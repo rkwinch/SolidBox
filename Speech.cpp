@@ -31,6 +31,7 @@ std::string Speech::StartListening()
 
 	hr = CoCreateInstance(CLSID_SpSharedRecognizer, nullptr, CLSCTX_ALL, IID_ISpRecognizer, reinterpret_cast<void**>(&recognizer));
 	hr = recognizer->CreateRecoContext(&recoContext);
+	// pausing SR engine to set rules and grammars
 	hr = recoContext->Pause(0);
 	recoGrammar = InitGrammar(recoContext);
 	hr = recoContext->SetNotifyWin32Event();
@@ -38,6 +39,7 @@ std::string Speech::StartListening()
 	interest = SPFEI(SPEI_RECOGNITION);
 	hr = recoContext->SetInterest(interest, interest);
 	hr = recoGrammar->SetRuleState(ruleName1, 0, SPRS_ACTIVE);
+	// can now resume SR engine
 	hr = recoContext->Resume(0);
 
 	HANDLE handles[1];
@@ -46,6 +48,7 @@ std::string Speech::StartListening()
 	text = GetText(recoContext);
 	recoGrammar->Release();
 	::CoUninitialize();
+	std::cout << text << std::endl;
 	return text;
 }
 
@@ -64,8 +67,10 @@ int Speech::RetrievePosInteger()
 	do
 	{
 		input = StartListening();
-
+		std::cout << "input:  " << input << std::endl;
 		if (input == "back") return -1;
+
+		if (input == "quit") return -1;
 
 		nNum = ConvertPhraseToInteger(input);
 
@@ -90,6 +95,7 @@ std::string Speech::GetText(ISpRecoContext* reco_context)
 	recoResult = reinterpret_cast<ISpRecoResult*>(events[0].lParam);
 	hr = recoResult->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, FALSE, &text, NULL);
 	test = ToNarrow(text);
+	std::cout << "test:  " << test << std::endl;
 	CoTaskMemFree(text);
 	return test;
 }
@@ -112,15 +118,25 @@ ISpRecoGrammar* Speech::InitGrammar(ISpRecoContext* recoContext)
 	ISpRecoGrammar* recoGrammar;
 
 	hr = recoContext->CreateGrammar(grammarId, &recoGrammar);
+	// sets language id     (primary language identifier (language), sublanguage identifier (country/region))
 	WORD langId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+	// resetting grammar to US english using the language ID
 	recoGrammar->ResetGrammar(langId);
+	// retrieving grammar's rule state    
+	//-- getting rule based on ruleName, not using grammarid, making it activated by default and entry point into grammar, --
+	//--create if not exist, out parameter for state of the rule --
 	recoGrammar->GetRule(ruleName1, 0, SPRAF_TopLevel | SPRAF_Active, true, &state);
-	std::wstring words[] = { L"one", L"two", L"three", L"four", L"five", L"six", L"seven", L"eight", L"nine", L"ten" , L"quit" };
+	std::wstring words[] = { L"one", L"two", L"three", L"four", L"five", L"six", L"seven", L"eight", L"nine", L"ten" , L"quit",
+	                         L"point", L"twenty", L"back" };
 
-	for (auto &item : words) {
+	 //adding words to the grammar
+	/*for (auto &item : words) 
+	{
 		recoGrammar->AddWordTransition(state, NULL, item.c_str(), L" ", SPWT_LEXICAL, 1, nullptr);
-	}
+	}*/
+	recoGrammar->LoadDictation(NULL, SPLO_STATIC);
 
+	recoGrammar->SetDictationState(SPRS_ACTIVE);
 	recoGrammar->Commit(0);
 	return recoGrammar;
 }
@@ -211,7 +227,7 @@ int Speech::ConvertPhraseToInteger(std::string input)
 			current = 0;
 		}
 	}
-
+	std::cout << result + current << std::endl;
 	return result + current;
 }
 

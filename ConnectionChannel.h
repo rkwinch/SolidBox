@@ -3,6 +3,7 @@
 #include <set>
 #include <string>
 #include <fstream>
+#include <memory>
 
 class Shape;
 class Surface;

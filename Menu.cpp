@@ -40,69 +40,71 @@ void Menu::Run()
 	bool bIsSpeech = false;
 	bool bQuit = false;
 	std::string strInput = "";
-	char cInput = 0;
 	Menu* menu = Menu::GetInstance(bIsSpeech);
 	bIsSpeech = menu->GetIsSpeechFlag();
 	std::cout << "Welcome to SolidBox.\n" << std::endl;
 	std::regex acceptableInputExpr;
 	                                                     
-	while ((tolower(cInput)) != 'q' && (bQuit == false))
+	while (bQuit == false)
 	{
 		menu->WelcomeAndOptions();
 
 		if (bIsSpeech) // for speech input
 		{ 
-			nInput = Speech::RetrievePosInteger(); // will be -1 if user elected to quit
-			
-			while (nInput < 1 || nInput > 8)
+			do
 			{
-				nInput = Speech::RetrievePosInteger();
+				nInput = Speech::RetrievePosInteger(); // will be -1 if user elected to quit
 				
 				if (nInput == -1)
 				{
 					bQuit = true;
 					break;
 				}
-			}
-			
-			cInput = cInput + '0'; // to make the number into a character of the same number
-		}                          // since the number is guaranteed at this point to be between 1-8  
+				std::cout << "nInput in run:  " << nInput << std::endl;
+			} while (nInput < 1 || nInput > 8);
+		}                          
 		else // for keyboard input
 		{
 			acceptableInputExpr = ("^\\s*([1-8|q|Q])\\s*$"); // looking for 1-8 or q or Q    
 			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-			cInput = strInput[0]; // making string of length 1 into a single char
+			
+			if (strInput == "q" || strInput == "Q")
+			{
+				bQuit = true;
+			}
+
+			nInput = stoi(strInput);
 		}
 
-		if (cInput == '1')
+		if (nInput == 1)
 		{
 			menu->CreateShape();
 		}
-		else if (cInput == '2')
+		else if (nInput == 2)
 		{
 			menu->DeleteExistingSolid();
 		}
-		else if (cInput == '3')
+		else if (nInput == 3)
 		{
 			menu->ShowSolidsInMemory();
 		}
-		else if (cInput == '4')
+		else if (nInput == 4)
 		{
 			menu->CopyExistingSolid();
 		}
-		else if (cInput == '5')
+		else if (nInput == 5)
 		{
 			menu->MoveASolid();
 		}
-		else if (cInput == '6')
+		else if (nInput == 6)
 		{
 			menu->DebugSolidBox();
 		}
-		else if (cInput == '7')
+		else if (nInput == 7)
 		{
 			menu->SaveAllObjects();
 		}
-		else if (cInput == '8')
+		else if (nInput == 8)
 		{
 			menu->LoadAllObjects();
 		}
@@ -151,7 +153,7 @@ void Menu::DeleteExistingSolid()
 	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$");
 	Menu* menu = Menu::GetInstance();
 	bool bSpeechEnabled = menu->GetIsSpeechFlag();
-
+	std::cout << "bspeechenabledflag:  " << bSpeechEnabled << std::endl;
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 
 	if (!Utility::AvailableSolids())

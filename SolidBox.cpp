@@ -10,6 +10,8 @@
 #include "RectPlane.h"
 #include "ConnectionChannel.h"
 #include "Utility.h"
+#include "Menu.h"
+#include "Speech.h"
 
 const int SolidBox::m_nSurfaces = 1;
 int SolidBox::m_nNameIDCounter = 0;
@@ -131,17 +133,40 @@ void SolidBox::Create()
 	double dSideLength = 0.0;
 	std::regex acceptableInputExpr("^\\s*([0-9]*\\.?[0-9]*)\\s*$"); // looking for a number (if present)
 																	// with 0-1 decimals followed by a number (if present) while allowing spaces
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
+
 	std::cout << "What would you like the length, width, and height to be? (in mm)" << std::endl;
 	std::cout << "ex: 4.5" << std::endl;
-	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-	dSideLength = std::stod(strInput); // converting string input into a double
 
-	while (dSideLength == 0.0) // don't want to make a box with sideLength of 0
+	if (isSpeech)
 	{
-		std::cout << "Please input a value that is not 0" << std::endl;
-		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-		dSideLength = std::stod(strInput);
+		do
+		{
+			dSideLength = Speech::RetrieveDouble(); // getting double from spoken phrase
+
+			if (dSideLength <= 0)
+			{
+				std::cout << "Please say a positive, nonzero, number." << std::endl;
+			}
+
+		} while (dSideLength <= 0.0);
+		
 	}
+	else
+	{
+		do
+		{
+			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+			dSideLength = std::stod(strInput); // converting string input into a double
+
+			if (dSideLength <= 0.0)
+			{
+				std::cout << "Please enter a positive, nonzero, number." << std::endl;
+			}
+		} while (dSideLength <= 0.0);
+	}
+	
 	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(dSideLength);
 	m_shapeVec.push_back(box);
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
