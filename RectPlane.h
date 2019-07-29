@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 #include "ConnectionChannel.h"
-#include "Plane.h"
+#include "Surface.h"
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -21,13 +21,15 @@ class RectPlane : public Plane<RectPlane<T>> {
 	friend class SolidBox;
 
 public:
+	static int RectPlane<T>::m_nNameIDCounter; // initialized at end of this header
+
 	RectPlane()
 	{
 		// empty
 	}
 
 	// parameterized constructor
-	RectPlane(double length, double height, ConnectionChannel<T>* channel)
+	RectPlane(double length, double height, ConnectionChannel<T, RectPlane>* channel)
 	{
 			m_stName = Utility::CreateUniqueName("plane", nameIDCounter);
 			m_dLength = length;
@@ -75,7 +77,7 @@ public:
 		return m_dHeight;
 	}
 
-	ConnectionChannel<T>* GetConnChannel()
+	ConnectionChannel<T, RectPlane>* GetConnChannel()
 	{
 		return m_channel;
 	}
@@ -115,14 +117,21 @@ public:
 		return (m_dHeight * m_dLength);
 	}
 
-	void SaveARectPlane(std::ofstream &outFile)
+	void Save(std::ofstream &outFile)
 	{
-		outFile << name << ";";
-		outFile << height << ";" << length << ";" << numOfEdges << ";";
+		outFile << m_stName << ";";
+		outFile << m_dHeight << ";" << m_dLength << ";" << m_nNumOfEdges << ";";
 	}
 	
+	std::shared_ptr<RectPlane> GetCopy() override
+	{
+		return std::make_shared<RectPlane<SolidBox>>(m_dRadius, m_channel);
+	}
 
 private:
 	double m_dHeight;
 	double m_dLength;
 };
+
+template<class T>
+int RectPlane<T>::m_nNameIDCounter = 0;

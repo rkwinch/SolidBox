@@ -1,7 +1,6 @@
 #include <string>
 #include <set>
 #include <iostream>
-#include <map>
 #include <fstream>
 #include <memory>
 #include <algorithm>
@@ -10,9 +9,7 @@
 #include "SolidBox.h"
 #include "ConnectionChannel.h"
 
-int SolidBox::nameIDCounter = 0;
-const int SolidBox::planesPerSolidBox = 6;
-std::vector<std::shared_ptr<SolidBox>> SolidBox::cubeVec;
+std::vector<std::shared_ptr<SolidBox>> SolidBox::m_shapeVec;
 
 // default constructor 
 SolidBox::SolidBox() : m_channel(this)
@@ -31,11 +28,11 @@ SolidBox::SolidBox(double sideLength) : m_channel(this)
 {
 	//giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
 	//will verify by putting the name into a set and check if it properly inserts.
-	m_stName = Utility::CreateUniqueName("cube", nameIDCounter);
+	m_stName = Utility::CreateUniqueName("cube", m_nNameIDCounter);
 	std::set<std::shared_ptr<RectPlane<SolidBox>>> RectPlaneSet;
 
 	//making 6 planes to go with the cube
-	for (int i = 0; i < SolidBox::planesPerSolidBox; ++i)
+	for (int i = 0; i < SolidBox::m_nNumOfSurfaces; ++i)
 	{
 		std::cout << "about to make a plane with sidelength of: " << sideLength << std::endl;
 		std::shared_ptr<RectPlane<SolidBox>> plane = std::make_shared<RectPlane<SolidBox>>(sideLength, &m_channel);
@@ -55,7 +52,7 @@ SolidBox::SolidBox(SolidBox& other)
 	// don't change name
 	m_dSideLength = other.m_dSideLength;
 	ConnectionChannel<SolidBox, RectPlane<SolidBox>> channel = other.m_channel;
-	bHasConnection = other.bHasConnection; // flag for checking if the SolidBox has a connection
+	m_bHasConnection = other.m_bHasConnection; // flag for checking if the SolidBox has a connection
 
 }
 
@@ -65,7 +62,7 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 {
 	m_dSideLength = cube.m_dSideLength;
 	m_channel = cube.m_channel;
-	bHasConnection = cube.bHasConnection;
+	m_bHasConnection = cube.m_bHasConnection;
 	cube.Delete(); //**deleting items on right side of = operator**
 	return *this;
 }
@@ -75,29 +72,7 @@ double SolidBox::GetSideLength()
 	return m_dSideLength;
 }
 
-
-
-int SolidBox::GetPlnsPerSolidBx()
-{
-	return planesPerSolidBox;
-}
-
-void SolidBox::Delete()
-{
-	std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr = cubeVec.begin();
-	// [&] is take by reference, arg type is shared ptr of solidbox (box), return type is bool, 
-	// predicate is check if the SolidBoxes are equivalent (same name by == operator)
-	cubeVecItr = std::find_if(cubeVec.begin(), cubeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return *box == *this; });
-	if (cubeVecItr == cubeVec.end())
-	{
-		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
-		return;
-	}
-	m_channel.Disconnect(); // setting planes in planeSet to null
-	SolidBox::cubeVec.erase(cubeVecItr); // removing item from vector
-}
-
-void SolidBox::LoadSolidBox(std::vector<std::string>::iterator &itr, const int &vecSize)
+void SolidBox::Load(std::vector<std::string>::iterator &itr, const int &vecSize)
 {
 	std::string stName = "";
 	double dLength = 0;
@@ -129,7 +104,7 @@ void SolidBox::LoadSolidBox(std::vector<std::string>::iterator &itr, const int &
 		stName = ""; // resetting name
 
 		//getting and setting members for square planes
-		for (auto planePtr : box->GetConnChannel()->GetPlaneSet())
+		for (auto planePtr : box->GetConnChannel()->GetSurfaceSet())
 		{
 			stName = (*itr);
 			itr++;
@@ -146,25 +121,35 @@ void SolidBox::LoadSolidBox(std::vector<std::string>::iterator &itr, const int &
 			planePtr->SetNumOfEdges(nNumOfEdges);
 		}
 		itr++; // skipping ":" delimiter
-		SolidBox::cubeVec.push_back(box); // solid box object is completed now.
+		SolidBox::m_shapeVec.push_back(box); // solid box object is completed now.
 	}
 }
 
 void SolidBox::Save(std::ofstream &outFile)
 {
 	outFile << m_stName << ";";
-	outFile << m_dSideLength << ";" << bHasConnection << ";";
-	m_channel.Save(outFile); // takes care of channel member and its associated planes
+	outFile << m_dSideLength << ";" << m_bHasConnection << ";";
+	m_channel.Save(outFile); // takes care of channel member and its associated surfaces
 	outFile << "\n";
 }
 
-std::set<std::shared_ptr<RectPlane<SolidBox>>> SolidBox::GetPlanesCopy()
+std::set<std::shared_ptr<RectPlane<SolidBox>>> SolidBox::GetSurfacesCopy()
 {
-	std::set<std::shared_ptr<RectPlane<SolidBox>>> planeSet;
-	for (auto planePtr : m_channel.GetPlaneSet())
+	std::set<std::shared_ptr<RectPlane<SolidBox>>> surfaceSet;
+	for (auto surface : m_channel.GetSurfaceSet())
 	{
-		std::shared_ptr<RectPlane<SolidBox>> copyPlane = std::make_shared<RectPlane<SolidBox>>(m_dSideLength, m_dSideLength, &m_channel);
-		planeSet.insert(copyPlane);
+		std::shared_ptr<RectPlane<SolidBox>> copy = std::make_shared<RectPlane<SolidBox>>(m_dSideLength, m_dSideLength, &m_channel);
+		surfaceSet.insert(copy);
 	}
-	return planeSet;
+	return surfaceSet;
+}
+
+int SolidBox::GetSurfaceCount()
+{
+	return SolidBox::m_nNumOfSurfaces;
+}
+
+std::vector<std::shared_ptr<SolidBox>> SolidBox::GetShapeVec()
+{
+	return SolidBox::m_shapeVec;
 }

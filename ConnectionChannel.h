@@ -11,10 +11,8 @@ class ConnectionChannel : public Channel<M> {
 	friend class Utility;
 
 private:
-	std::set<std::shared_ptr<RectPlane>> planeSet;
-	std::string name;
+	std::set<std::shared_ptr<M>> m_surfaceSet;
 	T* m_shape;
-	static int nameIDCounter;
 
 public:
 	//default constructor
@@ -26,10 +24,10 @@ public:
 	//parameterized constructor
 	ConnectionChannel(T* shape)
 	{
-		name = Utility::CreateUniqueName("connectionChannel", nameIDCounter);
-		this->cube = cube; // want the cube member here to have same address of cube
-							// it is constructed from 
-		// **will get planeSet as a SolidBox is being constructed**
+		m_stName = Utility::CreateUniqueName("connectionChannel", m_nNameIDCounter);
+		m_shape = shape; // want the shape member here to have same address of shape
+						 // it is constructed from 
+		// **will get surfaceSet as a shape is being constructed**
 	}
 
 	//copy constructor    (new = old)
@@ -37,13 +35,14 @@ public:
 	{
 		// new name for copy constructor was requested (will not copy current name)
 		// (will probably not want to call copy constructor.  pass by reference instead)
-		std::string name = Utility::CreateUniqueName("channel", nameIDCounter);
+		m_stName = Utility::CreateUniqueName("channel", m_nNameIDCounter);
 
 		// allocating new memory for the copy 
-		for (auto planePtr : channel.planeSet)
+		for (auto surface : channel.m_surfaceSet)
 		{
-			std::shared_ptr<M> copyPlanePtr = /*std::make_shared<M>(planePtr->GetSqPlaneHeight(), this)*/;
-			this->planeSet.insert(copyPlanePtr);
+			std::shared_ptr<M> copy = surface->GetCopy():
+				/*std::make_shared<M>(planePtr->GetSqPlaneHeight(), this)*/;
+			this->surfaceSet.insert(copy);
 		}
 		
 		//setting shape ptr
@@ -73,65 +72,65 @@ public:
 	//operator ==
 	bool operator==(const ConnectionChannel& channel) const
 	{
-		return (name == channel.name);
+		return (m_stName == channel.m_stName);
 	}
 
 	//operator <
 	bool operator<(const ConnectionChannel& channel) const
 	{
-		return (name < channel.name);
+		return (m_stName < channel.m_stName);
 	}
 
 	//adding a plane to the connection
-	void Connect(std::set<std::shared_ptr<M>> planeSet) override
+	void Connect(std::set<std::shared_ptr<M>> surfaceSet) override
 	{
-		for (auto plane : planeSet)
+		for (auto surface : surfaceSet)
 		{
-			this->planeSet.insert(plane);
+			this->surfaceSet.insert(surface);
 		}
 	}
 
 	//sets the planes to null, effectively "disconnecting them from the ConnectionChannel
 	void Disconnect() override
 	{
-		for (auto plane : planeSet)
+		for (auto surface : m_surfaceSet)
 		{
-			plane = nullptr;
+			surface = nullptr;
 		}
 	}
 
 	//cleans up memory when disconnecting a channel
 	void Cleanup() override
 	{
-		//not really needed since using shared_ptr for planes
+		//not really needed since using shared_ptr for surfaces
 	}
 
-	std::set<std::shared_ptr<RectPlane>> GetPlaneSet()
+	std::set<std::shared_ptr<M>> GetSurfaceSet()
 	{
-		return planeSet;
+		return m_surfaceSet;
 	}
 
 	std::string GetConnName()
 	{
-		return name;
+		return m_stName;
 	}
 
 	T* GetShapePtr()
 	{
-		return cube;
+		return m_shape;
 	}
 
 	void SetName(std::string name)
 	{
-		this->name = name;
+		m_stName = name;
 	}
 
-	void Save(std::ofstream &outFile)
+	void Save(std::ofstream &outFile) override
 	{
-		outFile << name << ";";
-		for (auto element : planeSet) // can be RectPlane or CurvedSurface
+		outFile << m_stName << ";";
+		for (auto surface : m_surfaceSet) // can be RectPlane or CurvedSurface
 		{
-			element->Save(outFile); // takes care of all of the square planes
+			surface->Save(outFile); // takes care of all of the surfaces
 		}
 	}
 };

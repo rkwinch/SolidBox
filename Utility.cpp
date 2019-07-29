@@ -14,370 +14,20 @@
 #include "RectPlane.h"
 #include "SolidBox.h"
 #include "Utility.h"
+#include "Sphere.h"
+#include "Menu.h"
 
-//initializing static member variable
-int ConnectionChannel<SolidBox>::nameIDCounter = 0;
-
-void Utility::Run()
-{
-	std::string strInput = "";
-	char cInput = 0;
-	std::cout << "Welcome to SolidBox." << std::endl;
-
-	while (tolower(cInput) != 'q')
-	{
-		WelcomeAndOptions();
-		std::regex acceptableInputExpr("^\\s*([1-8|q|Q])\\s*$"); // looking for 1-8 or q or Q                                                         
-		strInput = GetAndValidateInput(acceptableInputExpr);
-		cInput = strInput[0]; // making string of length 1 into a single char
-		if (cInput == '1')
-		{
-			CreateSolidBox();
-		}
-		else if (cInput == '2')
-		{
-			DeleteExistingSolid();
-		}
-		else if (cInput == '3')
-		{
-			ShowSolidsInMemory();
-		}
-		else if (cInput == '4')
-		{
-			CopyExistingSolid();
-		}
-		else if (cInput == '5')
-		{
-			MoveASolid();
-		}
-		else if (cInput == '6')
-		{
-			DebugSolidBox();
-		}
-		else if (cInput == '7')
-		{
-			SaveAllObjects();
-		}
-		else if (cInput == '8')
-		{
-			LoadAllObjects();
-		}
-	}
-}
-
-void Utility::CreateSolidBox()
-{
-	std::string strInput = "";
-	double dSideLength = 0.0;
-	std::regex acceptableInputExpr("^\\s*([0-9]*\\.?[0-9]*)\\s*$"); // looking for a number (if present)
-																	// with 0-1 decimals followed by a number (if present) while allowing spaces
-	PrintNwLnsAndLnDelimiter("-", 55);
-	std::cout << "What would you like the length, width, and height to be? (in cm)" << std::endl;
-	std::cout << "ex: 4.5" << std::endl;
-	strInput = GetAndValidateInput(acceptableInputExpr);
-	dSideLength = std::stod(strInput); // converting string input into a double
-
-	while (dSideLength == 0.0) // don't want to make a box with sideLength of 0
-	{
-		std::cout << "Please input a value that is not 0" << std::endl;
-		strInput = GetAndValidateInput(acceptableInputExpr);
-		dSideLength = std::stod(strInput);
-	}
-	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(dSideLength);
-	SolidBox::cubeVec.push_back(box);
-	PrintNwLnsAndLnDelimiter("-", 55);
-}
-
-void Utility::DeleteExistingSolid()
-{
-	std::string strInput = "";
-	PrintNwLnsAndLnDelimiter("-", 55);
-	std::cout << "Type the number corresponding to the cube you wish to delete" << std::endl;
-	std::cout << "or press 'b' to go back to the menu." << std::endl;
-	std::regex acceptableInputExpr("^\\s*([1-9]+|b|B)\\s*$");
-	PrintSolidsInMemory();
-	std::cout << std::endl;
-	strInput = InputInMapVal(strInput, acceptableInputExpr);
-
-	if ((strInput == "b") || (strInput == "B"))
-	{
-		return;
-	}
-
-	auto cubeVecItr = SolidBox::cubeVec.begin() + (stoi(strInput) - 1); // advance iterator by the # given by user 
-	(**cubeVecItr).Delete(); // dereference twice (first for iterator, second for shared ptr)
-}
-
-void Utility::ShowSolidsInMemory()
-{
-	PrintNwLnsAndLnDelimiter("-", 55);
-
-	if (SolidBox::cubeVec.size() == 0)
-	{
-		std::cout << "No solids currently in memory" << std::endl;
-		PrintNwLnsAndLnDelimiter("-", 55);
-		return;
-	}
-
-	std::string strHeader = "SolidBox name (length of each side in cm)";
-	PrintHeader(strHeader);
-
-
-	for (auto cubePtr : SolidBox::cubeVec)
-	{
-		std::cout << cubePtr->name << " (" << std::fixed << std::setprecision(3) << cubePtr->sideLength << ")" << std::endl;
-	}
-
-	PrintNwLnsAndLnDelimiter("-", 55);
-}
-
-void Utility::CopyExistingSolid()
-{
-	PrintNwLnsAndLnDelimiter("-", 55);
-
-	if (SolidBox::cubeVec.size() == 0)
-	{
-		std::cout << "No solids currently in memory" << std::endl;
-		PrintNwLnsAndLnDelimiter("-", 55);
-		return;
-	}
-
-	std::cout << "Enter the number corresponding to the cube you wish to copy." << std::endl;
-	std::string strInput = "";
-	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$"); // looking for the word "cube" followed by
-																// at least one number allowing for leading and trailing spaces
-	PrintSolidsInMemory();
-	std::cout << std::endl;
-	strInput = InputInMapVal(strInput, acceptableInputExpr);
-
-	if ((strInput == "b") || (strInput == "B"))
-	{
-		return;
-	}
-
-	auto cubeVecItr = SolidBox::cubeVec.begin();
-	cubeVecItr = std::next(cubeVecItr, (stoi(strInput) - 1)); // advance iterator by the # given by user 
-	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>((*cubeVecItr)->sideLength);
-	SolidBox::cubeVec.push_back(box);
-	PrintNwLnsAndLnDelimiter("-", 55);
-}
-
-void Utility::MoveASolid()
-{
-	std::string strMoveFrom = "";
-	std::string strMoveTo = "";
-
-	if (SolidBox::cubeVec.size() < 2)
-	{
-		std::cout << "There are not enough cubes in memory to make a move." << std::endl;
-		return;
-	}
-
-	std::cout << "Please enter two numbers corresponding to their cubes separated by the enter key" << std::endl;
-	std::cout << "to move one solid to another or press 'b' to go back to main menu." << std::endl;
-	std::cout << std::setw(11) << std::left << "(For ex:  1" << std::endl;
-	std::cout << std::setw(11) << std::right << "2" << std::endl;
-	std::cout << "moves 2 into 1)" << std::endl;
-	PrintSolidsInMemory();
-	std::cout << std::endl;
-	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want two numbers that can be separated by 
-																// spaces
-
-	//------Get cube selections from user----------------
-	//moveFrom cube:
-	strMoveFrom = InputInMapVal(strMoveFrom, acceptableInputExpr);
-
-	if ((strMoveFrom == "b") | (strMoveFrom == "B")) // user elected to go back to main menu
-	{
-		return;
-	}
-
-	auto cubeVecItr_From = SolidBox::cubeVec.begin();
-	cubeVecItr_From = std::next(cubeVecItr_From, (stoi(strMoveFrom) - 1)); // find if name given is the name of a cube made 
-	//moveTo cube:
-	strMoveTo = InputInMapVal(strMoveTo, acceptableInputExpr);
-
-	if ((strMoveTo == "b") | (strMoveTo == "B")) // user elected to go back to main menu
-	{
-		return;
-	}
-
-	auto cubeVecItr_To = SolidBox::cubeVec.begin();
-	cubeVecItr_To = std::next(cubeVecItr_To, (stoi(strMoveTo) - 1)); // find if name given is the name of a cube made 
-	//check if trying to move to the same cube
-	if (strMoveFrom == strMoveTo)
-	{
-		std::cout << "You cannot move from and to the same cube.  Please try again." << std::endl;
-		MoveASolid();
-	}
-
-	// It's OK to now move From into To
-	**cubeVecItr_To = **cubeVecItr_From;
-}
-
-void Utility::DebugSolidBox()
-{
-	std::string strInput = "";
-	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want one numbers that can be surrounded by 
-																// whitespace.
-	PrintNwLnsAndLnDelimiter("-", 55);
-	std::cout << "Type the number corresponding to the desired cube for detailed information" << std::endl;
-	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
-	PrintSolidsInMemory();
-	std::cout << std::endl;
-	strInput = InputInMapVal(strInput, acceptableInputExpr);
-
-	if ((strInput == "b") || (strInput == "B"))
-	{
-		return;
-	}
-
-	auto cubeVecItr = SolidBox::cubeVec.begin() + (stoi(strInput) - 1); // advance iterator by the # given by user 
-
-	PrintNwLnsAndLnDelimiter("-", 55);
-	PrintDebugInfo(cubeVecItr);
-	PrintNwLnsAndLnDelimiter("-", 55);
-}
-
-int Utility::SaveAllObjects()
-{
-	int count = 0;
-	char cInput = 0;
-	int numOfFiles = 0;
-	std::string fileName = "";
-	//if no boxes to save, return and don't save
-	if (!IsOkToSave())
-	{
-		std::cout << "There are no solid boxes to save." << std::endl;
-		return 0;
-	}
-
-	// view current files in memory and get input from the user to go to main menu,
-	// save a new file, or replace an existing file
-	ViewFiles();
-	numOfFiles = NumOfFilesAvail();
-	cInput = SaveOptions();
-
-	if (tolower(cInput) == 'b')
-	{
-		return 0;
-	}
-	else if ((tolower(cInput) == 's') && (numOfFiles == 0))
-	{
-		std::cout << "Cannot pick an existing file.  No files in memory." << std::endl;
-		fileName = PickNewFile();
-	}
-	else if(tolower(cInput) == 's')
-	{
-		fileName = PickFile();
-		if (fileName.length() == 0) // user elected to go back to the main menu
-		{
-			return 0;
-		}
-	}
-	else if (cInput == 'n')
-	{
-		fileName = PickNewFile();
-	}
-	// saving objects to file now
-	std::ofstream outFile;
-	outFile.open(fileName);
-	outFile << SolidBox::nameIDCounter << ";" << ConnectionChannel<SolidBox>::nameIDCounter << ";" << RectPlane::nameIDCounter << ";";
-	outFile << static_cast<int>(SolidBox::cubeVec.size()) << ";\n";
-	PrintNwLnsAndLnDelimiter("-", 55);
-	std::cout << "Saving...";
-
-	for (auto cubePtr : SolidBox::cubeVec)
-	{
-		if (count == 0)
-		{
-			std::cout << cubePtr->name << " (" << std::fixed << std::setprecision(3) << cubePtr->sideLength << ")" << std::endl;
-			++count;
-		}
-		else
-		{
-			std::cout << std::setw(9) << "" << std::left << cubePtr->name << " (" << std::fixed << std::setprecision(3) << cubePtr->sideLength << ")" << std::endl;
-		}
-
-		cubePtr->SaveASolidBox(outFile); // does the actual saving of the objects
-	}
-
-	outFile.close();
-	PrintNwLnsAndLnDelimiter("-", 55);
-	return 1;
-}
-
-void Utility::LoadAllObjects()
-{
-	if (SolidBox::cubeVec.size() != 0)
-	{
-		std::string strInput = "";
-		char cInput = 0;
-		std::regex acceptableInputExpr("^\\s*([bByYnN])\\s*$"); // looking for single character that is b, B, y, Y, n, or N
-		std::cout << "Do you want to save your current data (will be overwritten) before loading a file?" << std::endl;
-		std::cout << "Press 'y' to save your data before loading, 'n' to overwrite the current data with a file," << std::endl;
-		std::cout << "or 'b' to go back to the main menu" << std::endl;
-		strInput = GetAndValidateInput(acceptableInputExpr);
-		cInput = strInput[0];
-
-		if (tolower(cInput) == 'b')
-		{
-			return;
-		}
-		else if (tolower(cInput) == 'y')
-		{
-			if (!SaveAllObjects())
-			{
-				return;
-			}
-
-		}
-		else if (tolower(cInput) == 'n')
-		{
-			//do nothing here since deleting and loading data will occur below
-		}
-
-		// deleting old data
-		for (auto element : SolidBox::cubeVec)
-		{
-			element->channel.Disconnect();
-		}
-		SolidBox::cubeVec.clear();
-	}
-
-	SolidBox::nameIDCounter = 0; // resetting nameIDCounters in case boxes were made
-	ConnectionChannel<SolidBox>::nameIDCounter = 0; // and then deleted (making SolidBox::cubeVec.size() == 0 
-	RectPlane::nameIDCounter = 0; // and the nameIDCounters != 0)
-	LoadASolidBox();
-	PrintNwLnsAndLnDelimiter("-", 55);
-}
-
-
-//---------------------helper functions below--------------------------------------
-void Utility::WelcomeAndOptions()
-{
-	std::cout << "What would you like to do?" << std::endl;
-	std::cout << "(enter a number or press 'q' to quit)\n\n" << std::endl;
-	std::cout << "1)  Create a solid box" << std::endl;
-	std::cout << "2)  Delete a solid box" << std::endl;
-	std::cout << "3)  Show available solids" << std::endl;
-	std::cout << "4)  Copy an existing solid into a new one" << std::endl;
-	std::cout << "5)  Move an existing solid's data into another existing solid" << std::endl;
-	std::cout << "6)  Debug a solid (print information)" << std::endl;
-	std::cout << "7)  Save" << std::endl;
-	std::cout << "8)  Load" << std::endl;
-}
-
-std::string Utility::CreateUniqueName(std::string strNamePrefix, int &nameIDCounter)
+std::string Utility<T>::CreateUniqueName(std::string strNamePrefix, int &nameIDCounter)
 {
 	std::string strName = "";
 	strName = strNamePrefix + std::to_string(++nameIDCounter);
 
-	auto cubeVecItr = std::find_if(SolidBox::cubeVec.begin(), SolidBox::cubeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return box->GetShapeName() == strName; });
+	auto cubeVecItr = std::find_if(SolidBox::m_shapeVec.begin(), SolidBox::m_shapeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return box->GetShapeName() == strName; });
+	auto sphereVecItr = std::find_if(Sphere::m_shapeVec.begin(), Sphere::m_shapeVec.end(), [&](std::shared_ptr<Sphere> sphere)->bool {return sphere->GetShapeName() == strName; });
 
 	try //if in set, naming collision has occurred and don't want to construct object
 	{
-		if (cubeVecItr != SolidBox::cubeVec.end())
+		if ((cubeVecItr != SolidBox::m_shapeVec.end()) || (sphereVecItr != Sphere::m_shapeVec.end()))
 		{
 			throw std::exception();
 		}
@@ -385,7 +35,8 @@ std::string Utility::CreateUniqueName(std::string strNamePrefix, int &nameIDCoun
 	catch (std::exception e)
 	{
 		std::cout << "Exception:  " << strNamePrefix << " naming collision" << std::endl;
-		ShowSolidsInMemory();
+		Menu* menu = menu->GetInstance();
+		menu->ShowSolidsInMemory();
 	}
 	return strName;
 }
@@ -406,12 +57,14 @@ bool Utility::ValidateInput(std::string strInput, std::regex acceptableInputExpr
 	return false;
 }
 
+//only for one capture group
 std::string Utility::RemoveSpaces(std::string strInput, std::regex acceptableInputExpr)
 {
 	strInput = std::regex_replace(strInput, acceptableInputExpr, "$1");
 	return strInput;
 }
 
+//only for one capture group
 std::string Utility::GetAndValidateInput(std::regex acceptableInputExpr)
 {
 	bool bIsValid = false;
@@ -440,7 +93,7 @@ std::string Utility::GetAndValidateInput(std::regex acceptableInputExpr)
 	return strInput;
 }
 
-std::string Utility::InputInMapVal(std::string strInput, std::regex acceptableInputExpr)
+std::string Utility::InputInVecVal(std::string strInput, std::regex acceptableInputExpr, std::set<std::shared_ptr<T> shapeVec)
 {
 	strInput = GetAndValidateInput(acceptableInputExpr);
 
@@ -491,82 +144,9 @@ void Utility::PrintHeader(std::string strHeader)
 	PrintNwLnsAndLnDelimiter("_", strHeader.length());
 }
 
-void Utility::PrintCubeInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
+bool Utility::IsOkToSave() // if no shapes have been made, return false
 {
-	std::string strHeader = "Cube:";
-	PrintHeader(strHeader);
-	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "SolidBox name:" << (*cubeVecItr)->name << std::endl;
-	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "hasConnection:" << (*cubeVecItr)->GetHasConnection() << std::endl;
-	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "Channel name:" << (*cubeVecItr)->GetConnChannel()->GetConnName() << std::endl;
-	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "SideLength (cm):" << std::fixed << std::setprecision(3) << (*cubeVecItr)->GetSideLength() << std::endl;
-	std::cout << std::endl;
-}
-
-void Utility::PrintChannelInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
-{
-	std::string strHeader = "Channel:";
-	PrintHeader(strHeader);
-	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Channel name:" << (*cubeVecItr)->channel.name << std::endl;
-	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Associated SolidBox name:" << (*cubeVecItr)->channel.cube->name << std::endl;
-	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Associated planes' names:" << std::endl;
-
-	for (auto planePtr : (*cubeVecItr)->channel.planeSet)
-	{
-		PrintChar(' ', 32);
-		std::cout << std::left << planePtr->GetSqPlaneName() << std::endl;
-	}
-
-	std::cout << std::endl;
-}
-
-void Utility::PrintPlanesInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
-{
-	std::string strHeader = "Planes:";
-	PrintHeader(strHeader);
-
-	for (auto planePtr : (*cubeVecItr)->channel.planeSet)
-	{
-		PrintChar(' ', 5);
-		std::cout << std::left << std::setw(26) << "Plane name:" << planePtr->GetSqPlaneName() << std::endl;
-		PrintChar(' ', 5);
-		std::cout << std::left << std::setw(26) << "Associated channel name:" << planePtr->GetConnChannel()->GetConnName() << std::endl;
-		PrintChar(' ', 5);
-		std::cout << std::left << std::setw(26) << "Number of edges:" << planePtr->GetNumOfEdges() << std::endl;
-		PrintChar(' ', 5);
-		std::cout << std::left << std::setw(26) << "Length:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneLength() << std::endl;
-		PrintChar(' ', 5);
-		std::cout << std::left << std::setw(26) << "Height:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneHeight() << std::endl;
-		std::cout << std::endl;
-	}
-}
-
-void Utility::PrintDebugInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
-{
-	PrintCubeInfo(cubeVecItr);
-	PrintChannelInfo(cubeVecItr);
-	PrintPlanesInfo(cubeVecItr);
-}
-
-void Utility::PrintSolidsInMemory()
-{
-	int count = 1;
-	for (auto cubePtr : SolidBox::cubeVec)
-	{
-		std::cout << count << ") " << cubePtr->name << std::endl;
-		++count;
-	}
-}
-
-bool Utility::IsOkToSave() // if no solids have been made, return false
-{
-	return (SolidBox::cubeVec.size() > 0);
+	return ((SolidBox::shapeVec.size() > 0) || (Sphere::shapeVec.size() > 0));
 }
 
 void Utility::ViewFiles()
@@ -711,94 +291,6 @@ std::string Utility::PickNewFile()
 	}
 	return fileName;
 }
-
-void Utility::DeleteBox(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
-{
-	cubeVecItr = std::find_if(SolidBox::cubeVec.begin(), SolidBox::cubeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return *box == **cubeVecItr; });
-	if (cubeVecItr == SolidBox::cubeVec.end())
-	{
-		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
-		return;
-	}
-	(*cubeVecItr)->channel.Disconnect(); // setting planes in planeSet to null
-	SolidBox::cubeVec.erase(cubeVecItr); // removing item from vector
-}
-
-void Utility::LoadASolidBox()
-{
-	int vecSize = 0;
-	int nameSize = 0;
-	int solidBoxNameIDCntr = 0;
-	int connChannelNmIDCntr = 0;
-	int sqPlnNmIDCntr = 0;
-	std::string strInput = "";
-	std::string strDataFromFile = "";
-	std::vector<std::string> vec;
-	std::ifstream inFile;
-	std::vector<std::string>::iterator itr;
-	std::string strLineData = "";
-
-	ViewFiles();
-	std::cout << "Please type the number corresponding to the file you with to load" << std::endl;
-	std::cout << "or press 'b' to go back to the main menu" << std::endl;
-	strInput = PickFile();
-
-	if (strInput.length() == 0) // user elected to go back to the main menu
-	{
-		return;
-	}
-
-	inFile.open(strInput);
-
-	while (getline(inFile, strLineData))
-	{
-		strDataFromFile += strLineData + ":;";
-	}
-
-	vec = TokenizeStringToVec(strDataFromFile, ';');
-	std::cout << "items in vec:  " << std::endl;
-	for (auto element : vec)
-	{
-		std::cout << element << std::endl;
-	}
-	itr = vec.begin();
-	RetrieveInitialParams(solidBoxNameIDCntr, connChannelNmIDCntr, sqPlnNmIDCntr, vecSize, itr); // don't set NmIDCntrs permanently until
-	                                                 // finished creating objects since the values will be off due to creation of objects 
-	while (itr != vec.end())
-	{
-
-		if ((*itr).find("cube") != std::string::npos) // see if the string contains "cube"
-			// it should if that line is for a solidbox.  If so, load it.
-		{
-			SolidBox::LoadSolidBox(itr, vecSize);
-		}
-	}
-
-	// ensures counters are the same as when they were saved
-	SolidBox::nameIDCounter = solidBoxNameIDCntr;
-	ConnectionChannel<SolidBox>::nameIDCounter = connChannelNmIDCntr;
-	RectPlane::nameIDCounter = sqPlnNmIDCntr;
-	inFile.close();
-}
-
-void Utility::RetrieveInitialParams(int &solidBoxNameIDCntr, int &connChannelNmIDCntr, int &sqPlnNmIDCntr, int &vecSize, std::vector<std::string>::iterator &itr)
-{
-	std::cout << "solidboxnameidcntr:  " << (*itr) << std::endl;
-	solidBoxNameIDCntr = stoi(*itr);
-	itr++; // increment iterator to go through vec for each param
-	std::cout << "connchannelnmidcntr:  " << (*itr) << std::endl;
-	connChannelNmIDCntr = stoi(*itr);
-	itr++;
-	std::cout << "sqplnnmidcntr:  " << (*itr) << std::endl;
-	sqPlnNmIDCntr = stoi(*itr);
-	itr++;
-	std::cout << "vecsize:  " << (*itr) << std::endl;
-	vecSize = stoi(*itr);
-	itr++; std::cout << "in retrieve initial params. should be ':' " << (*itr) << std::endl;
-	itr++; // move past ":" delimiter
-}
-
-
 
 std::vector<std::string> Utility::TokenizeStringToVec(std::string str, char delimiter)
 {

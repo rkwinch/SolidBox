@@ -9,19 +9,20 @@
 #include <math.h>
 #include "Utility.h"
 #include "ConnectionChannel.h"
-#include "Plane.h"
+#include "Surface.h"
 //#define PI 3.14159
 
 template<class T>
-class CurvedSurface : public Plane<T> {
+class CurvedSurface : public Plane<T, CurvedSurface> {
 
-	//A curved surface is a plane-equivalent for curved surfaces (i.e. spheres).   
+		//A curved surface is a plane-equivalent for curved surfaces (i.e. spheres).   
 
 		friend class Utility;
 		friend class SolidBox;
 
 	public:
 		static const int PI;
+		static int CurvedSurface<T>::m_nNameIDCounter;
 
 		CurvedSurface()
 		{
@@ -29,7 +30,7 @@ class CurvedSurface : public Plane<T> {
 		}
 
 		// parameterized constructor
-		CurvedSurface(double radius, ConnectionChannel<T>* channel)
+		CurvedSurface(double radius, ConnectionChannel<T, CurvedSurface>* channel)
 		{
 			m_stName = Utility::CreateUniqueName("curvedSurf", nameIDCounter);
 			m_dRadius = radius;
@@ -69,7 +70,7 @@ class CurvedSurface : public Plane<T> {
 			return m_stName;
 		}
 
-		ConnectionChannel<T>* GetConnChannel()
+		ConnectionChannel<T, CurvedSurface>* GetConnChannel()
 		{
 			return m_channel;
 		}
@@ -100,6 +101,11 @@ class CurvedSurface : public Plane<T> {
 			outFile << m_dRadius << ";" << numOfEdges << ";";
 		}
 
+		std::shared_ptr<CurvedSurface> GetCopy() override
+		{
+			return std::make_shared<CurvedSurface>(m_dRadius, m_channel);
+		}
+
 	private:
 		double m_dRadius;
 
@@ -111,3 +117,5 @@ class CurvedSurface : public Plane<T> {
 
 template<class T>
 const int CurvedSurface<T>::PI = 3.14159;
+template<class T>
+int CurvedSurface<T>::m_nNameIDCounter = 0;

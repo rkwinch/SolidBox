@@ -24,9 +24,6 @@
     <ClCompile Include="Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sphere.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utility.h">
@@ -50,10 +47,13 @@
     <ClInclude Include="CurvedSurface.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Plane.h">
+    <ClInclude Include="RectPlane.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="RectPlane.h">
+    <ClInclude Include="Menu.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Surface.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
