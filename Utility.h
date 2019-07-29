@@ -38,9 +38,10 @@ private:
 	static void MoveASolid();
 	static std::string InputInMapVal(std::string input, std::regex acceptableInputExpr);
 	static void PrintSolidsInMemory();
-	static void SaveASolidBox(std::shared_ptr<SolidBox> solidBoxPtr/*, CArchive &archive, CFile &solidBoxFile*/);
-	static void SaveAConnectionChannel(std::shared_ptr<SolidBox> solidBoxPtr/*, CArchive &archive, CFile &solidBoxFile*/);
-	static void SaveASquarePlane(std::shared_ptr<SquarePlane> plane/*, CArchive &archive, CFile &solidBoxFile*/);
+	static void SaveASolidBox(std::shared_ptr<SolidBox> solidBoxPtr, CArchive &archive, CFile &solidBoxFile);
+	static void SaveAConnectionChannel(std::shared_ptr<SolidBox> solidBoxPtr, CArchive &archive, CFile &solidBoxFile);
+	static void SaveASquarePlane(std::shared_ptr<SquarePlane> plane, CArchive &archive, CFile &solidBoxFile);
 	static void LoadASolidBox();
+	static bool IsOkToSave();
 };
 
