@@ -1,4 +1,0 @@
-3;1;4;18;1;2;1;
-cube1;5.5;1;connectionChannel1;plane4;5;5;4;plane5;5;5;4;plane2;5;5;4;plane3;5;5;4;plane6;5;5;4;plane1;5;5;4;
-cube3;5.5;1;connectionChannel4;plane13;5.5;5.5;4;plane14;5.5;5.5;4;plane15;5.5;5.5;4;plane16;5.5;5.5;4;plane18;5.5;5.5;4;plane17;5.5;5.5;4;
-sphere1;3;1;connectionChannel2;curvedSurf1;3;0;

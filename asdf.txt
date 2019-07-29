@@ -1,4 +1,0 @@
-3;3;18;3;
-cube1;10;1;connectionChannel1;plane1;10;10;4;plane2;10;10;4;plane3;10;10;4;plane4;10;10;4;plane5;10;10;4;plane6;10;10;4;
-cube2;3;1;connectionChannel2;plane9;3;3;4;plane10;3;3;4;plane8;3;3;4;plane11;3;3;4;plane12;3;3;4;plane7;3;3;4;
-cube3;4;1;connectionChannel3;plane13;4;4;4;plane17;4;4;4;plane18;4;4;4;plane14;4;4;4;plane15;4;4;4;plane16;4;4;4;

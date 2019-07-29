@@ -1,2 +1,0 @@
-1;1;2;6;7;0;1;
-sphere1;0.125;1;connectionChannel2;curvedSurf7;0.125;0;
