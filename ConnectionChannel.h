@@ -30,7 +30,7 @@ public:
 	std::string GetConnName();
 	bool operator==(const ConnectionChannel& channel) const;
 	bool operator<(const ConnectionChannel& channel) const;
-	ConnectionChannel& operator=(const ConnectionChannel &channel);
+	ConnectionChannel& operator=(ConnectionChannel &channel);
 	ConnectionChannel(std::shared_ptr<SolidBox> cube);
 	//template <class T>
 	void Connect(std::set<std::shared_ptr<SquarePlane>> planeSet) /*override*/;

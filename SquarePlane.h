@@ -18,8 +18,8 @@ public:
 	DECLARE_SERIAL(SquarePlane)
 	void Serialize(CArchive& ar);
 
-	static std::set<std::string> SquarePlane::planeNames;
-	static int SquarePlane::nameIDCounter;
+	static std::set<std::string> planeNames;
+	static int nameIDCounter;
 	SquarePlane();
 	SquarePlane(double sideLength, std::shared_ptr<ConnectionChannel> channel);
 	bool operator==(const SquarePlane& plane) const;

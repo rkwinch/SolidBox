@@ -29,9 +29,9 @@ public:
 	static std::map <std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>> cubeAndPlanesMap;
 	static std::set<std::string>* GetCubeNames();
 	static std::map<std::string, double> cubeAndSideLengthMap;
-	static std::map<std::string, std::shared_ptr<SolidBox>> SolidBox::cubeNameAndCubeMap;
+	static std::map<std::string, std::shared_ptr<SolidBox>> cubeNameAndCubeMap;
 	static void AddCubeAndPlanesToMap(std::shared_ptr<SolidBox> cube);
-	static void SolidBox::AddCubeNameAndCubeToMap(std::shared_ptr<SolidBox> cube);
+	static void AddCubeNameAndCubeToMap(std::shared_ptr<SolidBox> cube);
 
 
 private:

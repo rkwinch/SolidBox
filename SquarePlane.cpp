@@ -2,6 +2,7 @@
 #include "ConnectionChannel.h"
 #include <afx.h>
 #include "Utility.h"
+#include <iostream>
 
 IMPLEMENT_SERIAL(SquarePlane, CObject, 0)
 
@@ -52,10 +53,11 @@ bool SquarePlane::operator==(const SquarePlane& plane) const
 //defining the = operator for SquarePlane to deep copy plane
 SquarePlane& SquarePlane::operator=(const SquarePlane& plane)
 {
+	std::cout << "***************in sq plane =" << std::endl;
 	this->height = plane.height;
 	this->length = plane.length;
 	this->numOfEdges = plane.numOfEdges;
-	*(this->channel) = *(plane.channel);
+	//*(this->channel) = *(plane.channel);
 	//code to delete old one
 	return *this;
 }

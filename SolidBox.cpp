@@ -53,26 +53,41 @@ bool SolidBox::operator==(const SolidBox &cube) const
 
 SolidBox& SolidBox::operator=(SolidBox &cube)
 {
+	std::cout << "**************!!!!!!!!!!!!!!!!!!!!!!!!*********************" << std::endl;
 	
 	this->sideLength = cube.sideLength;
-	this->channel = cube.channel;
+	*(this->channel) = *(cube.channel);
 	this->hasConnection = cube.hasConnection;
 	//delete items on right side of = operator
-	/*channel->Disconnect(channel->planeSet);
-	channel->Connect(cube.channel->planeSet);*/
+
+	//erasing string cube name
+	SolidBox::cubeNames.erase(cube.name);
+	//erasing string channel name
+	ConnectionChannel::channelNames.erase(cube.channel->name);
 	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr;
 	cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(cube.name);
+	//deleting string of cube name
 	SolidBox::cubeAndSideLengthMap.erase(cubeNameAndCubeItr->first); 
 	std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr;
 	cubeAndPlanesItr = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr->second);
+	//erasing planes
 	for (auto plane : cubeAndPlanesItr->second)
 	{
 		SquarePlane::planeNames.erase(plane->name);
 	}
+	//erasing cube
 	SolidBox::cubeAndPlanesMap.erase(cubeAndPlanesItr->first);
+	//erasing string cube name
 	SolidBox::cubeNameAndCubeMap.erase(cube.name);
-	SolidBox::cubeNames.erase(cube.name);
-	ConnectionChannel::channelNames.erase(cube.channel->name);
+	//auto cubeAndSideLengthItr = cubeAndSideLengthMap.find(name);
+	cubeAndSideLengthMap[name] = sideLength;
+
+		//std::set<std::string> SquarePlane::planeNames; get rid of this
+		//std::set<std::string> SolidBox::cubeNames; keep this
+	//std::map <std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>> SolidBox::cubeAndPlanesMap; map to new planes
+	//std::map<std::string, double> SolidBox::cubeAndSideLengthMap; map to new length
+	//std::map<std::string, std::shared_ptr<SolidBox>> SolidBox::cubeNameAndCubeMap; remove and add again when complete  *****
+		//std::set<std::string> ConnectionChannel::channelNames; get rid of and add back ...keep names the same?
 
 	return *this;
 }

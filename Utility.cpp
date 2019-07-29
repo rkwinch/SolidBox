@@ -124,30 +124,30 @@ void Utility::MoveASolid()
 	std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr_To;
 	cubeAndPlanesItr_To = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr_To->second); // now has iterator to 
 																					// SolidBox object and its planes
-	PrintLineDelimiter("-", 55);
+	/*PrintLineDelimiter("-", 55);
 	PrintDebugInfo(cubeNameAndCubeItr_To, cubeAndPlanesItr_To);
-	PrintLineDelimiter("-", 55);
+	PrintLineDelimiter("-", 55);*/
 
 	std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr_From;
 	cubeAndPlanesItr_From = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr_From->second); // now has iterator to 
 																						  // SolidBox object and its planes
-	PrintLineDelimiter("-", 55);
+	/*PrintLineDelimiter("-", 55);
 	PrintDebugInfo(cubeNameAndCubeItr_From, cubeAndPlanesItr_From);
-	PrintLineDelimiter("-", 55);
+	PrintLineDelimiter("-", 55);*/
 
-	cubeNameAndCubeItr_To->second = cubeNameAndCubeItr_From->second;
+	*(cubeNameAndCubeItr_To->second) = *(cubeNameAndCubeItr_From->second);
 
-	cubeAndPlanesItr_To = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr_To->second); // now has iterator to 
-																					// SolidBox object and its planes
-	PrintLineDelimiter("-", 55);
-	PrintDebugInfo(cubeNameAndCubeItr_To, cubeAndPlanesItr_To);
-	PrintLineDelimiter("-", 55);
+	//cubeAndPlanesItr_To = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr_To->second); // now has iterator to 
+	//																				// SolidBox object and its planes
+	//PrintLineDelimiter("-", 55);
+	//PrintDebugInfo(cubeNameAndCubeItr_To, cubeAndPlanesItr_To);
+	//PrintLineDelimiter("-", 55);
 
-	cubeAndPlanesItr_From = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr_From->second); // now has iterator to 
-																						  // SolidBox object and its planes
-	PrintLineDelimiter("-", 55);
-	PrintDebugInfo(cubeNameAndCubeItr_From, cubeAndPlanesItr_From);
-	PrintLineDelimiter("-", 55);
+	//cubeAndPlanesItr_From = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr_From->second); // now has iterator to 
+	//																					  // SolidBox object and its planes
+	//PrintLineDelimiter("-", 55);
+	//PrintDebugInfo(cubeNameAndCubeItr_From, cubeAndPlanesItr_From);
+	//PrintLineDelimiter("-", 55);
 }
 
 void Utility::DeleteExistingSolid()

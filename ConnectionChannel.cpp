@@ -31,15 +31,24 @@ ConnectionChannel::ConnectionChannel()
 {
 
 }
-ConnectionChannel& ConnectionChannel::operator=(const ConnectionChannel &channel)
+ConnectionChannel& ConnectionChannel::operator=(ConnectionChannel &channel)
 {
+	std::cout << "***********in conn channel =" << std::endl;
 	//don't change name
-	//this->planeSet = channel.planeSet;
-
-	*(this->cube) = *(channel.cube);
-	this->Disconnect(planeSet);
-	this->Connect(channel.planeSet);
+	//std::set<std::shared_ptr<SquarePlane>> planeSet;
+	std::set<std::shared_ptr<SquarePlane>>::iterator channelPlaneSetItr = channel.planeSet.begin();
+	for (auto plane : planeSet)
+	{
+		*plane = **(channelPlaneSetItr);
+		channelPlaneSetItr++;
+	}
 	
+	//*(this->planeSet) = *(channel.planeSet);
+
+	//*(this->cube) = *(channel.cube);
+	//this->Disconnect(planeSet);
+	//this->Connect(channel.planeSet);
+	//channel.Disconnect(planeSet);
 	//code to delete old channel
 	return *this;
 }
