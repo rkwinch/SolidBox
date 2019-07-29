@@ -96,7 +96,7 @@ void Menu::CreateShape()
 	{
 		return;
 	}
-
+	std::cout << "strInput:  " << strInput << std::endl;
 	nInput = stoi(strInput);
 
 	if (nInput == 1)

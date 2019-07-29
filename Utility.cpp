@@ -82,22 +82,20 @@ std::string Utility::SelectShapeType()
 
 	std::cout << "Type the number corresponding to your desired shape" << std::endl;
 	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
-
 	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-
+	
 	if ((strInput == "b") || (strInput == "B"))
 	{
 		return strInput;
 	}
 
 	nInput = stoi(strInput);
-
+	
 	if ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()))
 	{
-		std::cout << "Selection out of bounds.  Please try again." << std::endl;
-		SelectShapeType();
+		strInput = SelectShapeType();
 	}
-
+	
 	return strInput;
 }
 
