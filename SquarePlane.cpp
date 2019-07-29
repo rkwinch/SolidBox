@@ -94,12 +94,12 @@ void SquarePlane::SetName(std::string name)
 	this->name = name;
 }
 
-void SquarePlane::SetLength(int length)
+void SquarePlane::SetLength(double length)
 {
 	this->length = length;
 }
 
-void SquarePlane::SetHeight(int height)
+void SquarePlane::SetHeight(double height)
 {
 	this->height = height;
 }

@@ -14,6 +14,7 @@
 #include "SquarePlane.h"
 #include "SolidBox.h"
 #include "Utility.h"
+#include <typeinfo>
 
 void Utility::Run()
 {
@@ -239,54 +240,83 @@ void Utility::DebugSolidBox()
 
 void Utility::SaveAllObjects()
 {
-	try
-	{
-		CFile solidBoxFile;
-		solidBoxFile.Open(_T("SolidBox.txt"), CFile::modeCreate | CFile::modeWrite | CFile::modeNoTruncate);
-		CArchive archive(&solidBoxFile, CArchive::store);
-		archive << SolidBox::nameIDCounter << ConnectionChannel::nameIDCounter << SquarePlane::nameIDCounter;
-		archive << SolidBox::cubeVec.size();
-		archive.Close();
-		solidBoxFile.Close();
+	CFile solidBoxFile;
+	solidBoxFile.Open(_T("Box.txt"), CFile::modeCreate | CFile::modeWrite /*| CFile::modeNoTruncate*/);
+	CArchive archive(&solidBoxFile, CArchive::store);
+	archive << SolidBox::nameIDCounter << ConnectionChannel::nameIDCounter << SquarePlane::nameIDCounter;
+	archive << static_cast<int>(SolidBox::cubeVec.size());
+	/*archive.Close();
+	solidBoxFile.Close();*/
 
-		for (auto cubePtr : SolidBox::cubeVec)
+	for (auto cubePtr : SolidBox::cubeVec)
+	{
+		std::cout << cubePtr->name << " (" << std::fixed << std::setprecision(3) << cubePtr->sideLength << ")" << std::endl;
+		//SaveASolidBox(cubePtr/*, archive, solidBoxFile*/);
+		
+		//saving solidbox
+		archive << cubePtr->sideLength << cubePtr->bHasConnection;
+		int nameLength = static_cast<int>(cubePtr->GetShapeName().size());
+		archive << nameLength;
+
+		for (char i : cubePtr->GetShapeName())
 		{
-			std::cout << cubePtr->name << " (" << std::fixed << std::setprecision(3) << cubePtr->sideLength << ")" << std::endl;
-			SaveASolidBox(cubePtr/*, archive, solidBoxFile*/);
+			archive << i;
 		}
-	}
-	catch (std::exception e)
-	{
-		std::cerr << e.what() << std::endl;
 
+		//saving connection
+		nameLength = static_cast<int>(cubePtr->GetConnChannel()->GetConnName().size());
+		archive << nameLength;
+
+		for (auto i : cubePtr->GetConnChannel()->GetConnName())
+		{
+			archive << i;
+		}
+
+		for (auto squarePlanePtr : cubePtr->GetConnChannel()->GetPlaneSet())
+		{
+			//SaveASquarePlane(squarePlaneItr/*, archive, solidBoxFile*/); // takes care of all of the square planes
+			//saving squareplane
+			archive << squarePlanePtr->GetSqPlaneHeight() << squarePlanePtr->GetSqPlaneLength() << squarePlanePtr->GetNumOfEdges();
+			int nameLength = static_cast<int>(squarePlanePtr->GetSqPlaneName().size());
+			archive << nameLength;
+
+			for (auto i : squarePlanePtr->GetSqPlaneName())
+			{
+				archive << i;
+			}
+		}	
 	}
+	archive.Close();
+	solidBoxFile.Close();	
 }
 
 void Utility::SaveASolidBox(std::shared_ptr<SolidBox> solidBoxPtr/*, CArchive &archive, CFile &solidBoxFile*/)
 {
 	CFile solidBoxFile;
-	solidBoxFile.Open(_T("SolidBox.txt"), CFile::modeCreate | CFile::modeWrite | CFile::modeNoTruncate);
-	//solidBoxFile.SeekToEnd();
+	solidBoxFile.Open(_T("SolidBox.txt"), CFile::modeCreate | CFile::modeWrite /*| CFile::modeNoTruncate*/);
+	solidBoxFile.SeekToEnd();
 	CArchive archive(&solidBoxFile, CArchive::store);
 	archive << solidBoxPtr->sideLength << solidBoxPtr->bHasConnection;
 	int nameLength = static_cast<int>(solidBoxPtr->GetShapeName().size());
+	std::cout << nameLength << "namelength in saveasolidbox" << std::endl;
 	archive << nameLength;
-
+	std::cout << "letters in shapename" << std::endl;
 	for (auto i : solidBoxPtr->GetShapeName())
 	{
+		std::cout << i << std::endl;
 		archive << i;
 	}
-
-	SaveAConnectionChannel(solidBoxPtr/*, archive, solidBoxFile*/); // takes care of channel member and its associated planes
 	archive.Close();
 	solidBoxFile.Close();
+	SaveAConnectionChannel(solidBoxPtr/*, archive, solidBoxFile*/); // takes care of channel member and its associated planes
+	
 }
 
 void Utility::LoadASolidBox()
 {
 	int numOfEdges = 0;
-	int height = 0;
-	int length = 0;
+	double height = 0;
+	double length = 0;
 	char letter = 0;
 	int vecSize = 0;
 	int nameSize = 0;
@@ -294,53 +324,60 @@ void Utility::LoadASolidBox()
 	int connChannelNmIDCntr = 0;
 	int sqPlnNmIDCntr = 0;
 	std::string name = "";
+	bool hasConnection = false;
 
-	CFile solidBoxFile;
-	solidBoxFile.Open(_T("SolidBox.txt"), CFile::modeRead | CFile::typeBinary);
-	CArchive archive(&solidBoxFile, CArchive::load);
-	archive >> solidBoxNameIDCntr >> connChannelNmIDCntr >> sqPlnNmIDCntr;
-	std::cout << "box, chann, and sqpln nameIDcounters:" << solidBoxNameIDCntr << "," << connChannelNmIDCntr << "," << sqPlnNmIDCntr << "." << std::endl;
-	archive >> vecSize;
-	std::cout << "vecsize" << vecSize << "." << std::endl;
+	CFile file;
+	file.Open(_T("Box.txt"), CFile::modeRead | CFile::typeBinary);
+	CArchive ar(&file, CArchive::load);
+	ar >> solidBoxNameIDCntr >> connChannelNmIDCntr >> sqPlnNmIDCntr;
+	ar >> vecSize;
+	
 	for (int ii = 0; ii < vecSize; ++ii)
 	{
-		std::string name = "";
-		int sideLength = 0;
-		bool bHasConnection = false;
-		archive >> sideLength >> bHasConnection >> nameSize;
-		std::cout << "sideLength, bHasConnection, nameSize:" << sideLength << "," << bHasConnection << "," << nameSize << "." << std::endl;
-		for (int ii = 0; ii < nameSize; ++ii)
-		{
-			archive >> letter;
-			std::cout << "letter:" << letter << "." << std::endl;
-			name += letter;
-		}
-		std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(sideLength);
-		box->SetName(name);
-		archive >> nameSize;
+		ar >> length >> hasConnection >> nameSize;
 		name = "";
+
 		for (int ii = 0; ii < nameSize; ++ii)
 		{
-			archive >> letter;
+			ar >> letter;
 			name += letter;
 		}
+
+		std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(length);
+		box->SetName(name);
+		ar >> nameSize;
+		name = "";
+
+		for (int ii = 0; ii < nameSize; ++ii)
+		{
+			ar >> letter;
+			name += letter;
+		}
+
 		box->GetConnChannel()->SetName(name);
+
 		for (auto planePtr : box->GetConnChannel()->GetPlaneSet())
 		{
-			archive >> height >> length >> numOfEdges;
+			ar >> height >> length >> numOfEdges;
 			planePtr->SetHeight(height);
 			planePtr->SetLength(length);
 			planePtr->SetNumOfEdges(numOfEdges);
-			archive >> nameSize;
+			ar >> nameSize;
+			name = "";
+
 			for (int ii = 0; ii < nameSize; ++ii)
 			{
-				archive >> letter;
+				ar >> letter;
 				name += letter;
 			}
+
 			planePtr->SetName(name);
 		}
+
 		SolidBox::cubeVec.push_back(box);
+
 	}
+
 	SolidBox::nameIDCounter = solidBoxNameIDCntr;
 	ConnectionChannel::nameIDCounter = connChannelNmIDCntr;
 	SquarePlane::nameIDCounter = sqPlnNmIDCntr;
@@ -353,7 +390,7 @@ void Utility::SaveAConnectionChannel(std::shared_ptr<SolidBox> solidBoxPtr/*, CA
 	{
 		CFile solidBoxFile;
 		solidBoxFile.Open(_T("SolidBox.txt"), CFile::modeCreate | CFile::modeWrite | CFile::modeNoTruncate);
-		//solidBoxFile.SeekToEnd();
+		solidBoxFile.SeekToEnd();
 		CArchive archive(&solidBoxFile, CArchive::store);
 		int nameLength = static_cast<int>(solidBoxPtr->GetConnChannel()->GetConnName().size());
 		archive << nameLength;
@@ -381,8 +418,8 @@ void Utility::SaveAConnectionChannel(std::shared_ptr<SolidBox> solidBoxPtr/*, CA
 void Utility::SaveASquarePlane(std::shared_ptr<SquarePlane> planePtr/*, CArchive &archive, CFile &solidBoxFile*/)
 {
 	CFile solidBoxFile;
-	solidBoxFile.Open(_T("SolidBox.txt"), CFile::modeCreate | CFile::modeWrite | CFile::modeNoTruncate);
-	//solidBoxFile.SeekToEnd();
+	solidBoxFile.Open(_T("SolidBox.txt"), CFile::modeCreate | CFile::modeWrite /*| CFile::modeNoTruncate*/);
+	solidBoxFile.SeekToEnd();
 	CArchive archive(&solidBoxFile, CArchive::store);
 	archive << planePtr->GetSqPlaneHeight() << planePtr->GetSqPlaneLength() << planePtr->GetNumOfEdges();
 	int nameLength = static_cast<int>(planePtr->GetSqPlaneName().size());

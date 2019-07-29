@@ -37,8 +37,8 @@ private:
 	std::string name;
 	ConnectionChannel* channel;
 	void SetName(std::string name);
-	void SetLength(int length);
-	void SetHeight(int height);
+	void SetLength(double length);
+	void SetHeight(double height);
 	void SetNumOfEdges(int numOfEdges);
 };
 
