@@ -1,5 +1,5 @@
 #pragma once
-#include "stdafx.h"
+
 #include "Channel.h"
 #include <set>
 #include "SolidBox.h"
@@ -8,7 +8,7 @@ class ConnectionChannel : public Channel {
 private:
 	std::set<SolidBox> CubeSet;
 	std::set<SquarePlane> PlaneSet;
-	std::set<std::set<SquarePlane>> PlanesOfCubes;
+	//map of cubes to planes. cubes unique. plane sets don't have to be unique as of now?
 
 public:
 	ConnectionChannel();
@@ -16,12 +16,10 @@ public:
 	void Disconnect();
 	void Cleanup();
 	~ConnectionChannel();
-	void AddPlanes(SquarePlane PlaneSet);
-	void AddPlaneToSet(SquarePlane plane);
+	void AddPlanes(const std::set<SquarePlane> PlaneSet);
+	//void AddPlaneToSet(const SquarePlane& plane);
 
 };
 
-//public:
-//	virtual void Connect();
-//	virtual void Disconnect();
-//	virtual void Cleanup();
+
+
