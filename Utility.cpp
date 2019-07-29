@@ -11,7 +11,7 @@
 #include <fstream>
 #include <Windows.h>
 #include "ConnectionChannel.h"
-#include "SquarePlane.h"
+#include "RectPlane.h"
 #include "SolidBox.h"
 #include "Utility.h"
 
@@ -282,7 +282,7 @@ int Utility::SaveAllObjects()
 	// saving objects to file now
 	std::ofstream outFile;
 	outFile.open(fileName);
-	outFile << SolidBox::nameIDCounter << ";" << ConnectionChannel<SolidBox>::nameIDCounter << ";" << SquarePlane::nameIDCounter << ";";
+	outFile << SolidBox::nameIDCounter << ";" << ConnectionChannel<SolidBox>::nameIDCounter << ";" << RectPlane::nameIDCounter << ";";
 	outFile << static_cast<int>(SolidBox::cubeVec.size()) << ";\n";
 	PrintNwLnsAndLnDelimiter("-", 55);
 	std::cout << "Saving...";
@@ -347,7 +347,7 @@ void Utility::LoadAllObjects()
 
 	SolidBox::nameIDCounter = 0; // resetting nameIDCounters in case boxes were made
 	ConnectionChannel<SolidBox>::nameIDCounter = 0; // and then deleted (making SolidBox::cubeVec.size() == 0 
-	SquarePlane::nameIDCounter = 0; // and the nameIDCounters != 0)
+	RectPlane::nameIDCounter = 0; // and the nameIDCounters != 0)
 	LoadASolidBox();
 	PrintNwLnsAndLnDelimiter("-", 55);
 }
@@ -777,7 +777,7 @@ void Utility::LoadASolidBox()
 	// ensures counters are the same as when they were saved
 	SolidBox::nameIDCounter = solidBoxNameIDCntr;
 	ConnectionChannel<SolidBox>::nameIDCounter = connChannelNmIDCntr;
-	SquarePlane::nameIDCounter = sqPlnNmIDCntr;
+	RectPlane::nameIDCounter = sqPlnNmIDCntr;
 	inFile.close();
 }
 

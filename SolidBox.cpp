@@ -15,7 +15,7 @@ const int SolidBox::planesPerSolidBox = 6;
 std::vector<std::shared_ptr<SolidBox>> SolidBox::cubeVec;
 
 // default constructor 
-SolidBox::SolidBox() : channel(this)
+SolidBox::SolidBox() : m_channel(this)
 {
 	// only here for CObject
 }
@@ -27,36 +27,34 @@ SolidBox::~SolidBox()
 }
 
 // parameterized constructor
-SolidBox::SolidBox(double sideLength) : channel(this)
+SolidBox::SolidBox(double sideLength) : m_channel(this)
 {
-	bHasConnection = false; // no channel connection yet
-
-							//giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
-							//will verify by putting the name into a set and check if it properly inserts.
-	name = Utility::CreateUniqueName("cube", nameIDCounter);
-	std::set<std::shared_ptr<SquarePlane>> squarePlaneSet;
+	//giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
+	//will verify by putting the name into a set and check if it properly inserts.
+	m_stName = Utility::CreateUniqueName("cube", nameIDCounter);
+	std::set<std::shared_ptr<RectPlane<SolidBox>>> RectPlaneSet;
 
 	//making 6 planes to go with the cube
 	for (int i = 0; i < SolidBox::planesPerSolidBox; ++i)
 	{
 		std::cout << "about to make a plane with sidelength of: " << sideLength << std::endl;
-		std::shared_ptr<SquarePlane> plane = std::make_shared<SquarePlane>(sideLength, &channel);
-		squarePlaneSet.insert(plane);
+		std::shared_ptr<RectPlane<SolidBox>> plane = std::make_shared<RectPlane<SolidBox>>(sideLength, &m_channel);
+		RectPlaneSet.insert(plane);
 	}
 
-	channel.Connect(squarePlaneSet);
+	m_channel.Connect(RectPlaneSet);
 
 	//if all planes inserted correctly, then a proper ChannelConnection has been made
-	this->sideLength = sideLength;
-	bHasConnection = true;
+	this->m_dSideLength = sideLength;
+	m_bHasConnection = true;
 }
 
 // copy constructor
 SolidBox::SolidBox(SolidBox& other)
 {
 	// don't change name
-	sideLength = other.sideLength;
-	ConnectionChannel<SolidBox> channel = other.channel;
+	m_dSideLength = other.m_dSideLength;
+	ConnectionChannel<SolidBox, RectPlane<SolidBox>> channel = other.m_channel;
 	bHasConnection = other.bHasConnection; // flag for checking if the SolidBox has a connection
 
 }
@@ -65,8 +63,8 @@ SolidBox::SolidBox(SolidBox& other)
 // more like a move.  That is why this is not const. '=' is a move.
 SolidBox& SolidBox::operator=(SolidBox &cube)
 {
-	sideLength = cube.sideLength;
-	channel = cube.channel;
+	m_dSideLength = cube.m_dSideLength;
+	m_channel = cube.m_channel;
 	bHasConnection = cube.bHasConnection;
 	cube.Delete(); //**deleting items on right side of = operator**
 	return *this;
@@ -74,7 +72,7 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 
 double SolidBox::GetSideLength()
 {
-	return sideLength;
+	return m_dSideLength;
 }
 
 
@@ -95,7 +93,7 @@ void SolidBox::Delete()
 		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
 		return;
 	}
-	channel.Disconnect(); // setting planes in planeSet to null
+	m_channel.Disconnect(); // setting planes in planeSet to null
 	SolidBox::cubeVec.erase(cubeVecItr); // removing item from vector
 }
 
@@ -152,10 +150,21 @@ void SolidBox::LoadSolidBox(std::vector<std::string>::iterator &itr, const int &
 	}
 }
 
-void SolidBox::SaveASolidBox(std::ofstream &outFile)
+void SolidBox::Save(std::ofstream &outFile)
 {
-	outFile << name << ";";
-	outFile << sideLength << ";" << bHasConnection << ";";
-	channel.SaveAConnectionChannel(outFile); // takes care of channel member and its associated planes
+	outFile << m_stName << ";";
+	outFile << m_dSideLength << ";" << bHasConnection << ";";
+	m_channel.Save(outFile); // takes care of channel member and its associated planes
 	outFile << "\n";
+}
+
+std::set<std::shared_ptr<RectPlane<SolidBox>>> SolidBox::GetPlanesCopy()
+{
+	std::set<std::shared_ptr<RectPlane<SolidBox>>> planeSet;
+	for (auto planePtr : m_channel.GetPlaneSet())
+	{
+		std::shared_ptr<RectPlane<SolidBox>> copyPlane = std::make_shared<RectPlane<SolidBox>>(m_dSideLength, m_dSideLength, &m_channel);
+		planeSet.insert(copyPlane);
+	}
+	return planeSet;
 }

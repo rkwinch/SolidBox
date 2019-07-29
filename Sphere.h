@@ -18,11 +18,11 @@ public:
 	Sphere(Sphere&);
 	Sphere(double sideLength);
 	double GetRadius();
-	static std::vector<std::shared_ptr<Sphere>> cubeVec;
-	static int GetPlnsPerSphere();
+	static std::vector<std::shared_ptr<Sphere>> sphereVec;
+	static int GetSurface();
 	void Delete();
 	
 private:
-	double radius;
+	double m_dRadius;
 	static const int planesPerSphere;
 };

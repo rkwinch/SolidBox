@@ -1,18 +1,18 @@
 #pragma once
 
 #include <vector>
-#include "SquarePlane.h"
+#include "RectPlane.h"
 #include <string>
 
 //abstract.  Don't make instances of Shape.
-template<class T>
+template<class T, class  M>
 class Shape {
 
 protected:
 	static int m_nNameIDCounter; // used for naming unique cubes; initialized at the bottom of this header
 	std::string m_stName = "";
 	bool m_bHasConnection = false; // flag for checking if the shape has a connection
-	ConnectionChannel<T> m_channel;
+	ConnectionChannel<T, M> m_channel;
 
 	virtual T& operator=(T &cube) = 0;
 	static void Load(std::vector<std::string>::iterator &itr, const int &vecSize) = 0;

@@ -6,7 +6,7 @@
 #include <map>
 #include <memory>
 #include "SolidBox.h"
-#include "SquarePlane.h"
+#include "RectPlane.h"
 #include "ConnectionChannel.h"
 
 class Utility
@@ -41,7 +41,7 @@ private:
 	static void PrintSolidsInMemory();
 	static void SaveASolidBox(std::shared_ptr<SolidBox> solidBoxPtr, std::ofstream &outFile);
 	static void SaveAConnectionChannel(std::shared_ptr<SolidBox> solidBoxPtr, std::ofstream &outFile);
-	static void SaveASquarePlane(std::shared_ptr<SquarePlane> plane, std::ofstream &outFile);
+	static void SaveARectPlane(std::shared_ptr<RectPlane> plane, std::ofstream &outFile);
 	static void LoadASolidBox();
 	static bool IsOkToSave();
 	static void ViewFiles();
