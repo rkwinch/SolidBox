@@ -273,12 +273,12 @@ bool RectPrism::Move()
 
 			if (strMoveFrom == -1) return false; // user elected to go back to main menu
 
-			if ((strMoveFrom < rectPrismVecSize) || (strMoveFrom > rectPrismVecSize))
+			if ((strMoveFrom < 1) || (strMoveFrom > rectPrismVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while ((strMoveFrom < rectPrismVecSize) || (strMoveFrom > rectPrismVecSize));
+		} while ((strMoveFrom < 1) || (strMoveFrom > rectPrismVecSize));
 
 		shapeVecItr_From = std::next(shapeVecItr_From, (strMoveFrom - 1));
 
@@ -289,12 +289,12 @@ bool RectPrism::Move()
 
 			if (strMoveTo == -1) return false; // user elected to go back to main menu
 
-			if ((strMoveTo < rectPrismVecSize) || (strMoveTo > rectPrismVecSize))
+			if ((strMoveTo < 1) || (strMoveTo > rectPrismVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while ((strMoveTo < rectPrismVecSize) || (strMoveTo > rectPrismVecSize));
+		} while ((strMoveTo < 1) || (strMoveTo > rectPrismVecSize));
 
 		shapeVecItr_To = std::next(shapeVecItr_To, (strMoveTo - 1));
 

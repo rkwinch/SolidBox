@@ -17,6 +17,7 @@ private:
 	
 
 public:
+
 	static const int m_nSurfaces;
 	static std::vector<std::shared_ptr<SolidBox>> m_shapeVec;
 	static int m_nNameIDCounter;

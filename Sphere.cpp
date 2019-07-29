@@ -10,6 +10,8 @@
 #include "CurvedSurface.h"
 #include "ConnectionChannel.h"
 #include "Utility.h"
+#include "Menu.h"
+#include "Speech.h"
 
 const int Sphere::m_nSurfaces = 1;
 int Sphere::m_nNameIDCounter = 0;
@@ -127,14 +129,34 @@ void Sphere::Save(std::ofstream &outFile)
 
 void Sphere::Create()
 {
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
 	std::string strInput = "";
 	double dRadius = 0.0;
 	std::regex acceptableInputExpr("^\\s*([0-9]*\\.?[0-9]*)\\s*$"); // looking for a number (if present)
 																   // with 0-1 decimals followed by a number (if present) while allowing spaces
 	std::cout << "What would you like the radius to be? (in mm)" << std::endl;
 	std::cout << "ex: 0.125" << std::endl;
-	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-	dRadius = std::stod(strInput); // converting string input into a double
+
+	if (isSpeech)
+	{
+		do
+		{
+			dRadius = Speech::RetrieveDouble();
+
+			if (dRadius <= 0.0)
+			{
+				std::cout << "Invalid parameter.  Must be greater than zero.  Please try again." << std::endl;
+			}
+
+		} while (dRadius <= 0.0);
+	}
+	else
+	{
+		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+		dRadius = std::stod(strInput); // converting string input into a double
+	}
+	
 
 	while (dRadius == 0.0)
 	{
@@ -235,12 +257,12 @@ bool Sphere::Move()
 
 			if (strMoveFrom == -1) return false; // user elected to go back to main menu
 
-			if ((strMoveFrom < sphereVecSize) || (strMoveFrom > sphereVecSize))
+			if ((strMoveFrom < 1) || (strMoveFrom > sphereVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while ((strMoveFrom < sphereVecSize) || (strMoveFrom > sphereVecSize));
+		} while ((strMoveFrom < 1) || (strMoveFrom > sphereVecSize));
 
 		shapeVecItr_From = std::next(shapeVecItr_From, (strMoveFrom - 1));
 
@@ -251,12 +273,12 @@ bool Sphere::Move()
 
 			if (strMoveTo == -1) return false; // user elected to go back to main menu
 
-			if ((strMoveTo < sphereVecSize) || (strMoveTo > sphereVecSize))
+			if ((strMoveTo < 1) || (strMoveTo > sphereVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while ((strMoveTo < sphereVecSize) || (strMoveTo > sphereVecSize));
+		} while ((strMoveTo < 1) || (strMoveTo > sphereVecSize));
 
 		shapeVecItr_To = std::next(shapeVecItr_To, (strMoveTo - 1));
 

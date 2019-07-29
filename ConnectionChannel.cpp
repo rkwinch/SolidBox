@@ -36,7 +36,7 @@ ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
 	// allocating new memory for the copy 
 	for (auto surface : channel.m_surfaceSet)
 	{
-		std::shared_ptr<Surface> copy = surface->GetCopy();
+		std::shared_ptr<Surface> copy = surface;
 		m_surfaceSet.insert(copy);
 	}
 

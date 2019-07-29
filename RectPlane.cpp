@@ -19,6 +19,21 @@ RectPlane::RectPlane(double length, double height, ConnectionChannel* channel)
 	m_channel = channel;
 }
 
+// copy constructor
+RectPlane::RectPlane(RectPlane & rectPlane)
+{
+	// don't change name
+	if (m_stName.length() == 0)
+	{
+		m_stName = Utility::CreateUniqueName("plane", m_nNameIDCounter);
+	}
+
+	m_dLength = rectPlane.m_dLength;
+	m_dHeight = rectPlane.m_dHeight;
+	m_channel = rectPlane.m_channel;
+	CalcArea();
+}
+
 //defining the = operator for RectPlane to deep copy plane
 RectPlane& RectPlane::operator=(RectPlane& plane)
 {

@@ -22,6 +22,7 @@ public:
 	static int m_nNameIDCounter; 
 
 	RectPlane(double length, double height, ConnectionChannel* channel);
+	RectPlane(RectPlane & rectPlane);
 	RectPlane& operator=(RectPlane& plane);
 	bool operator==(const RectPlane& plane) const;
 	bool operator<(const RectPlane &plane) const;

@@ -24,12 +24,15 @@ namespace Speech {
 
 	double RetrieveDouble();
 	int RetrievePosInteger();
-	ISpRecoGrammar* InitGrammar(ISpRecoContext* recoContext);
+	ISpRecoGrammar* InitGrammarPhrase(ISpRecoContext* recoContext);
+	std::string ClampWord(std::string const &word);
+	std::string ClampPhrase(std::string const &text);
 	std::string GetText(ISpRecoContext* reco_context);
 	std::string ToNarrow(const wchar_t *s, char dfault = '?',
 		const std::locale& loc = std::locale());
 	double ConvertPhraseToDouble(std::string input);
 	int ConvertPhraseToInteger(std::string input);
-	std::string StartListening();
+	int CalculateEditDistance(std::string word1, std::string word2);
+	std::string StartListeningPhrase();
 	void FileNameConversion(std::string &fileName);
 }

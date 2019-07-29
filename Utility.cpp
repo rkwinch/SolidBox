@@ -344,7 +344,7 @@ char Utility::SaveOptions()
 	{
 		while ((strInput != "save") && (strInput != "new") && (strInput != "back"))
 		{
-			strInput = Speech::StartListening();
+			strInput = Speech::StartListeningPhrase();
 
 			for (auto character : strInput)
 			{
@@ -378,7 +378,7 @@ char Utility::LoadOptions()
 	{
 		while ((strInput != "yes") && (strInput != "no") && (strInput != "back"))
 		{
-			strInput = Speech::StartListening();
+			strInput = Speech::StartListeningPhrase();
 
 			for (auto character : strInput)
 			{
@@ -485,7 +485,7 @@ std::string Utility::PickNewFile()
 
 		while (fileName == "")
 		{
-			fileName = Speech::StartListening();
+			fileName = Speech::StartListeningPhrase();
 		}
 
 		Speech::FileNameConversion(fileName);

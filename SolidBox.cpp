@@ -52,10 +52,16 @@ SolidBox::~SolidBox()
 SolidBox::SolidBox(SolidBox& other)
 {
 	// don't change name
+	if (m_stName.length() == 0)
+	{
+		m_stName = Utility::CreateUniqueName("cube", m_nNameIDCounter);
+	}
+
 	m_dSideLength = other.m_dSideLength;
 	m_channel = other.m_channel;
 	m_bHasConnection = other.m_bHasConnection; // flag for checking if the SolidBox has a connection
-
+	CalcSA();
+	CalcVol();
 }
 
 // since it was requested that old object be discarded afterwards, this is
@@ -174,10 +180,12 @@ void SolidBox::Create()
 
 void SolidBox::PrintSolids()
 {
+	std::cout << "in print solids" << std::endl;
 	int count = 1;
 
 	for (auto cube : m_shapeVec)
 	{
+		std::cout << "in for loop in print solids" << std::endl;
 		std::cout << count << ") " << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
 		++count;
 	}
@@ -236,6 +244,7 @@ void SolidBox::Load(std::vector<std::string>::iterator &itr)
 
 bool SolidBox::Move()
 {
+	std::cout << "in move" << std::endl;
 	int strMoveFrom = 0;
 	int strMoveTo = 0;
 	int solidBoxVecSize = static_cast<int>(SolidBox::m_shapeVec.size());
@@ -256,12 +265,12 @@ bool SolidBox::Move()
 
 			if (strMoveFrom == -1) return false; // user elected to go back to main menu
 			
-			if ((strMoveFrom < solidBoxVecSize) || (strMoveFrom > solidBoxVecSize))
+			if ((strMoveFrom < 1) || (strMoveFrom > solidBoxVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while ((strMoveFrom < solidBoxVecSize) || (strMoveFrom > solidBoxVecSize));
+		} while ((strMoveFrom < 1) || (strMoveFrom > solidBoxVecSize));
 		
 		shapeVecItr_From = std::next(shapeVecItr_From, (strMoveFrom - 1));
 
@@ -272,12 +281,12 @@ bool SolidBox::Move()
 
 			if (strMoveTo == -1) return false; // user elected to go back to main menu
 
-			if ((strMoveTo < solidBoxVecSize) || (strMoveTo > solidBoxVecSize))
+			if ((strMoveTo < 1) || (strMoveTo > solidBoxVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while ((strMoveTo < solidBoxVecSize) || (strMoveTo > solidBoxVecSize));
+		} while ((strMoveTo < 1) || (strMoveTo > solidBoxVecSize));
 		
 		shapeVecItr_To = std::next(shapeVecItr_To, (strMoveTo - 1));
 

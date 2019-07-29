@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include <string>
 #include <sapi.h>
 #include <sphelper.h>
@@ -11,51 +12,61 @@
 #include <sstream>
 #include <stdexcept>
 #include <regex>
+#include <limits>
 #include "Speech.h"
 #include "Utility.h"
 
-std::string Speech::StartListening()
+std::string Speech::StartListeningPhrase()
 {
-	if (FAILED(::CoInitialize(nullptr)))
-	{
+	// Initialize COM library
+	if (FAILED(::CoInitialize(nullptr))) {
 		return "ERROR";
 	}
 
 	HRESULT hr;
 	ISpRecognizer* recognizer;
-	ISpRecoContext* recoContext;
-	ISpRecoGrammar* recoGrammar;
-	HANDLE handleEvent;
-	ULONGLONG interest;
-	std::string text = "";
+	hr = CoCreateInstance(CLSID_SpSharedRecognizer,
+		nullptr, CLSCTX_ALL, IID_ISpRecognizer,
+		reinterpret_cast<void**>(&recognizer));
 
-	hr = CoCreateInstance(CLSID_SpSharedRecognizer, nullptr, CLSCTX_ALL, IID_ISpRecognizer, reinterpret_cast<void**>(&recognizer));
+	ISpRecoContext* recoContext;
 	hr = recognizer->CreateRecoContext(&recoContext);
-	// pausing SR engine to set rules and grammars
+
+	// Disable context
 	hr = recoContext->Pause(0);
-	recoGrammar = InitGrammar(recoContext);
+
+	ISpRecoGrammar* recoGrammar = InitGrammarPhrase(recoContext);
+
 	hr = recoContext->SetNotifyWin32Event();
+
+	HANDLE handleEvent;
 	handleEvent = recoContext->GetNotifyEventHandle();
+
+	ULONGLONG interest;
 	interest = SPFEI(SPEI_RECOGNITION);
 	hr = recoContext->SetInterest(interest, interest);
+
+	// Activate Grammar
 	hr = recoGrammar->SetRuleState(ruleName1, 0, SPRS_ACTIVE);
-	// can now resume SR engine
+
+	// Enable context
 	hr = recoContext->Resume(0);
 
+	// Wait for reco
 	HANDLE handles[1];
 	handles[0] = handleEvent;
 	WaitForMultipleObjects(1, handles, FALSE, INFINITE);
-	text = GetText(recoContext);
+	std::string  text = GetText(recoContext);
+
 	recoGrammar->Release();
 	::CoUninitialize();
-	std::cout << text << std::endl;
 	return text;
 }
 
 double Speech::RetrieveDouble()
 {
 	double dNum = 0.0;
-	std::string input = StartListening();
+	std::string input = StartListeningPhrase();
 	return (dNum = ConvertPhraseToDouble(input));
 }
 
@@ -66,7 +77,7 @@ int Speech::RetrievePosInteger()
 
 	do
 	{
-		input = StartListening();
+		input = StartListeningPhrase();
 		std::cout << "input:  " << input << std::endl;
 		if (input == "back") return -1;
 
@@ -95,7 +106,6 @@ std::string Speech::GetText(ISpRecoContext* reco_context)
 	recoResult = reinterpret_cast<ISpRecoResult*>(events[0].lParam);
 	hr = recoResult->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, FALSE, &text, NULL);
 	test = ToNarrow(text);
-	std::cout << "test:  " << test << std::endl;
 	CoTaskMemFree(text);
 	return test;
 }
@@ -111,34 +121,69 @@ std::string Speech::ToNarrow(const wchar_t *s, char dfault,
 	return stm.str();
 }
 
-ISpRecoGrammar* Speech::InitGrammar(ISpRecoContext* recoContext)
+ISpRecoGrammar* Speech::InitGrammarPhrase(ISpRecoContext* recoContext)
 {
 	HRESULT hr;
 	SPSTATEHANDLE state;
+
 	ISpRecoGrammar* recoGrammar;
-
 	hr = recoContext->CreateGrammar(grammarId, &recoGrammar);
-	// sets language id     (primary language identifier (language), sublanguage identifier (country/region))
 	WORD langId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
-	// resetting grammar to US english using the language ID
 	recoGrammar->ResetGrammar(langId);
-	// retrieving grammar's rule state    
-	//-- getting rule based on ruleName, not using grammarid, making it activated by default and entry point into grammar, --
-	//--create if not exist, out parameter for state of the rule --
 	recoGrammar->GetRule(ruleName1, 0, SPRAF_TopLevel | SPRAF_Active, true, &state);
-	std::wstring words[] = { L"one", L"two", L"three", L"four", L"five", L"six", L"seven", L"eight", L"nine", L"ten" , L"quit",
-	                         L"point", L"twenty", L"back" };
-
-	 //adding words to the grammar
-	/*for (auto &item : words) 
-	{
-		recoGrammar->AddWordTransition(state, NULL, item.c_str(), L" ", SPWT_LEXICAL, 1, nullptr);
-	}*/
-	recoGrammar->LoadDictation(NULL, SPLO_STATIC);
-
-	recoGrammar->SetDictationState(SPRS_ACTIVE);
 	recoGrammar->Commit(0);
+	recoGrammar->LoadDictation(NULL, SPLO_STATIC);
+	recoGrammar->SetDictationState(SPRS_ACTIVE);
 	return recoGrammar;
+}
+
+int Speech::CalculateEditDistance(std::string word1, std::string word2) 
+{
+	std::vector<std::vector<int>> dp(word1.length() + 1);
+	for (auto &v : dp) v.resize(word2.length() + 1);
+
+	for (size_t i = 0; i <= word1.length(); i++) 
+	{
+		for (size_t j = 0; j <= word2.length(); j++) 
+		{
+			if (!i) dp[i][j] = j;
+			else if (!j) dp[i][j] = i;
+			else if (word1[i - 1] == word2[j - 1]) dp[i][j] = dp[i - 1][j - 1];
+			else dp[i][j] = 1 + (std::min)({ dp[i][j - 1], dp[i - 1][j], dp[i - 1][j - 1] });
+		}
+	}
+
+	return dp[word1.length()][word2.length()];
+}
+
+std::string Speech::ClampWord(std::string const &word) 
+{
+	std::string bestMatch = word;
+	int minEditDistance = std::numeric_limits<int>::max();
+	static std::vector<std::string> dictionary{ "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+		"nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", 
+		"eighteen", "nineteen", "twenty", "thirty", "fourty", "fifty", "sixty", "seventy", "eighty", "ninety",
+		"hundred", "thousand", "million", "point", "back", "quit", "and" };
+
+	for (auto &candidate : dictionary) {
+		auto editDist = CalculateEditDistance(word, candidate);
+		if (editDist < minEditDistance) {
+			bestMatch = candidate;
+			minEditDistance = editDist;
+		}
+	}
+
+	return bestMatch;
+}
+
+std::string Speech::ClampPhrase(std::string const &text) {
+	std::string rv;
+	std::istringstream is(text);
+	std::string word;
+	while (std::getline(is, word, ' ')) {
+		rv += ClampWord(word) + " ";
+	}
+	return std::string(rv.begin(), rv.end() - 1);
 }
 
 int Speech::ConvertPhraseToInteger(std::string input)
@@ -147,9 +192,6 @@ int Speech::ConvertPhraseToInteger(std::string input)
 	std::string word;
 	int current = 0;
 	int result = 0;
-	std::vector<std::string> strVec;
-	std::vector<std::string> trimmedVec;
-	std::string trimmedInput = "";
 	std::map<std::string, std::pair<int, int>> wordsToNumMap;
 
 	for (auto &character : input) // making sure all of the input is uniformly lowercase
@@ -165,37 +207,14 @@ int Speech::ConvertPhraseToInteger(std::string input)
 		}
 	}
 
-	if (input.find("back") != std::string::npos)
+	if ((input.find("back") != std::string::npos) || (input.find("quit") != std::string::npos))
 	{
 		return -1; // user elected return to main menu
 	}
 
-	strVec = Utility::TokenizeStringToVec(input, ' '); // tokenize into vec by a single whitespace
-
-	for (auto element : strVec) // only keeping words of interest (in units, scales, or tens)
-	{
-		auto unitsItr = find(units.begin(), units.end(), element);
-		auto scalesItr = find(scales.begin(), scales.end(), element);
-		auto tensItr = find(tens.begin(), tens.end(), element);
-
-		if ((unitsItr != units.end()) || (scalesItr != scales.end()) || (tensItr != tens.end()))
-		{
-			trimmedVec.push_back(element);
-		}
-	}
-
-	if (strVec.size() == 0)
-	{              //will use this as a return flag that input was invalid     
-		return -2; // user perhaps mumbled or said something else
-	}
-
-	for (auto element : trimmedVec) // putting back into string form
-	{
-		trimmedInput += (element + ' ');
-	}
-
-	trimmedInput.erase(trimmedInput.begin() + trimmedInput.size() - 1); // removing last space
-
+	input = ClampPhrase(input);
+	wordsToNumMap["and"] = std::make_pair(1, 0);
+	
 	for (size_t i = 0; i < units.size(); ++i)
 	{
 		wordsToNumMap[units[i]] = std::make_pair(1, i);
@@ -211,7 +230,7 @@ int Speech::ConvertPhraseToInteger(std::string input)
 		wordsToNumMap[scales[i]] = std::make_pair(pow(10, i ? i * 3 : 2), 0);
 	}
 
-	strStream.str(trimmedInput);
+	strStream.str(input);
 
 	while (std::getline(strStream, word, ' '))
 	{
@@ -239,9 +258,6 @@ double Speech::ConvertPhraseToDouble(std::string input)
 	double result = 0;
 	double deci = 0;
 	int deciIndex = 0;
-	std::vector<std::string> strVec;
-	std::vector<std::string> trimmedVec;
-	std::string trimmedInput = "";
 	std::map<std::string, std::pair<int, int>> wordsToNumMap;
 
 	for (auto &character : input) // making sure all of the input is uniformly lowercase
@@ -250,33 +266,14 @@ double Speech::ConvertPhraseToDouble(std::string input)
 	}
 
 	for (size_t i = 0; i < input.size(); ++i) // removing all other characters that aren't letters, such as
-	{                                         // nyphens, commas, periods, etc
+	{                                         // hyphens, commas, periods, etc
 		if (!isalpha(input[i]))
 		{
 			input[i] = ' ';
 		}
 	}
-
-	strVec = Utility::TokenizeStringToVec(input, ' ');
-
-	for (auto element : strVec) // only keeping words of interest (in units, scales, tens, or is "point")
-	{
-		auto unitsItr = find(units.begin(), units.end(), element);
-		auto scalesItr = find(scales.begin(), scales.end(), element);
-		auto tensItr = find(tens.begin(), tens.end(), element);
-
-		if ((unitsItr != units.end()) || (scalesItr != scales.end()) || (tensItr != tens.end()) || element == "point")
-		{
-			trimmedVec.push_back(element);
-		}
-	}
-
-	for (auto element : trimmedVec)
-	{
-		trimmedInput += (element + ' ');
-	}
-
-	trimmedInput.erase(trimmedInput.begin() + trimmedInput.size() - 1); // removing last space
+	input = Speech::ClampPhrase(input);
+	wordsToNumMap["and"] = std::make_pair(1, 0);
 
 	for (size_t i = 0; i < units.size(); ++i)
 	{
@@ -293,7 +290,7 @@ double Speech::ConvertPhraseToDouble(std::string input)
 		wordsToNumMap[scales[i]] = std::make_pair(pow(10, i ? i * 3 : 2), 0);
 	}
 
-	strStream.str(trimmedInput);
+	strStream.str(input);
 
 	while (std::getline(strStream, word, ' '))
 	{

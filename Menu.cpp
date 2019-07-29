@@ -29,6 +29,7 @@ bool Menu::GetIsSpeechFlag()
 
 Menu* Menu::GetInstance(const bool &speechFlag)
 {
+	std::cout << "in get instance. speechflag:  " << speechFlag << std::endl;
 	static Menu m_instance(speechFlag); // used to help enforce only one instance of Menu
 	return &m_instance;
 }
@@ -113,6 +114,7 @@ void Menu::Run()
 
 Menu::Menu(bool speechFlag) : isSpeech(speechFlag)
 {
+	std::cout << "in constructor.  speechflag:  " << speechFlag << std::endl;
 	// empty for now
 }
 
@@ -322,8 +324,8 @@ void Menu::CopyExistingSolid()
 	{                                                                 // advance iterator by the # given by user
 		auto shapeVecItr = SolidBox::m_shapeVec.begin() + nInput - 1; // (subtract 1 since user sees values starting at 1 and our index starts at 0)                                               
 		// make a new SolidBox with same sidelength as selection
-		std::shared_ptr<SolidBox> box = *shapeVecItr;
-		SolidBox::m_shapeVec.push_back(box);
+		std::shared_ptr<SolidBox> boxPtr = std::make_shared<SolidBox>(**shapeVecItr);
+		SolidBox::m_shapeVec.push_back(boxPtr);
 	}
 	else if (static_cast<size_t>(nInput) <= (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size())) // user chose a Sphere. 
 	{                                                         // wrote it this way so that more shapes can be easily added after spheres
@@ -360,6 +362,7 @@ void Menu::MoveASolid()
 		return;
 	}
 
+	std::cout << "Please select the shape type that you want to move." << std::endl;
 	strShapeType = Utility::SelectAvailableShapeType(2);
 
 	if (strShapeType.size() == 0) return;
