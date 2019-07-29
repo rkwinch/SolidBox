@@ -3,7 +3,6 @@
 #include "SquarePlane.h"
 #include <iostream>
 #include <set>
-//#include <utility>
 #include "SolidBox.h"
 #include "Utility.h"
 #include <afx.h>
@@ -18,51 +17,42 @@ void ConnectionChannel::Serialize(CArchive& ar) {
 
 	if (ar.IsStoring())
 	{
-		//ar << empID << empName << age;
+		//ex: ar << empID << empName << age;
 	}
 
 	else
 	{
-		//ar >> empID >> empName >> age;
+		//ex: ar >> empID >> empName >> age;
 	}
 
 }
+
 ConnectionChannel::ConnectionChannel()
 {
 
 }
+
 ConnectionChannel& ConnectionChannel::operator=(ConnectionChannel &channel)
 {
-	std::cout << "***********in conn channel =" << std::endl;
 	//don't change name
-	//std::set<std::shared_ptr<SquarePlane>> planeSet;
 	std::set<std::shared_ptr<SquarePlane>>::iterator channelPlaneSetItr = channel.planeSet.begin();
 	for (auto plane : planeSet)
 	{
 		*plane = **(channelPlaneSetItr);
 		channelPlaneSetItr++;
 	}
-	
-	//*(this->planeSet) = *(channel.planeSet);
 
-	//*(this->cube) = *(channel.cube);
-	//this->Disconnect(planeSet);
-	//this->Connect(channel.planeSet);
-	//channel.Disconnect(planeSet);
-	//code to delete old channel
 	return *this;
 }
 
 // parameterized constructor
 ConnectionChannel::ConnectionChannel(std::shared_ptr<SolidBox> cube)
 {
-    name = Utility::CreateUniqueName("connectionChannel", channelNames, nameIDCounter);
+	name = Utility::CreateUniqueName("connectionChannel", channelNames, nameIDCounter);
 	channelNames.insert(name);
-
-	// will get planeSet as a SolidBox is being constructed
-
 	this->cube = cube; // want the cube member here to have same address of cube
-	                   // it is constructed from
+					   // it is constructed from
+					   // **will get planeSet as a SolidBox is being constructed**
 }
 
 //copy constructor
@@ -78,7 +68,7 @@ ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
 	{
 		std::shared_ptr<SquarePlane> copyPlanePtr = std::make_shared<SquarePlane>(planePtr->GetSqPlaneHeight(), std::shared_ptr<ConnectionChannel>(this));
 		this->planeSet.insert(copyPlanePtr);
-	}	
+	}
 
 	//allocating new memory for a copy of the cube constructed with the same sideLength
 	std::shared_ptr<SolidBox> copyCube = std::make_shared<SolidBox>(this->cube->GetSideLength());
@@ -94,7 +84,6 @@ void ConnectionChannel::Connect(std::set<std::shared_ptr<SquarePlane>> planeSet)
 	}
 }
 
-//template <class T>
 void ConnectionChannel::Disconnect(std::set<std::shared_ptr<SquarePlane>> planeSet)
 {
 	for (auto plane : planeSet)
@@ -104,14 +93,15 @@ void ConnectionChannel::Disconnect(std::set<std::shared_ptr<SquarePlane>> planeS
 }
 
 //cleans up memory when disconnecting a channel
-//template <class T>
 void ConnectionChannel::Cleanup(SquarePlane* plane)
 {
+	//implement later!
 }
 
 //destructor
 ConnectionChannel::~ConnectionChannel()
 {
+
 }
 
 std::set<std::shared_ptr<SquarePlane>> ConnectionChannel::GetPlaneSet()

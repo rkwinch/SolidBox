@@ -13,17 +13,18 @@ SquarePlane::SquarePlane()
 {
 
 }
+
 void SquarePlane::Serialize(CArchive& ar) {
 	CObject::Serialize(ar);
 
 	if (ar.IsStoring())
 	{
-		//ar << empID << empName << age;
+		//ex: ar << empID << empName << age;
 	}
 
 	else
 	{
-		//ar >> empID >> empName >> age;
+		//ex: ar >> empID >> empName >> age;
 	}
 
 }
@@ -53,12 +54,9 @@ bool SquarePlane::operator==(const SquarePlane& plane) const
 //defining the = operator for SquarePlane to deep copy plane
 SquarePlane& SquarePlane::operator=(const SquarePlane& plane)
 {
-	std::cout << "***************in sq plane =" << std::endl;
 	this->height = plane.height;
 	this->length = plane.length;
 	this->numOfEdges = plane.numOfEdges;
-	//*(this->channel) = *(plane.channel);
-	//code to delete old one
 	return *this;
 }
 
