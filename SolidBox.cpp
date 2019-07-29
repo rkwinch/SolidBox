@@ -2,7 +2,6 @@
 #include <set>
 #include <iostream>
 #include <fstream>
-#include <memory>
 #include <algorithm>
 #include <vector>
 #include "SolidBox.h"
@@ -10,39 +9,35 @@
 #include "ConnectionChannel.h"
 #include "Utility.h"
 
-// default constructor 
-SolidBox::SolidBox() : m_channel(this)
+const int SolidBox::m_nSurfaces = 1;
+
+// parameterized constructor
+SolidBox::SolidBox(double sideLength)
 {
-	// only here for CObject
+	//giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
+	//will verify by putting the name into a set and check if it properly inserts.
+	m_stName = Utility::CreateUniqueName("cube", m_nNameIDCounter);
+	m_nNumOfSurfaces = 6;
+	std::set<std::shared_ptr<Surface>> rectPlaneSet;
+
+	//making 6 planes to go with the cube
+	for (int i = 0; i < SolidBox::m_nNumOfSurfaces; ++i)
+	{
+		std::shared_ptr<RectPlane> plane = std::make_shared<RectPlane>(sideLength, sideLength, &m_channel);
+		rectPlaneSet.insert(plane);
+	}
+
+	m_channel.Connect(rectPlaneSet);
+
+	//if all planes inserted correctly, then a proper ChannelConnection has been made
+	m_dSideLength = sideLength;
+	m_bHasConnection = true;
 }
 
 // destructor
 SolidBox::~SolidBox()
 {
 	// don't need to do anything here since memory is handled via smart pointers
-}
-
-// parameterized constructor
-SolidBox::SolidBox(double sideLength) : m_channel(this)
-{
-	//giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
-	//will verify by putting the name into a set and check if it properly inserts.
-	m_stName = Shape::CreateUniqueName("cube", m_nNameIDCounter);
-	std::set<std::shared_ptr<RectPlane<SolidBox>>> RectPlaneSet;
-
-	//making 6 planes to go with the cube
-	for (int i = 0; i < SolidBox::m_nNumOfSurfaces; ++i)
-	{
-		std::cout << "about to make a plane with sidelength of: " << sideLength << std::endl;
-		std::shared_ptr<RectPlane<SolidBox>> plane = std::make_shared<RectPlane<SolidBox>>(sideLength, sideLength, &m_channel);
-		RectPlaneSet.insert(plane);
-	}
-
-	m_channel.Connect(RectPlaneSet);
-
-	//if all planes inserted correctly, then a proper ChannelConnection has been made
-	this->m_dSideLength = sideLength;
-	m_bHasConnection = true;
 }
 
 // copy constructor
@@ -66,14 +61,50 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 	return *this;
 }
 
+void SolidBox::Delete()
+{
+	std::vector<std::shared_ptr<SolidBox>>::iterator shapeVecItr = SolidBox::m_shapeVec.begin();
+	// [&] is take by reference, arg type is shared ptr of surface type (solidbox or sphere at this point), return type is bool, 
+	// predicate is check if the shapes are equivalent (same name by == operator)
+	shapeVecItr = std::find_if(SolidBox::m_shapeVec.begin(), SolidBox::m_shapeVec.end(), [&](std::shared_ptr<SolidBox> shape)->bool {return *shape == *this; });
+
+	if (shapeVecItr == SolidBox::m_shapeVec.end())
+	{
+		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
+		return;
+	}
+
+	m_channel.Disconnect(); // setting surfaces in surfaceSet to null
+	SolidBox::m_shapeVec.erase(shapeVecItr); // removing item from vector
+}
+
 double SolidBox::GetSideLength()
 {
 	return m_dSideLength;
 }
 
-ConnectionChannel<SolidBox, RectPlane<SolidBox>>* SolidBox::GetConnChannel()
+std::set<std::shared_ptr<Surface>> SolidBox::GetSurfacesCopy()
 {
-	return &m_channel;
+	std::set<std::shared_ptr<Surface>> surfaceSet;
+	for (auto surface : m_channel.GetSurfaceSet())
+	{
+		std::shared_ptr<RectPlane> copy = std::make_shared<RectPlane>(m_dSideLength, m_dSideLength, &m_channel);
+		surfaceSet.insert(copy);
+	}
+	return surfaceSet;
+}
+
+std::vector<std::shared_ptr<SolidBox>> SolidBox::GetShapeVec()
+{
+	return m_shapeVec;
+}
+
+void SolidBox::Save(std::ofstream &outFile)
+{
+	outFile << m_stName << ";";
+	outFile << m_dSideLength << ";" << m_bHasConnection << ";";
+	m_channel.Save(outFile); // takes care of channel member and its associated surfaces
+	outFile << "\n";
 }
 
 void SolidBox::Create()
@@ -99,35 +130,13 @@ void SolidBox::Create()
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 }
 
-std::string SolidBox::GetConnName()
-{
-	return m_channel.GetName();
-}
-
-void SolidBox::Delete()
-{
-	std::vector<std::shared_ptr<SolidBox>>::iterator shapeVecItr = m_shapeVec.begin();
-	// [&] is take by reference, arg type is shared ptr of surface type (solidbox or sphere at this point), return type is bool, 
-	// predicate is check if the shapes are equivalent (same name by == operator)
-	shapeVecItr = std::find_if(m_shapeVec.begin(), m_shapeVec.end(), [&](std::shared_ptr<SolidBox> shape)->bool {return *shape == *this; });
-
-	if (shapeVecItr == m_shapeVec.end())
-	{
-		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
-		return;
-	}
-
-	m_channel.Disconnect(); // setting surfaces in surfaceSet to null
-	m_shapeVec.erase(shapeVecItr); // removing item from vector
-}
-
 void SolidBox::PrintSolids()
 {
 	int count = 1;
 
 	for (auto cube : SolidBox::m_shapeVec)
 	{
-		std::cout << count << ") " << cube->m_stName << std::endl;
+		std::cout << count << ") " << cube->GetName() << std::endl;
 		++count;
 	}
 }
@@ -175,38 +184,13 @@ void SolidBox::Load(std::vector<std::string>::iterator &itr, const int &vecSize)
 			nNumOfEdges = stoi(*itr);
 			itr++; std::cout << "in loadsolidbox plane. last should be a ':' " << (*itr) << std::endl;
 			// for notes on why using dynamic cast here, refer to load fxn in Sphere
-			auto rectPlanePtr = dynamic_cast<RectPlane<SolidBox>*>(planePtr.get());
+			auto rectPlanePtr = dynamic_cast<RectPlane*>(planePtr.get());
 			rectPlanePtr->SetName(stName);
 			stName = ""; // resetting name
 			rectPlanePtr->SetHeight(dHeight);
 			rectPlanePtr->SetLength(dLength);
-			rectPlanePtr->SetNumOfEdges(nNumOfEdges);
 		}
 		itr++; // skipping ":" delimiter
 		SolidBox::m_shapeVec.push_back(box); // solid box object is completed now.
 	}
-}
-
-void SolidBox::Save(std::ofstream &outFile)
-{
-	outFile << m_stName << ";";
-	outFile << m_dSideLength << ";" << m_bHasConnection << ";";
-	m_channel.Save(outFile); // takes care of channel member and its associated surfaces
-	outFile << "\n";
-}
-
-std::set<std::shared_ptr<RectPlane<SolidBox>>> SolidBox::GetSurfacesCopy() override 
-{
-	std::set<std::shared_ptr<RectPlane<SolidBox>>> surfaceSet;
-	for (auto surface : m_channel.GetSurfaceSet())
-	{
-		std::shared_ptr<RectPlane<SolidBox>> copy = std::make_shared<RectPlane<SolidBox>>(m_dSideLength, m_dSideLength, &m_channel);
-		surfaceSet.insert(copy);
-	}
-	return surfaceSet;
-}
-
-int SolidBox::GetSurfaceCount()
-{
-	return SolidBox::m_nNumOfSurfaces;
 }

@@ -13,7 +13,6 @@
 #include "Utility.h"
 //#include "ConnectionChannel.h" // figure out what to do since need to have nameidcounter
 
-template<class T, class M>
 class Shape;
 
 
@@ -130,7 +129,7 @@ void Menu::DeleteExistingSolid()
 		std::cout << "or press 'b' to go back to the menu." << std::endl;
 		Utility::PrintAllSolids();
 		std::cout << std::endl;
-		strInput = Shape<SolidBox, RectPlane<SolidBox>>::InputInVecVal(strInput, acceptableInputExpr, Shape<SolidBox, RectPlane<SolidBox>>::m_shapeVec);
+		strInput = Utility::InputInVecVal(strInput, acceptableInputExpr, SolidBox::m_shapeVec.size());
 
 		if ((strInput == "b") || (strInput == "B"))
 		{
@@ -145,7 +144,7 @@ void Menu::DeleteExistingSolid()
 		std::cout << "or press 'b' to go back to the menu." << std::endl;
 		Utility::PrintAllSolids();
 		std::cout << std::endl;
-		strInput = Shape<Sphere, CurvedSurface<Sphere>>::InputInVecVal(strInput, acceptableInputExpr, Shape<Sphere, CurvedSurface<Sphere>>::m_shapeVec);
+		strInput = Utility::InputInVecVal(strInput, acceptableInputExpr, Sphere::m_shapeVec.size());
 
 		if ((strInput == "b") || (strInput == "B"))
 		{
@@ -202,17 +201,17 @@ void Menu::CopyExistingSolid()
 																	// allowing for leading and trailing whitespaces
 		SolidBox::PrintSolids();
 		std::cout << std::endl;
-		strInput = Shape<SolidBox, RectPlane<SolidBox>>::InputInVecVal(strInput, acceptableInputExpr, SolidBox::m_shapeVec);
+		strInput = Utility::InputInVecVal(strInput, acceptableInputExpr, SolidBox::m_shapeVec.size());
 
 		if ((strInput == "b") || (strInput == "B"))
 		{
 			return;
 		}
 
-		auto shapeVecItr = Shape<SolidBox, RectPlane<SolidBox>>::m_shapeVec.begin();
+		auto shapeVecItr = SolidBox::m_shapeVec.begin();
 		shapeVecItr = std::next(shapeVecItr, (stoi(strInput) - 1)); // advance iterator by the # given by user 
 		std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>((dynamic_cast<SolidBox*>((*shapeVecItr).get()))->GetSideLength());
-		Shape<SolidBox, RectPlane<SolidBox>>::m_shapeVec.push_back(box);
+		SolidBox::m_shapeVec.push_back(box);
 	}
 	else if (nInput == 2) // user chose Sphere
 	{
@@ -221,17 +220,17 @@ void Menu::CopyExistingSolid()
 		std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$"); // looking for same parameters as nInput == 1
 		Sphere::PrintSolids();
 		std::cout << std::endl;
-		strInput = Shape<Sphere, CurvedSurface<Sphere>>::InputInVecVal(strInput, acceptableInputExpr, Sphere::m_shapeVec);
+		strInput = Utility::InputInVecVal(strInput, acceptableInputExpr, Sphere::m_shapeVec.size());
 
 		if ((strInput == "b") || (strInput == "B"))
 		{
 			return;
 		}
 
-		auto shapeVecItr = Shape<Sphere, CurvedSurface<Sphere>>::m_shapeVec.begin();
+		auto shapeVecItr = Sphere::m_shapeVec.begin();
 		shapeVecItr = std::next(shapeVecItr, (stoi(strInput) - 1)); // advance iterator by the # given by user 
 		std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>((dynamic_cast<Sphere*>((*shapeVecItr).get()))->GetRadius());
-		Shape<Sphere, CurvedSurface<Sphere>>::m_shapeVec.push_back(sphere);
+		Sphere::m_shapeVec.push_back(sphere);
 	}
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 }
@@ -281,7 +280,7 @@ void Menu::MoveASolid()
 
 		//------Get cube selections from user----------------
 		//moveFrom cube:
-		strMoveFrom = Shape<SolidBox, RectPlane<SolidBox>>::InputInVecVal(strMoveFrom, acceptableInputExpr, SolidBox::m_shapeVec);
+		strMoveFrom = Utility::InputInVecVal(strMoveFrom, acceptableInputExpr, SolidBox::m_shapeVec.size());
 
 		if ((strMoveFrom == "b") | (strMoveFrom == "B")) // user elected to go back to main menu
 		{
@@ -291,7 +290,7 @@ void Menu::MoveASolid()
 		auto shapeVecItr_From = SolidBox::m_shapeVec.begin();
 		shapeVecItr_From = std::next(shapeVecItr_From, (stoi(strMoveFrom) - 1)); // find if name given is the name of a cube made 
 		//moveTo cube:
-		strMoveTo = Shape<SolidBox, RectPlane<SolidBox>>::InputInVecVal(strMoveTo, acceptableInputExpr, SolidBox::m_shapeVec);
+		strMoveTo = Utility::InputInVecVal(strMoveTo, acceptableInputExpr, SolidBox::m_shapeVec.size());
 
 		if ((strMoveTo == "b") | (strMoveTo == "B")) // user elected to go back to main menu
 		{
@@ -325,7 +324,7 @@ void Menu::MoveASolid()
 
 		//------Get sphere selections from user----------------
 		//moveFrom sphere:
-		strMoveFrom = Shape<Sphere, CurvedSurface<Sphere>>::InputInVecVal(strMoveFrom, acceptableInputExpr, Sphere::m_shapeVec);
+		strMoveFrom = Utility::InputInVecVal(strMoveFrom, acceptableInputExpr, Sphere::m_shapeVec.size());
 
 		if ((strMoveFrom == "b") | (strMoveFrom == "B")) // user elected to go back to main menu
 		{
@@ -335,7 +334,7 @@ void Menu::MoveASolid()
 		auto shapeVecItr_From = Sphere::m_shapeVec.begin();
 		shapeVecItr_From = std::next(shapeVecItr_From, (stoi(strMoveFrom) - 1)); // find if name given is the name of a cube made 
 		//moveTo sphere:
-		strMoveTo = Shape<Sphere, CurvedSurface<Sphere>>::InputInVecVal(strMoveTo, acceptableInputExpr, Sphere::m_shapeVec);
+		strMoveTo = Utility::InputInVecVal(strMoveTo, acceptableInputExpr, Sphere::m_shapeVec.size());
 
 		if ((strMoveTo == "b") | (strMoveTo == "B")) // user elected to go back to main menu
 		{
@@ -379,12 +378,12 @@ void Menu::DebugSolidBox()
 	{
 		SolidBox::PrintSolids();
 		std::cout << std::endl;
-		strInput = Shape<SolidBox, RectPlane<SolidBox>>::InputInVecVal(strInput, acceptableInputExpr, Shape<SolidBox, RectPlane<SolidBox>>::m_shapeVec);
+		strInput = Utility::InputInVecVal(strInput, acceptableInputExpr, SolidBox::m_shapeVec.size());
 		if ((strInput == "b") || (strInput == "B"))
 		{
 			return;
 		}
-		auto shapeVecItr = Shape<SolidBox, RectPlane<SolidBox>>::m_shapeVec.begin() + (stoi(strInput) - 1); // advance iterator by the # given by user 
+		auto shapeVecItr = SolidBox::m_shapeVec.begin() + (stoi(strInput) - 1); // advance iterator by the # given by user 
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		PrintCubeDebugInfo(shapeVecItr);
 	}
@@ -392,7 +391,7 @@ void Menu::DebugSolidBox()
 	{
 		Sphere::PrintSolids();
 		std::cout << std::endl;
-		strInput = Shape<Sphere, CurvedSurface<Sphere>>::InputInVecVal(strInput, acceptableInputExpr, Shape<Sphere, CurvedSurface<Sphere>>::m_shapeVec);
+		strInput = Utility::InputInVecVal(strInput, acceptableInputExpr, Sphere::m_shapeVec.size());
 		if ((strInput == "b") || (strInput == "B"))
 		{
 			return;
@@ -448,25 +447,24 @@ int Menu::SaveAllObjects()
 	// saving objects to file now
 	std::ofstream outFile;
 	outFile.open(fileName);
-	outFile << SolidBox::m_nNameIDCounter << ";" /*<< ConnectionChannel<SolidBox, RectPlane<SolidBox>>::m_nNameIDCounter */ << ";" << RectPlane<SolidBox>::m_nNameIDCounter << ";";
+	outFile << SolidBox::m_nNameIDCounter << ";" /*<< ConnectionChannel<SolidBox, RectPlane<SolidBox>>::m_nNameIDCounter */ << ";" << RectPlane::m_nNameIDCounter << ";";
 	outFile << static_cast<int>(SolidBox::m_shapeVec.size()) << ";\n";
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 	std::cout << "Saving...";
 
-	for (auto cubePtr : Shape<SolidBox, RectPlane<SolidBox>>::m_shapeVec)
+	for (auto cubePtr : SolidBox::m_shapeVec)
 	{
-		auto cube = dynamic_cast<SolidBox*>(cubePtr.get());
 		if (count == 0)
 		{
-			std::cout << cube->GetShapeName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+			std::cout << cubePtr->GetName() << " (" << std::fixed << std::setprecision(3) << cubePtr->GetSideLength() << ")" << std::endl;
 			++count;
 		}
 		else
 		{
-			std::cout << std::setw(9) << "" << std::left << cube->GetShapeName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+			std::cout << std::setw(9) << "" << std::left << cubePtr->GetName() << " (" << std::fixed << std::setprecision(3) << cubePtr->GetSideLength() << ")" << std::endl;
 		}
 
-		cube->Save(outFile); // does the actual saving of the objects
+		cubePtr->Save(outFile); // does the actual saving of the objects
 	}
 
 	outFile.close();
@@ -476,7 +474,7 @@ int Menu::SaveAllObjects()
 
 void Menu::LoadAllObjects()
 {
-	if (Shape<SolidBox, RectPlane<SolidBox>>::m_shapeVec.size() != 0)
+	if (SolidBox::m_shapeVec.size() != 0)
 	{
 		std::string strInput = "";
 		char cInput = 0;
@@ -505,17 +503,17 @@ void Menu::LoadAllObjects()
 		}
 
 		// deleting old data
-		for (auto element : Shape<SolidBox, RectPlane<SolidBox>>::m_shapeVec)
+		for (auto element : SolidBox::m_shapeVec)
 		{
 			auto elementPtr = dynamic_cast<SolidBox*>(element.get());
 			elementPtr->GetConnChannel()->Disconnect();
 		}
-		Shape<SolidBox, RectPlane<SolidBox>>::m_shapeVec.clear();
+		SolidBox::m_shapeVec.clear();
 	}
 
 	SolidBox::m_nNameIDCounter = 0; // resetting nameIDCounters in case boxes were made
 	//ConnectionChannel<SolidBox, RectPlane<SolidBox>>::m_nNameIDCounter = 0; // and then deleted (making SolidBox::cubeVec.size() == 0 
-	RectPlane<SolidBox>::m_nNameIDCounter = 0; // and the nameIDCounters != 0)
+	RectPlane::m_nNameIDCounter = 0; // and the nameIDCounters != 0)
 	LoadASolidBox();
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 }
@@ -535,13 +533,13 @@ void Menu::WelcomeAndOptions()
 	std::cout << "8)  Load" << std::endl;
 }
 
-void Menu::PrintCubeInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlane<SolidBox>>>>::iterator cubeVecItr)
+void Menu::PrintCubeInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
 {
 	auto cubePtr = dynamic_cast<SolidBox*>((*cubeVecItr).get());
 	std::string strHeader = "Cube:";
 	Utility::PrintHeader(strHeader);
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "SolidBox name:" << cubePtr->GetShapeName() << std::endl;
+	std::cout << std::left << std::setw(18) << "SolidBox name:" << cubePtr->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
 	std::cout << std::left << std::setw(18) << "hasConnection:" << cubePtr->GetHasConnection() << std::endl;
 	Utility::PrintChar(' ', 5);
@@ -551,7 +549,7 @@ void Menu::PrintCubeInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlane<S
 	std::cout << std::endl;
 }
 
-void Menu::PrintChannelInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlane<SolidBox>>>>::iterator cubeVecItr)
+void Menu::PrintChannelInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
 {
 	auto cubePtr = dynamic_cast<SolidBox*>((*cubeVecItr).get());
 	std::string strHeader = "Channel:";
@@ -559,7 +557,7 @@ void Menu::PrintChannelInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlan
 	Utility::PrintChar(' ', 5);
 	std::cout << std::left << std::setw(27) << "Channel name:" << cubePtr->GetConnChannel()->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Associated SolidBox name:" << cubePtr->GetConnChannel()->GetShape()->GetShapeName() << std::endl;
+	std::cout << std::left << std::setw(27) << "Associated SolidBox name:" << cubePtr->GetConnChannel()->GetShape()->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
 	std::cout << std::left << std::setw(27) << "Associated planes' names:" << std::endl;
 
@@ -572,14 +570,15 @@ void Menu::PrintChannelInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlan
 	std::cout << std::endl;
 }
 
-void Menu::PrintPlanesInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlane<SolidBox>>>>::iterator cubeVecItr)
+void Menu::PrintPlanesInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
 {
 	std::string strHeader = "Planes:";
 	Utility::PrintHeader(strHeader);
-	auto cubePtr = dynamic_cast<SolidBox*>((*cubeVecItr).get());
+	auto cubePtr = dynamic_cast<SolidBox*>((*cubeVecItr).get()); // std::shared_ptr<Shape> to SolidBox*
 
-	for (auto planePtr : cubePtr->GetConnChannel()->GetSurfaceSet())
+	for (auto plane : cubePtr->GetConnChannel()->GetSurfaceSet())
 	{
+		auto planePtr = dynamic_cast<RectPlane*>(plane.get()); // std::shared_ptr<Surface> to RectPlane*
 		Utility::PrintChar(' ', 5);
 		std::cout << std::left << std::setw(26) << "Plane name:" << planePtr->GetName() << std::endl;
 		Utility::PrintChar(' ', 5);
@@ -594,7 +593,7 @@ void Menu::PrintPlanesInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlane
 	}
 }
 
-void Menu::PrintCubeDebugInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlane<SolidBox>>>>::iterator cubeVecItr)
+void Menu::PrintCubeDebugInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
 {
 	PrintCubeInfo(cubeVecItr);
 	PrintChannelInfo(cubeVecItr);
@@ -654,7 +653,7 @@ void Menu::LoadASolidBox()
 	// ensures counters are the same as when they were saved
 	SolidBox::m_nNameIDCounter = solidBoxNameIDCntr;
 	//ConnectionChannel<SolidBox, RectPlane<SolidBox>>::m_nNameIDCounter = connChannelNmIDCntr;
-	RectPlane<SolidBox>::m_nNameIDCounter = sqPlnNmIDCntr;
+	RectPlane::m_nNameIDCounter = sqPlnNmIDCntr;
 	inFile.close();
 }
 

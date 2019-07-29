@@ -5,13 +5,6 @@
 #include <vector>
 
 class SolidBox;
-class Sphere;
-template<class T, class M>
-class Shape;
-template<class T>
-class RectPlane;
-template<class T>
-class CurvedSurface;
 
 class Menu {
 
@@ -37,11 +30,12 @@ private:
 	Menu(); // private because want to control when it is instantiated for Singleton purposes 
 	~Menu();
 	void WelcomeAndOptions();
-	void PrintCubeDebugInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlane<SolidBox>>>>::iterator cubeVecItr);
-	void PrintCubeInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlane<SolidBox>>>>::iterator cubeVecItr);
-	void PrintChannelInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlane<SolidBox>>>>::iterator cubeVecItr);
-	void PrintPlanesInfo(std::vector<std::shared_ptr<Shape<SolidBox, RectPlane<SolidBox>>>>::iterator cubeVecItr);
+	void PrintCubeDebugInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr);
+	void PrintCubeInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr);
+	void PrintChannelInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr);
+	void PrintPlanesInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr);
 	void LoadASolidBox();
 	void RetrieveInitialParams(int &solidBoxNameIDCntr, int &connChannelNmIDCntr, int &sqPlnNmIDCntr, int &vecSize, std::vector<std::string>::iterator &itr);
 };
+
 

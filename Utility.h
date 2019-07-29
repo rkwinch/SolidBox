@@ -1,13 +1,13 @@
 #pragma once
 
 #include <string>
-#include <set>
+#include <vector>
 #include <regex>
 
 class Utility {
 
 public:
-	
+
 	static void PrintAllSolids();
 	static std::string SelectShapeType();
 	static std::vector<std::string> TokenizeStringToVec(std::string, char delimiter);
@@ -24,5 +24,6 @@ public:
 	static bool FileExists(std::string fileName);
 	static std::string PickNewFile();
 	static int NumOfFilesAvail();
+	static std::string CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter);
+	static std::string InputInVecVal(std::string strInput, std::regex acceptableInputExpr, int shapeVecSize);
 };
-

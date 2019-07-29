@@ -13,7 +13,6 @@
 #include "SolidBox.h"
 #include "Sphere.h"
 
-template<class T, class M>
 class ConnectionChannel;
 
 bool Utility::ValidateInput(std::string strInput, std::regex acceptableInputExpr)
@@ -105,7 +104,7 @@ std::string Utility::SelectShapeType()
 void Utility::PrintAllSolids()
 {
 	int count = 1;
-	
+
 	if (SolidBox::m_shapeVec.size() != 0)
 	{
 		std::string strHeader = "SolidBox name (length of each side in mm)";
@@ -113,7 +112,7 @@ void Utility::PrintAllSolids()
 
 		for (auto cube : SolidBox::m_shapeVec)
 		{
-			std::cout << cube->GetShapeName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+			std::cout << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
 		}
 		std::cout << std::endl;
 	}
@@ -127,7 +126,7 @@ void Utility::PrintAllSolids()
 
 		for (auto sphere : Sphere::m_shapeVec)
 		{
-			std::cout << sphere->GetShapeName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
+			std::cout << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
 		}
 		std::cout << std::endl;
 	}
@@ -315,11 +314,45 @@ std::vector<std::string> Utility::TokenizeStringToVec(std::string str, char deli
 	char* nextToken = NULL;
 	char *p = strtok_s(myString, myDelimiter, &nextToken);
 
-	while (p) 
+	while (p)
 	{
 		vec.push_back(p);
 		p = strtok_s(NULL, myDelimiter, &nextToken);
 	}
-	
+
 	return vec;
+}
+
+std::string Utility::CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter)
+{
+	std::string strName = "";
+	strName = strNamePrefix + std::to_string(++nNameIDCounter);
+	return strName;
+}
+
+// getting user input and validating input based on if the shape exists...helper fxn
+std::string Utility::InputInVecVal(std::string strInput, std::regex acceptableInputExpr, int shapeVecSize)
+{
+	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+
+	if ((strInput == "b") | (strInput == "B")) // user elected to go back to main menu
+	{
+		return "b";
+	}
+
+	// check if shape exists
+	while ((size_t(stoi(strInput)) > static_cast<size_t>(shapeVecSize)) || (stoi(strInput) < 1))
+	{
+		std::cout << "Selection out of bounds.  Please try again or press 'b' to go" << std::endl;
+		std::cout << "to the main menu." << std::endl;
+		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+
+		if ((strInput == "b") | (strInput == "B")) // user elected to go back to main menu
+		{
+			return "b";
+		}
+
+	}
+
+	return strInput;
 }

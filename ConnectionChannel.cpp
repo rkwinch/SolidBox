@@ -1,35 +1,23 @@
+#include <set>
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <algorithm>
 #include "ConnectionChannel.h"
 #include "Shape.h"
-#include "SquarePlane.h"
-#include <iostream>
-#include <set>
-#include "SolidBox.h"
+#include "Surface.h"
+#include "Menu.h"
 #include "Utility.h"
-#include <afx.h>
-#include <memory>
-#include <vector>
 
-IMPLEMENT_SERIAL(ConnectionChannel, CObject, 0)
-int ConnectionChannel::nameIDCounter = 1;
+int ConnectionChannel::m_nNameIDCounter = 0;
 
-void ConnectionChannel::Serialize(CArchive& ar) {
-	CObject::Serialize(ar);
-
-	if (ar.IsStoring())
-	{
-		//ex: ar << empID << empName << age;
-	}
-
-	else
-	{
-		//ex: ar >> empID >> empName >> age;
-	}
-
-}
-
-ConnectionChannel::ConnectionChannel()
+//parameterized constructor
+ConnectionChannel::ConnectionChannel(Shape* shape)
 {
-	// only here because of CObject
+	m_stName = Utility::CreateUniqueName("connectionChannel", m_nNameIDCounter);
+	m_shape = shape; // want the shape member here to have same address of shape
+					 // it is constructed from 
+	// **will get surfaceSet as a shape is being constructed**
 }
 
 //destructor
@@ -38,97 +26,100 @@ ConnectionChannel::~ConnectionChannel()
 	// don't need to do anything here since memory is handled via smart pointers
 }
 
-// parameterized constructor
-ConnectionChannel::ConnectionChannel(SolidBox* cube)
-{
-	name = Utility::CreateUniqueName("connectionChannel", nameIDCounter);
-	this->cube = cube; // want the cube member here to have same address of cube
-					   // it is constructed from 
-	// **will get planeSet as a SolidBox is being constructed**
-}
-
-//copy constructor
+//copy constructor    (new = old)
 ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
 {
 	// new name for copy constructor was requested (will not copy current name)
 	// (will probably not want to call copy constructor.  pass by reference instead)
-	std::string name = Utility::CreateUniqueName("cube", nameIDCounter);
+	m_stName = Utility::CreateUniqueName("channel", m_nNameIDCounter);
 
-	// allocating new memory for the copy using the length (same as height for SquarePlane
-	// implementation) of a SquarePlane* in the set of channel
-	for (auto planePtr : planeSet)
+	// allocating new memory for the copy 
+	for (auto surface : channel.m_surfaceSet)
 	{
-		std::shared_ptr<SquarePlane> copyPlanePtr = std::make_shared<SquarePlane>(planePtr->GetSqPlaneHeight(), this);
-		this->planeSet.insert(copyPlanePtr);
+		std::shared_ptr<Surface> copy = surface->GetCopy();
+		m_surfaceSet.insert(copy);
 	}
 
-	//setting cube ptr
-	cube = channel.cube;
+	//setting shape ptr
+	m_shape = channel.m_shape;
 }
 
-
+//operator =
 ConnectionChannel& ConnectionChannel::operator=(ConnectionChannel &channel)
 {
 	//don't change name
-	std::set<std::shared_ptr<SquarePlane>>::iterator channelPlaneSetItr = channel.planeSet.begin();
-	for (auto plane : planeSet)
+	std::set<std::shared_ptr<Surface>>::iterator surfaceSetItr = m_surfaceSet.begin();
+
+	for (auto surface : m_surfaceSet)
 	{
-		*plane = **(channelPlaneSetItr);
-		++channelPlaneSetItr;
+		*surface = **(surfaceSetItr);
+		++surfaceSetItr;
 	}
 
 	return *this;
 }
 
+//operator ==
 bool ConnectionChannel::operator==(const ConnectionChannel& channel) const
 {
-	return (name == channel.name);
+	return (m_stName == channel.m_stName);
 }
 
+//operator <
 bool ConnectionChannel::operator<(const ConnectionChannel& channel) const
 {
-	return (name < channel.name);
+	return (m_stName < channel.m_stName);
 }
 
 //adding a plane to the connection
-void ConnectionChannel::Connect(std::set<std::shared_ptr<SquarePlane>> planeSet)
+void ConnectionChannel::Connect(std::set<std::shared_ptr<Surface>> surfaceSet)
 {
-	for (auto plane : planeSet)
+	for (auto surface : surfaceSet)
 	{
-		this->planeSet.insert(plane);
+		m_surfaceSet.insert(surface);
 	}
 }
 
-void ConnectionChannel::Disconnect(std::set<std::shared_ptr<SquarePlane>> planeSet)
+//sets the planes to null, effectively "disconnecting them from the ConnectionChannel
+void ConnectionChannel::Disconnect()
 {
-	for (auto plane : planeSet)
+	for (auto surface : m_surfaceSet)
 	{
-		plane = nullptr;
+		surface = nullptr;
 	}
 }
 
 //cleans up memory when disconnecting a channel
-void ConnectionChannel::Cleanup(SquarePlane* plane)
+void ConnectionChannel::Cleanup()
 {
-	//not really needed since using shared_ptr for SquarePlanes
-}
-
-std::set<std::shared_ptr<SquarePlane>> ConnectionChannel::GetPlaneSet()
-{
-	return planeSet;
-}
-
-std::string ConnectionChannel::GetConnName()
-{
-	return name;
-}
-
-SolidBox* ConnectionChannel::GetSolidBox()
-{
-	return cube;
+	//not really needed since using shared_ptr for surfaces
 }
 
 void ConnectionChannel::SetName(std::string name)
 {
-	this->name = name;
+	m_stName = name;
+}
+
+std::string ConnectionChannel::GetName()
+{
+	return this->m_stName;
+}
+
+std::set<std::shared_ptr<Surface>> ConnectionChannel::GetSurfaceSet()
+{
+	return this->m_surfaceSet;
+}
+
+Shape* ConnectionChannel::GetShape()
+{
+	return m_shape;
+}
+void ConnectionChannel::Save(std::ofstream &outFile)
+{
+	outFile << m_stName << ";";
+
+	for (auto surface : m_surfaceSet) // can be RectPlane or CurvedSurface
+	{
+		surface->Save(outFile); // takes care of all of the surfaces
+	}
 }
