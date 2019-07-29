@@ -17,10 +17,12 @@ class Utility
 {
 public:
 	static void Run();
+	static bool ValidateMenuInput(std::string input);
+	static void Utility::DebugSolidBox();
 private:
 	static bool ValidateSideLengthInput(std::string input);
 	static void CreateSolidBox();
 	static void WelcomeAndOptions();
-	static bool ValidateMenuInput(std::string input);
+	static char MenuInputToChar(std::string input);
 	
 };

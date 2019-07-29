@@ -6,6 +6,7 @@
 int main()
 {
 	Utility::Run();
+	//Utility::ValidateMenuInput("  q   ");
 	
 	system("pause");
 	return 0;

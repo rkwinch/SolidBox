@@ -4,18 +4,24 @@
 #include <set>
 #include "SquarePlane.h"
 
-class ConnectionChannel : public Channel {
+class ConnectionChannel /*: public Channel*/ {
 private:
-	std::set<SquarePlane*> PlaneSet;
+	std::set<SquarePlane*> planeSet;
+	std::string name;
 	
 
 public:
+	std::string GetConnName();
+	bool operator==(const ConnectionChannel& channel) const;
+	bool operator<(const ConnectionChannel& channel) const;
 	ConnectionChannel();
-	void Connect();
-	void Disconnect();
-	void Cleanup();
+	//template <class T>
+	void Connect(SquarePlane* plane) /*override*/;
+	//template <class T>
+	void Disconnect(SquarePlane* plane) /*override*/;
+	//template <class T>
+	void Cleanup(SquarePlane* plane) /*override*/;
 	~ConnectionChannel();
-	void AddPlane(SquarePlane* plane); // sets PlaneSet with a set of SquarePlanes
 	std::set<SquarePlane*> GetPlaneSet();
 	
 

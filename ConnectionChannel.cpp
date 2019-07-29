@@ -15,20 +15,25 @@
 //constructor
 ConnectionChannel::ConnectionChannel()
 {
+	name = "ConnectionChannel1"; //TAKE OUT LATER!!!
+}
+
+//adding a plane to the connection
+//template <class T>
+void ConnectionChannel::Connect(SquarePlane* plane)
+{
+	planeSet.insert(plane);
+}
+
+//template <class T>
+void ConnectionChannel::Disconnect(SquarePlane* plane)
+{
 	
 }
 
-
-void ConnectionChannel::Connect()
-{
-}
-
-void ConnectionChannel::Disconnect()
-{
-}
-
 //cleans up memory when disconnecting a channel
-void ConnectionChannel::Cleanup()
+//template <class T>
+void ConnectionChannel::Cleanup(SquarePlane* plane)
 {
 }
 
@@ -37,16 +42,25 @@ ConnectionChannel::~ConnectionChannel()
 {
 }
 
-//adding a plane to the connection
-void ConnectionChannel::AddPlane(SquarePlane* plane)
-{
-	PlaneSet.insert(plane);
-}
+
+
 
 std::set<SquarePlane*> ConnectionChannel::GetPlaneSet()
 {
-	return PlaneSet;
+	return planeSet;
 }
 
+std::string ConnectionChannel::GetConnName()
+{
+	return name;
+}
 
+bool ConnectionChannel::operator==(const ConnectionChannel& channel) const
+{
+	return (this->name == channel.name);
+}
 
+bool ConnectionChannel::operator<(const ConnectionChannel& channel) const
+{
+	return (this->name < channel.name);
+}

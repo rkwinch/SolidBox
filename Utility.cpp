@@ -4,6 +4,7 @@
 #include <limits>
 #include <string>
 #include <regex>
+#include <ctype.h>
 
 //solid is moved to other solid the previous solid should be removed from the memory.
 //
@@ -31,9 +32,16 @@ void Utility::CreateSolidBox()
 	} 
 	sideLength = std::stod(input);
 	SolidBox box(sideLength);
+	SolidBox::AddCubeToMap(box);
+	
 }
 
-bool Utility::ValidateSideLengthInput(std::string input)
+void Utility::DebugSolidBox()
+{
+
+}
+
+bool Utility::ValidateSideLengthInput(std::string input) // MAKE SIMPLER LATER!!!!!
 {
 	int validInputCounter = 0;
 	int decimalCounter = 0;
@@ -70,19 +78,24 @@ bool Utility::ValidateSideLengthInput(std::string input)
 
 bool Utility::ValidateMenuInput(std::string input)
 {
-	std::regex acceptableInputExpr([1-8] or q or Q);
-	if (input.length() != 1)
+	if (input.length() == 0)
 	{
-		std::cin.clear();
-		std::cout << "Invalid input.  Please try again." << std::endl;
 		return false;
 	}
-	return true;
+	std::regex acceptableInputExpr("^\\s*([1-8|q|Q])\\s*$"); // looking for 1-8 or q or Q
+	                                                         // allowing for leading and trailing whitespaces
+	std::smatch match;
+	
+	if (std::regex_match(input, match, acceptableInputExpr))
+	{
+		return true;	
+	}
+	return false;
 }
 
 void Utility::WelcomeAndOptions()
 {
-	std::cout << "Welcome to Solidbox.  What would you like to do?" << std::endl;
+	std::cout << "What would you like to do?" << std::endl;
 	std::cout << "(enter a number or press 'q' to quit)\n\n" << std::endl;
 	std::cout << "1)  Create a solid box" << std::endl;
 	std::cout << "2)  Delete a solid box" << std::endl;
@@ -98,13 +111,31 @@ void Utility::Run()
 {
 	bool isValid = false;
 	std::string input = "";
-	
-	while (!isValid || input != "q")
+	char cInput = 0;
+	std::cout << "Welcome to SolidBox." << std::endl;
+	while (tolower(cInput) != 'q')
 	{
 		WelcomeAndOptions();
 		getline(std::cin, input);
-		//std::cout << "input in run:  " << input << std::endl;
 		isValid = ValidateMenuInput(input);
+		while (!isValid)
+		{
+			std::cout << "Please enter valid input  ";
+			getline(std::cin, input);
+			isValid = ValidateMenuInput(input);
+		}
+		cInput = MenuInputToChar(input);
 		//write code for mapping fxns(?) to numbers and rest of driver!!
+		if (cInput == '1')
+		{
+			CreateSolidBox();
+		}
 	}
+}
+
+char Utility::MenuInputToChar(std::string input)
+{
+	std::regex acceptableInputExpr("^\\s*([1-8|q|Q])\\s*$");
+	std::string result = std::regex_replace(input, acceptableInputExpr, "$1");
+	return result[0];
 }
