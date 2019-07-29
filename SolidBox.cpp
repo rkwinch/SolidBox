@@ -107,18 +107,8 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 {
 	sideLength = cube.sideLength;
 	channel = cube.channel;
-	bHasConnection = cube.bHasConnection;
-
-	//**deleting items on right side of = operator**
-	//erasing cube
-	std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr = cubeVec.begin();
-
-	                                                       // [&] is take by reference, arg type is shared ptr of solidbox (box), return type is bool, 
-	                                                       // predicate is check if the SolidBoxes are equivalent (same name by == operator)
-	cubeVecItr = std::find_if(cubeVec.begin(), cubeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return *box == cube; });
-	cubeVec.erase(cubeVecItr);
-	//**end of deleting items from right of =**
-
+	bHasConnection = cube.bHasConnection;                                                      
+	cube.Delete(); //**deleting items on right side of = operator**
 	return *this;
 }
 
@@ -152,3 +142,17 @@ void SolidBox::SetName(std::string name)
 	this->name = name;
 }
 
+void SolidBox::Delete()
+{
+	std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr = cubeVec.begin();
+	                                                      // [&] is take by reference, arg type is shared ptr of solidbox (box), return type is bool, 
+														  // predicate is check if the SolidBoxes are equivalent (same name by == operator)
+	cubeVecItr = std::find_if(cubeVec.begin(), cubeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return *box == *this; });
+	if (cubeVecItr == cubeVec.end())
+	{
+		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
+		return;
+	}
+	channel.Disconnect(channel.planeSet); // setting planes in planeSet to null
+	SolidBox::cubeVec.erase(cubeVecItr); // removing item from vector
+}

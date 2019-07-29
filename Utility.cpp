@@ -104,7 +104,7 @@ void Utility::DeleteExistingSolid()
 	}
 
 	auto cubeVecItr = SolidBox::cubeVec.begin() + (stoi(strInput) - 1); // advance iterator by the # given by user 
-	SolidBox::cubeVec.erase(cubeVecItr);
+	(**cubeVecItr).Delete(); // dereference twice (first for iterator, second for shared ptr)
 }
 
 void Utility::ShowSolidsInMemory()
@@ -193,7 +193,6 @@ void Utility::MoveASolid()
 
 	auto cubeVecItr_From = SolidBox::cubeVec.begin();
 	cubeVecItr_From = std::next(cubeVecItr_From, (stoi(strMoveFrom) - 1)); // find if name given is the name of a cube made 
-
 	//moveTo cube:
 	strMoveTo = InputInMapVal(strMoveTo, acceptableInputExpr);
 
@@ -204,7 +203,7 @@ void Utility::MoveASolid()
 
 	auto cubeVecItr_To = SolidBox::cubeVec.begin();
 	cubeVecItr_To = std::next(cubeVecItr_To, (stoi(strMoveTo) - 1)); // find if name given is the name of a cube made 
-
+	//check if trying to move to the same cube
 	if (strMoveFrom == strMoveTo)
 	{
 		std::cout << "You cannot move from and to the same cube.  Please try again." << std::endl;
@@ -239,38 +238,41 @@ void Utility::DebugSolidBox()
 	PrintNwLnsAndLnDelimiter("-", 55);
 }
 
-void Utility::SaveAllObjects()
+int Utility::SaveAllObjects()
 {
 	int count = 0;
 	char cInput = 0;
 	std::string fileName = "";
+	//if no boxes to save, return and don't save
 	if (!IsOkToSave())
 	{
 		std::cout << "There are no solid boxes to save." << std::endl;
-		return;
+		return 0;
 	}
+	// view current files in memory and get input from the user to go to main menu,
+	// save a new file, or replace an existing file
 	ViewFiles();
 	cInput = SaveOptions();
+
 	if (tolower(cInput) == 'b')
 	{
-		return;
+		return 0;
 	}
 	else if (tolower(cInput) == 's')
 	{
-		fileName = PickFileToOverWrite();
+		fileName = PickFile();
+		if (fileName.length() == 0) // user elected to go back to the main menu
+		{
+			return 0;
+		}
 	}
 	else if (cInput == 'n')
 	{
-		std::cout << "Please type the name (no extension) of the new file" << std::endl;
-		std::cout << "For example, \"myFile\" would be acceptable (no quotes)" << std::endl;
-		std::regex acceptableInputExpr("^\\s*([a-zA-Z0-9_]*)\\s*$");
-		fileName = GetAndValidateInput(acceptableInputExpr);
-		std::cout << fileName << std::endl;
-		fileName += ".txt";
+		fileName = PickNewFile();
 	}
-	//check if there are files present;
-
+	// saving objects to file now
 	CFile solidBoxFile;
+
 	solidBoxFile.Open(fileName.c_str(), CFile::modeCreate | CFile::modeWrite);
 	CArchive archive(&solidBoxFile, CArchive::store);
 	archive << SolidBox::nameIDCounter << ConnectionChannel::nameIDCounter << SquarePlane::nameIDCounter;
@@ -290,136 +292,60 @@ void Utility::SaveAllObjects()
 			std::cout << std::setw(9) << "" << std::left << cubePtr->name << " (" << std::fixed << std::setprecision(3) << cubePtr->sideLength << ")" << std::endl;
 		}
 
-		SaveASolidBox(cubePtr, archive, solidBoxFile);
+		SaveASolidBox(cubePtr, archive, solidBoxFile); // does the actual saving of the objects
 	}
 
 	archive.Close();
 	solidBoxFile.Close();
 	PrintNwLnsAndLnDelimiter("-", 55);
-}
-
-void Utility::SaveASolidBox(std::shared_ptr<SolidBox> solidBoxPtr, CArchive &archive, CFile &solidBoxFile)
-{
-	archive << solidBoxPtr->sideLength << solidBoxPtr->bHasConnection;
-	int nameLength = static_cast<int>(solidBoxPtr->GetShapeName().size());
-	archive << nameLength;
-
-	for (auto i : solidBoxPtr->GetShapeName())
-	{
-		archive << i;
-	}
-
-	SaveAConnectionChannel(solidBoxPtr, archive, solidBoxFile); // takes care of channel member and its associated planes
-}
-
-void Utility::SaveAConnectionChannel(std::shared_ptr<SolidBox> solidBoxPtr, CArchive &archive, CFile &solidBoxFile)
-{
-	int nameLength = static_cast<int>(solidBoxPtr->GetConnChannel()->GetConnName().size());
-	archive << nameLength;
-
-	for (auto i : solidBoxPtr->GetConnChannel()->GetConnName())
-	{
-		archive << i;
-	}
-
-	for (auto squarePlaneItr : solidBoxPtr->GetConnChannel()->GetPlaneSet())
-	{
-		SaveASquarePlane(squarePlaneItr, archive, solidBoxFile); // takes care of all of the square planes
-	}
-}
-
-void Utility::SaveASquarePlane(std::shared_ptr<SquarePlane> planePtr, CArchive &archive, CFile &solidBoxFile)
-{
-	archive << planePtr->GetSqPlaneHeight() << planePtr->GetSqPlaneLength() << planePtr->GetNumOfEdges();
-	int nameLength = static_cast<int>(planePtr->GetSqPlaneName().size());
-	archive << nameLength;
-
-	for (auto i : planePtr->GetSqPlaneName())
-	{
-		archive << i;
-	}
+	return 1;
 }
 
 void Utility::LoadAllObjects()
 {
-	LoadASolidBox();
-}
-
-void Utility::LoadASolidBox()
-{
-	int numOfEdges = 0;
-	double height = 0;
-	double length = 0;
-	char letter = 0;
-	int vecSize = 0;
-	int nameSize = 0;
-	int solidBoxNameIDCntr = 0;
-	int connChannelNmIDCntr = 0;
-	int sqPlnNmIDCntr = 0;
-	std::string name = "";
-	bool hasConnection = false;
-
-	CFile file;
-	file.Open(_T("Box.txt"), CFile::modeRead | CFile::typeBinary);
-	CArchive ar(&file, CArchive::load);
-	ar >> solidBoxNameIDCntr >> connChannelNmIDCntr >> sqPlnNmIDCntr;
-	ar >> vecSize;
-
-	//getting members for solidbox(es)
-	for (int ii = 0; ii < vecSize; ++ii)
+	if (SolidBox::cubeVec.size() != 0)
 	{
-		ar >> length >> hasConnection >> nameSize;
-		name = ""; // resetting name for boxes if there is more than one solid box
+		std::string strInput = "";
+		char cInput = 0;
+		std::regex acceptableInputExpr("^\\s*([bByYnN])\\s*$"); // looking for single character that is b, B, y, Y, n, or N
+		std::cout << "Do you want to save your current data (will be overwritten) before loading a file?" << std::endl;
+		std::cout << "Press 'y' to save your data before loading, 'n' to overwrite the current data with a file," << std::endl;
+		std::cout << "or 'b' to go back to the main menu" << std::endl;
+		strInput = GetAndValidateInput(acceptableInputExpr);
+		cInput = strInput[0];
 
-		//getting cube name
-		for (int ii = 0; ii < nameSize; ++ii)
+		if (tolower(cInput) == 'b')
 		{
-			ar >> letter;
-			name += letter;
+			return;
 		}
-
-		//constructing a solid box with given length and setting other params
-		std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(length);
-		box->SetName(name);
-		ar >> nameSize;
-		name = ""; // resetting name
-
-		//getting connectionchannel name
-		for (int ii = 0; ii < nameSize; ++ii)
+		else if (tolower(cInput) == 'y')
 		{
-			ar >> letter;
-			name += letter;
-		}
-
-		box->GetConnChannel()->SetName(name);
-
-		//getting and setting members for square planes
-		for (auto planePtr : box->GetConnChannel()->GetPlaneSet())
-		{
-			ar >> height >> length >> numOfEdges;
-			planePtr->SetHeight(height);
-			planePtr->SetLength(length);
-			planePtr->SetNumOfEdges(numOfEdges);
-			ar >> nameSize;
-			name = ""; // resetting name
-
-			for (int ii = 0; ii < nameSize; ++ii) // reading in sq plane name
+			if (!SaveAllObjects())
 			{
-				ar >> letter;
-				name += letter;
+				return;
 			}
 
-			planePtr->SetName(name);
 		}
-
-		SolidBox::cubeVec.push_back(box); // solid box object is completed now.
+		else if (tolower(cInput) == 'n')
+		{
+			//do nothing here since deleting and loading data will occur below
+		}
+	
+		// deleting old data
+		for (auto element : SolidBox::cubeVec)
+		{
+			element->channel.Disconnect(element->channel.planeSet);
+		}
+		SolidBox::cubeVec.clear();
 	}
 
-	// ensures counters are the same as when they were saved
-	SolidBox::nameIDCounter = solidBoxNameIDCntr;
-	ConnectionChannel::nameIDCounter = connChannelNmIDCntr;
-	SquarePlane::nameIDCounter = sqPlnNmIDCntr;
+	SolidBox::nameIDCounter = 1; // resetting nameIDCounters in case boxes were made
+	ConnectionChannel::nameIDCounter = 1; // and then deleted (making SolidBox::cubeVec.size() == 0 
+	SquarePlane::nameIDCounter = 1; // and the nameIDCounters != 1)
+	LoadASolidBox();
+	PrintNwLnsAndLnDelimiter("-", 55);
 }
+
 
 //---------------------helper functions below--------------------------------------
 void Utility::WelcomeAndOptions()
@@ -638,7 +564,7 @@ bool Utility::IsOkToSave() // if no solids have been made, return false
 	return (SolidBox::cubeVec.size() > 0);
 }
 
-int Utility::ViewFiles()
+void Utility::ViewFiles()
 {   // checking for txt files in current directory
 	WIN32_FIND_DATA file;
 	HANDLE searchHandle = FindFirstFile("*.txt", &file);
@@ -663,11 +589,69 @@ int Utility::ViewFiles()
 		} while (FindNextFile(searchHandle, &file));
 
 		FindClose(searchHandle);
-		return count; // return # of files
 	}
 	else
 	{
-		throw std::exception("Invalid handle in Utility::ViewFiles");
+		std::cout << "No files in memory" << std::endl;
+	}
+}
+int Utility::NumOfFilesAvail()
+{
+	WIN32_FIND_DATA file;
+	HANDLE searchHandle = FindFirstFile("*.txt", &file);
+	int count = 0;
+	if (searchHandle != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			++count;
+
+		} while (FindNextFile(searchHandle, &file));
+
+		FindClose(searchHandle);
+	}
+	return count; // return # of files
+}
+
+void Utility::SaveASolidBox(std::shared_ptr<SolidBox> solidBoxPtr, CArchive &archive, CFile &solidBoxFile)
+{
+	archive << solidBoxPtr->sideLength << solidBoxPtr->bHasConnection;
+	int nameLength = static_cast<int>(solidBoxPtr->GetShapeName().size());
+	archive << nameLength;
+
+	for (auto i : solidBoxPtr->GetShapeName())
+	{
+		archive << i;
+	}
+
+	SaveAConnectionChannel(solidBoxPtr, archive, solidBoxFile); // takes care of channel member and its associated planes
+}
+
+void Utility::SaveAConnectionChannel(std::shared_ptr<SolidBox> solidBoxPtr, CArchive &archive, CFile &solidBoxFile)
+{
+	int nameLength = static_cast<int>(solidBoxPtr->GetConnChannel()->GetConnName().size());
+	archive << nameLength;
+
+	for (auto i : solidBoxPtr->GetConnChannel()->GetConnName())
+	{
+		archive << i;
+	}
+
+	for (auto squarePlaneItr : solidBoxPtr->GetConnChannel()->GetPlaneSet())
+	{
+		SaveASquarePlane(squarePlaneItr, archive, solidBoxFile); // takes care of all of the square planes
+	}
+}
+
+void Utility::SaveASquarePlane(std::shared_ptr<SquarePlane> planePtr, CArchive &archive, CFile &solidBoxFile)
+{
+	archive << planePtr->GetSqPlaneHeight() << planePtr->GetSqPlaneLength() << planePtr->GetNumOfEdges();
+	int nameLength = static_cast<int>(planePtr->GetSqPlaneName().size());
+	archive << nameLength;
+
+	for (auto i : planePtr->GetSqPlaneName())
+	{
+		archive << i;
 	}
 }
 
@@ -680,32 +664,40 @@ char Utility::SaveOptions()
 	std::cout << "Press 's' to save to an existing file (overwrite)," << std::endl;
 	std::cout << "press 'n' to save to a new file," << std::endl;
 	std::cout << " or press 'b' to go back to the main menu.\n" << std::endl;
-	std::regex acceptableInputExpr("^\\s*(s|S|n|N|b|B)\\s*$");
+	std::regex acceptableInputExpr("^\\s*([sSnNbB])\\s*$");
 	strInput = GetAndValidateInput(acceptableInputExpr);
 	cInput = strInput[0];
 	return cInput;
 }
 	
-std::string Utility::PickFileToOverWrite()
+std::string Utility::PickFile()
 {
+	char cInput = 0;
 	std::string strInput = "";
 	int numOfFiles = 0;
 	int fileSelection = 0;
 	WIN32_FIND_DATA file;
 	HANDLE searchHandle = FindFirstFile("*.txt", &file);
-	std::regex acceptableInputExpr("^\\s*([1-9]*)\\s*$");
+	std::regex acceptableInputExpr("^\\s*([1-9]*|b|B)\\s*$");
 
-	std::cout << "Please select a number that corresponds to the file" << std::endl;
-	std::cout << "you wish to overwrite" << std::endl;
+	std::cout << "Please select a number that corresponds to the file or press 'b' to go to the main menu" << std::endl;
 	strInput = GetAndValidateInput(acceptableInputExpr);
-	numOfFiles = ViewFiles();
+	cInput = strInput[0];
+
+	if (tolower(cInput) == 'b')
+	{
+		return strInput;
+	}
+	ViewFiles();
+	numOfFiles = NumOfFilesAvail();
 	fileSelection = stoi(strInput);
 
 	if ((fileSelection < 1) || (fileSelection > numOfFiles))
 	{
 		std::cout << "Invalid selection.  Please enter a valid selection" << std::endl;
 		strInput = GetAndValidateInput(acceptableInputExpr);
-		numOfFiles = ViewFiles();
+		ViewFiles();
+		numOfFiles = NumOfFilesAvail();
 		fileSelection = stoi(strInput);
 	}
 
@@ -714,13 +706,12 @@ std::string Utility::PickFileToOverWrite()
 		for (int ii = 1; ii < fileSelection; ++ii) // starting at 1 so you don't go to next file with 
 		{                                          // FindNextFile if there's only one file or make rest
 			FindNextFile(searchHandle, &file);     // of the files off by one (even if more than 1 file)
-			std::cout << "files searching:  " << file.cFileName << std::endl;
 		}
 	}
 	else
 	{
 		std::cout << "A problem has occurred.  No such file in memory" << std::endl;
-		return nullptr;
+		return (strInput = "");
 	}
 
 	std::string fileName(file.cFileName);
@@ -728,7 +719,149 @@ std::string Utility::PickFileToOverWrite()
 	return fileName;
 }
 
+bool Utility::FileExists(std::string fileName)
+{
+	bool isFound = false;
+	WIN32_FIND_DATA file;
+	HANDLE searchHandle = FindFirstFile(fileName.c_str(), &file);
+	if (searchHandle != INVALID_HANDLE_VALUE)
+	{
+		isFound = true; // matching file found
+	}
+	FindClose(searchHandle);
+	return isFound;
+}
 
+std::string Utility::PickNewFile()
+{
+	std::string fileName = "";
+	std::cout << "Please type the name (no extension) of the new file" << std::endl;
+	std::cout << "For example, \"myFile\" would be acceptable (no quotes)" << std::endl;
+	std::regex acceptableInputExpr("^\\s*([a-zA-Z0-9_]*)\\s*$");
+	fileName = GetAndValidateInput(acceptableInputExpr);
+	fileName += ".txt";
+	if (FileExists(fileName))
+	{
+		std::cout << fileName << " already exists.  Please make another selection." << std::endl;
+		PickNewFile();
+	}
+	return fileName;
+}
+
+void Utility::DeleteBox(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
+{
+	cubeVecItr = std::find_if(SolidBox::cubeVec.begin(), SolidBox::cubeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return *box == **cubeVecItr; });
+	if (cubeVecItr == SolidBox::cubeVec.end())
+	{
+		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
+		return;
+	}
+	(*cubeVecItr)->channel.Disconnect((*cubeVecItr)->channel.planeSet); // setting planes in planeSet to null
+	SolidBox::cubeVec.erase(cubeVecItr); // removing item from vector
+}
+
+void Utility::LoadASolidBox()
+{
+	int numOfEdges = 0;
+	double height = 0;
+	double length = 0;
+	char letter = 0;
+	int vecSize = 0;
+	int nameSize = 0;
+	int solidBoxNameIDCntr = 0;
+	int connChannelNmIDCntr = 0;
+	int sqPlnNmIDCntr = 0;
+	std::string name = "";
+	bool hasConnection = false;
+	std::string strInput = "";
+	char cInput = 0;
+
+	ViewFiles();
+	std::cout << "Please type the number corresponding to the file you with to load" << std::endl;
+	std::cout << "or press 'b' to go back to the main menu" << std::endl;
+	strInput = PickFile();
+
+	if (strInput.length() == 0) // user elected to go back to the main menu
+	{
+		return;
+	}
+
+	CFile file;
+	file.Open(strInput.c_str(), CFile::modeRead | CFile::typeBinary);
+	CArchive ar(&file, CArchive::load);
+	ar >> solidBoxNameIDCntr >> connChannelNmIDCntr >> sqPlnNmIDCntr;
+	ar >> vecSize;
+
+	//getting members for solidbox(es)
+	for (int ii = 0; ii < vecSize; ++ii)
+	{
+		ar >> length >> hasConnection >> nameSize;
+		name = ""; // resetting name for boxes if there is more than one solid box
+
+		//getting cube name
+		for (int ii = 0; ii < nameSize; ++ii)
+		{
+			ar >> letter;
+			name += letter;
+		}
+
+		//constructing a solid box with given length and setting other params
+		std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(length);
+		box->SetName(name);
+		ar >> nameSize;
+		name = ""; // resetting name
+
+		//getting connectionchannel name
+		for (int ii = 0; ii < nameSize; ++ii)
+		{
+			ar >> letter;
+			name += letter;
+		}
+
+		box->GetConnChannel()->SetName(name);
+
+		//getting and setting members for square planes
+		for (auto planePtr : box->GetConnChannel()->GetPlaneSet())
+		{
+			ar >> height >> length >> numOfEdges;
+			planePtr->SetHeight(height);
+			planePtr->SetLength(length);
+			planePtr->SetNumOfEdges(numOfEdges);
+			ar >> nameSize;
+			name = ""; // resetting name
+
+			for (int ii = 0; ii < nameSize; ++ii) // reading in sq plane name
+			{
+				ar >> letter;
+				name += letter;
+			}
+
+			planePtr->SetName(name);
+		}
+
+		SolidBox::cubeVec.push_back(box); // solid box object is completed now.
+	}
+
+	// ensures counters are the same as when they were saved
+	SolidBox::nameIDCounter = solidBoxNameIDCntr;
+	ConnectionChannel::nameIDCounter = connChannelNmIDCntr;
+	SquarePlane::nameIDCounter = sqPlnNmIDCntr;
+	ar.Close();
+	file.Close();
+}
+
+std::vector<std::string> Utility::TokenizeStringToVec(std::string str)
+{
+	char *myString = const_cast<char*>(str.c_str());
+	char* nextToken = NULL;
+	char *p = strtok_s(myString, " ", &nextToken);
+	while (p) {
+		std::cout << p << std::endl;
+		p = strtok_s(NULL, " ", &nextToken);
+	}
+	std::vector<std::string> x;
+	return x;
+}
 
 
 	

@@ -113,8 +113,6 @@ void ConnectionChannel::Cleanup(SquarePlane* plane)
 	//not really needed since using shared_ptr for SquarePlanes
 }
 
-
-
 std::set<std::shared_ptr<SquarePlane>> ConnectionChannel::GetPlaneSet()
 {
 	return planeSet;

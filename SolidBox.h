@@ -31,6 +31,7 @@ public:
 	bool operator==(const SolidBox &cube) const;
 	static std::vector<std::shared_ptr<SolidBox>> cubeVec;
 	static int GetPlnsPerSolidBx();
+	void Delete();
 
 private:
 	void SetName(std::string name);

@@ -15,8 +15,9 @@ class Utility
 public:
 	static void Run();
 	static std::string CreateUniqueName(std::string namePrefix,  int &nameIDCounter);
-	static void SaveAllObjects();
+	static int SaveAllObjects();
 	static void LoadAllObjects();
+	static std::vector<std::string> Utility::TokenizeStringToVec(std::string);
 
 private:
 	static void CreateSolidBox();
@@ -43,8 +44,13 @@ private:
 	static void SaveASquarePlane(std::shared_ptr<SquarePlane> plane, CArchive &archive, CFile &solidBoxFile);
 	static void LoadASolidBox();
 	static bool IsOkToSave();
-	static int ViewFiles();
+	static void ViewFiles();
 	static char SaveOptions();
-	static std::string PickFileToOverWrite();
+	static std::string PickFile();
+	static bool FileExists(std::string fileName);
+	static std::string PickNewFile();
+	static void DeleteBox(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr);
+	static int NumOfFilesAvail();
+	//static std::vector<std::string> Utility::TokenizeString(std::string);
 };
 
