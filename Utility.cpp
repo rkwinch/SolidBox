@@ -1,45 +1,21 @@
 #include <iostream>
-#include <limits>
 #include <string>
 #include <regex>
 #include <ctype.h>
 #include <set>
 #include <iomanip>
-#include <memory>
 #include <algorithm>
 #include <vector>
 #include <fstream>
 #include <Windows.h>
-#include "ConnectionChannel.h"
-#include "RectPlane.h"
-#include "SolidBox.h"
 #include "Utility.h"
-#include "Sphere.h"
 #include "Menu.h"
 
-//std::string Utility::CreateUniqueName(std::string strNamePrefix, int &nameIDCounter)
-//{
-//	std::string strName = "";
-//	strName = strNamePrefix + std::to_string(++nameIDCounter);
-//
-//	auto cubeVecItr = std::find_if(SolidBox::m_shapeVec.begin(), SolidBox::m_shapeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return box->GetShapeName() == strName; });
-//	auto sphereVecItr = std::find_if(Sphere::m_shapeVec.begin(), Sphere::m_shapeVec.end(), [&](std::shared_ptr<Sphere> sphere)->bool {return sphere->GetShapeName() == strName; });
-//
-//	try //if in set, naming collision has occurred and don't want to construct object
-//	{
-//		if ((cubeVecItr != SolidBox::m_shapeVec.end()) || (sphereVecItr != Sphere::m_shapeVec.end()))
-//		{
-//			throw std::exception();
-//		}
-//	}
-//	catch (std::exception e)
-//	{
-//		std::cout << "Exception:  " << strNamePrefix << " naming collision" << std::endl;
-//		Menu* menu = menu->GetInstance();
-//		menu->ShowSolidsInMemory();
-//	}
-//	return strName;
-//}
+class SolidBox;
+class Sphere;
+
+template<class T, class M>
+class ConnectionChannel;
 
 bool Utility::ValidateInput(std::string strInput, std::regex acceptableInputExpr)
 {
@@ -118,7 +94,7 @@ std::string Utility::SelectShapeType()
 
 	nInput = stoi(strInput);
 
-	if ((nInput < 1) || (nInput > strShapeTypes.size()))
+	if ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()))
 	{
 		std::cout << "Selection out of bounds.  Please try again." << std::endl;
 		SelectShapeType();
@@ -186,7 +162,7 @@ void Utility::PrintHeader(std::string strHeader)
 
 bool Utility::IsOkToSave() // if no shapes have been made, return false
 {
-	return ((SolidBox::shapeVec.size() > 0) || (Sphere::shapeVec.size() > 0));
+	return ((SolidBox::m_shapeVec.size() > 0) || (Sphere::m_shapeVec.size() > 0));
 }
 
 void Utility::ViewFiles()

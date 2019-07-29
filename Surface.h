@@ -2,7 +2,6 @@
 
 #include <string>
 #include "Menu.h"
-#include "ConnectionChannel.h"
 
 template<class T, class M>
 class ConnectionChannel;
@@ -19,7 +18,7 @@ protected:
 public:
 	
 	double d_Area = 0;
-	double CalcArea() = 0;
+	virtual double CalcArea() = 0;
 	
 	virtual std::shared_ptr<M> GetCopy() = 0;
 

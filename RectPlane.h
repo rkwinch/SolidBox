@@ -2,13 +2,14 @@
 
 #include <string>
 #include <memory>
-#include "ConnectionChannel.h"
-#include "Surface.h"
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include "Utility.h"
-#include "ConnectionChannel.h"
+#include "Surface.h"
+
+template<class T, class M>
+class ConnectionChannel;
 
 //A rectangular (rect) plane is a plane that can be square or rectangular.  
 //Each plane is a 2D rectangle that has 4 edges that are
@@ -20,8 +21,14 @@ class RectPlane : public Surface<T, RectPlane<T>> {
 	friend class Utility;
 	friend class SolidBox;
 
+private:
+
+	double m_dHeight;
+	double m_dLength;
+
 public:
-	static int RectPlane<T>::m_nNameIDCounter; // initialized at end of this header
+
+	static int m_nNameIDCounter; // initialized at end of this header
 
 	RectPlane()
 	{
@@ -31,7 +38,7 @@ public:
 	// parameterized constructor
 	RectPlane(double length, double height, ConnectionChannel<T, RectPlane>* channel)
 	{
-			m_stName = Utility::CreateUniqueName("plane", nameIDCounter);
+			m_stName = Utility::CreateUniqueName("plane", m_nNameIDCounter);
 			m_dLength = length;
 			m_dHeight = height;
 			m_nNumOfEdges = 4;
@@ -125,12 +132,9 @@ public:
 	
 	std::shared_ptr<RectPlane> GetCopy() override
 	{
-		return std::make_shared<RectPlane<SolidBox>>(m_dLength, m_dHeight, m_channel);
+		return std::make_shared<RectPlane<T>>(m_dLength, m_dHeight, m_channel);
 	}
 
-private:
-	double m_dHeight;
-	double m_dLength;
 };
 
 template<class T>

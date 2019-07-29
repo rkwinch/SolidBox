@@ -2,11 +2,9 @@
 
 #include <string>
 #include <set>
-#include <memory>
 #include <vector>
 #include "Shape.h"
 #include "ConnectionChannel.h"
-//#include "RectPlane.h"
 
 template<class T>
 class RectPlane;

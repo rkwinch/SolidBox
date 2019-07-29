@@ -1,4 +1,6 @@
 #pragma once
+
+#include <vector>
 #include <set>
 #include <string>
 #include <fstream>
@@ -7,8 +9,13 @@
 template<class T>
 class Channel {
 	
-public:
+protected:
+
+	T* m_shape;
 	std::string m_stName = "";
+
+public:
+	
 	virtual void Connect(std::set<std::shared_ptr<T>> surfaceSet) = 0;
 	virtual void Disconnect() = 0;
 	virtual void Cleanup() = 0;
@@ -25,7 +32,7 @@ public:
 		{
 			if (shapeVecItr != T::m_shapeVec.end())
 			{
-				--nameIDCounter;
+				--nNameIDCounter;
 				throw std::exception();
 			}
 		}

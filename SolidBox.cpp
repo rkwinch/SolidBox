@@ -5,10 +5,11 @@
 #include <memory>
 #include <algorithm>
 #include <vector>
-#include "Utility.h"
+#include "Shape.h"
 #include "SolidBox.h"
 #include "ConnectionChannel.h"
-#include "Shape.h"
+#include "Utility.h"
+
 
 std::vector<std::shared_ptr<SolidBox>> SolidBox::m_shapeVec;
 

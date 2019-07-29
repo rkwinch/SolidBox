@@ -78,6 +78,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0502;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\p2wrau\Documents\Visual Studio 2017\Projects\TrainingProject_v1\TrainingProject_v1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -126,10 +127,10 @@
     <ClInclude Include="ConnectionChannel.h" />
     <ClInclude Include="CurvedSurface.h" />
     <ClInclude Include="Menu.h" />
+    <ClInclude Include="Sphere.h" />
     <ClInclude Include="Surface.h" />
     <ClInclude Include="Shape.h" />
     <ClInclude Include="SolidBox.h" />
-    <ClInclude Include="Sphere.h" />
     <ClInclude Include="RectPlane.h" />
     <ClInclude Include="Utility.h" />
   </ItemGroup>

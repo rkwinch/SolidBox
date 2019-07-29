@@ -2,15 +2,16 @@
 
 #include <string>
 #include <memory>
-#include "ConnectionChannel.h"
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include <math.h>
-#include "Utility.h"
-#include "ConnectionChannel.h"
 #include "Surface.h"
-//#define PI 3.14159
+#include "Utility.h"
+
+
+template<class T, class M>
+class ConnectionChannel;
 
 template<class T>
 class CurvedSurface : public Surface<T, CurvedSurface> {

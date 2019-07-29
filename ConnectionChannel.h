@@ -1,8 +1,6 @@
 #pragma once
 
 #include <set>
-#include <memory>
-#include <vector>
 #include "Channel.h"
 
 template<class T, class M>
@@ -12,7 +10,7 @@ class ConnectionChannel : public Channel<M> {
 
 private:
 	std::set<std::shared_ptr<M>> m_surfaceSet;
-	T* m_shape;
+	
 
 public:
 	//default constructor
@@ -40,8 +38,7 @@ public:
 		// allocating new memory for the copy 
 		for (auto surface : channel.m_surfaceSet)
 		{
-			std::shared_ptr<M> copy = surface->GetCopy():
-				/*std::make_shared<M>(planePtr->GetSqPlaneHeight(), this)*/;
+			std::shared_ptr<M> copy = surface->GetCopy();
 			this->surfaceSet.insert(copy);
 		}
 		
@@ -108,6 +105,11 @@ public:
 	std::set<std::shared_ptr<M>> GetSurfaceSet()
 	{
 		return m_surfaceSet;
+	}
+
+	T* GetShape()
+	{
+		return m_shape;
 	}
 
 	std::string GetConnName()

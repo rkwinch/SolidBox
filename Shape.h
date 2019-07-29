@@ -1,43 +1,50 @@
 #pragma once
 
+#include <set>
 #include <vector>
 #include <string>
-#include "RectPlane.h"
-#include "ConnectionChannel.h"
-#include "Menu.h"
 #include "Utility.h"
+
+template<class T, class M>
+class ConnectionChannel;
 
 //abstract.  Don't make instances of Shape.
 template<class T, class  M>
 class Shape {
 
+protected:
+
+	std::string m_stName = "";
+	bool m_bHasConnection = false; // flag for checking if the shape has a connection
+
 public:
-	static std::vector<std::shared_ptr<T>> m_shapeVec;
+
 	static int m_nNameIDCounter; // used for naming unique cubes; initialized at the bottom of this header
 	static const int m_nNumOfSurfaces = 0;
+	static std::vector<std::shared_ptr<T>> m_shapeVec;
+	virtual T& operator=(T &cube) = 0;
 	virtual int GetSurfaceCount() = 0;
 	virtual std::set<std::shared_ptr<M>> GetSurfacesCopy() = 0;
 	virtual void Save(std::ofstream &outFile) = 0; 
-	virtual T& operator=(T &cube) = 0;
-
-	std::vector<std::shared_ptr<T>> GetShapeVec()
+	
+	bool operator<(const T &shape) const
 	{
-		return T::m_shapeVec;
+		return (this->m_stName < shape.m_stName);
 	}
 
-	void Delete()
+	bool operator==(const T &shape) const
 	{
-		std::vector<std::shared_ptr<T>>::iterator shapeVecItr = m_shapeVec.begin();
-		// [&] is take by reference, arg type is shared ptr of surface type (solidbox or sphere at this point), return type is bool, 
-		// predicate is check if the shapes are equivalent (same name by == operator)
-		shapeVecItr = std::find_if(m_shapeVec.begin(), m_shapeVec.end(), [&](std::shared_ptr<T> shape)->bool {return *shape == *this; });
-		if (shapeVecItr == m_shapeVec.end())
-		{
-			std::cout << "Cannot delete solid.  Solid not found" << std::endl;
-			return;
-		}
-		m_channel.Disconnect(); // setting surfaces in surfaceSet to null
-		T::m_shapeVec.erase(shapeVecItr); // removing item from vector
+		return (this->m_stName == shape.m_stName);
+	}
+
+	void SetName(std::string m_stName)
+	{
+		this->m_stName = m_stName;
+	}
+
+	std::string GetShapeName()
+	{
+		return m_stName;
 	}
 
 	static std::string CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter)
@@ -87,6 +94,11 @@ public:
 		return strInput;
 	}
 
+	std::vector<std::shared_ptr<T>> GetShapeVec()
+	{
+		return T::m_shapeVec;
+	}
+
 	bool GetHasConnection()
 	{
 		return m_bHasConnection;
@@ -96,31 +108,23 @@ public:
 	{
 		return &m_channel;
 	}
-
-	bool operator<(const T &shape) const
+	
+	void Delete()
 	{
-		return (this->m_stName < shape.m_stName);
+		std::vector<std::shared_ptr<T>>::iterator shapeVecItr = T::m_shapeVec.begin();
+		// [&] is take by reference, arg type is shared ptr of surface type (solidbox or sphere at this point), return type is bool, 
+		// predicate is check if the shapes are equivalent (same name by == operator)
+		shapeVecItr = std::find_if(m_shapeVec.begin(), m_shapeVec.end(), [&](std::shared_ptr<T> shape)->bool {return *shape == *this; });
+
+		if (shapeVecItr == m_shapeVec.end())
+		{
+			std::cout << "Cannot delete solid.  Solid not found" << std::endl;
+			return;
+		}
+
+		m_channel.Disconnect(); // setting surfaces in surfaceSet to null
+		T::m_shapeVec.erase(shapeVecItr); // removing item from vector
 	}
-
-	bool operator==(const T &shape) const
-	{
-		return (this->m_stName == shape.m_stName);
-	}
-
-	void SetName(std::string m_stName)
-	{
-		this->m_stName = m_stName;
-	}
-
-	std::string GetShapeName()
-	{
-		return m_stName;
-	}
-
-//protected:
-
-	std::string m_stName = "";
-	bool m_bHasConnection = false; // flag for checking if the shape has a connection
 	//virtual static void Load(std::vector<std::string>::iterator &itr, const int &vecSize) = 0; 		
 };
 

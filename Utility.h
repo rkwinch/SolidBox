@@ -3,56 +3,11 @@
 #include <string>
 #include <set>
 #include <regex>
-#include <memory>
-#include "SolidBox.h"
-#include "RectPlane.h"
-#include "ConnectionChannel.h"
 
-//template<class T> // T for shape type
 class Utility {
 
 public:
 	
-	/*static std::string CreateUniqueName(std::string namePrefix, int &nameIDCounter)
-	{
-		std::string strName = "";
-		strName = strNamePrefix + std::to_string(++nameIDCounter);
-
-		auto shapeVecItr = std::find_if(T::m_shapeVec.begin(), T::m_shapeVec.end(), [&](std::shared_ptr<T> shape)->bool {return shape->GetShapeName() == strName; });
-		if (shapeVecItr == T::m_shapeVec.end())
-		{
-			shapeVecItr = std::find_if(T::m_shapeVec.begin(), T::m_shapeVec.end(), [&](std::shared_ptr<T> shape)->bool {return shape->GetConnName() == strName; });
-			if (shapeVecItr == T::m_shapeVec.end())
-			{
-				shapeVecItr = std::find_if(T::m_shapeVec.begin(), T::m_shapeVec.end(), [&](std::shared_ptr<T> shape)->bool 
-				{
-					for (auto element : shape->m_channel.GetSurfaceSet)
-					{
-						if (element->GetSurfaceName() == strName)
-						{
-							return true;
-						}
-					}
-					return false;
-				});		
-			}
-		}*/
-
-	//	try //if in set, naming collision has occurred and don't want to construct object
-	//	{
-	//		if (shapeVecItr != T::m_shapeVec.end())
-	//		{
-	//			throw std::exception();
-	//		}
-	//	}
-	//	catch (std::exception e)
-	//	{
-	//		std::cout << "Exception:  " << strNamePrefix << " naming collision" << std::endl;
-	//		Menu* menu = menu->GetInstance();
-	//		menu->ShowSolidsInMemory();
-	//	}
-	//	return strName;
-	//}
 	static void PrintAllSolids();
 	static std::string SelectShapeType();
 	static std::vector<std::string> TokenizeStringToVec(std::string, char delimiter);
