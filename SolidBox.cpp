@@ -7,45 +7,45 @@
 #include "SquarePlane.h"
 
 
-int SolidBox::nameIDCounter = 1; // why do I need to have int here?  The type is in the header
+int SolidBox::nameIDCounter = 1;
 std::set<std::string>SolidBox::cubeNames;
 const int SolidBox::planesPerSolidBox = 6;
 
 
-SolidBox::SolidBox(int sideLength)
+
+SolidBox::SolidBox(double sideLength)
 {
+	hasConnection = false; // no channel connection yet
+
 	//giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
 	//will verify by putting the name into a set and check if it properly inserts.
 	name = "cube" + std::to_string(SolidBox::nameIDCounter++);
 	SolidBox::cubeNames.insert(name);
 	
-	std::cout << "in solidbox constructor" << std::endl;
+	std::string planeName = "";
 
 	//making 6 planes to go with the cube
-	for (int i = 0; i < SolidBox::planesPerSolidBox; i++) 
+	for (int i = 0; i < SolidBox::planesPerSolidBox; i++)
 	{
-		groupOfPlanes.emplace_back(SquarePlane(sideLength));
+		SquarePlane* plane = new SquarePlane(sideLength);
+		planeName = "plane" + std::to_string(i + 1);
+		(*plane).SetSqPlaneName(planeName);
+		channel.AddPlane(plane);
 	}
 
-	for (int ii = 0; ii < SolidBox::planesPerSolidBox; ++ii)
+	//if all planes inserted correctly, then a proper ChannelConnection has been made
+	if ((channel.GetPlaneSet()).size() == 6)
 	{
-		std::cout << "plane" << ii << "in " << name << std::endl;
-		SquarePlane plane(2);
+		this->sideLength = sideLength;
+		hasConnection = true;
 	}
-	//	std::pair<std::set<SquarePlane>::iterator, bool> returnVal; // for return value for insert fxn for sets
-	//	returnVal = PlaneSet.insert(plane);
-	//	if (returnVal.second == false) //returnVal.second is a bool that is false if didn't insert (dup) or true if did
-	//	{
-	//		std::cout << "Plane already inserted.  No duplicates." << std::endl;
-	//	}
-	//	else
-	//	{
-	//		std::cout << "Plane successfully inserted!" << std::endl;
-	//	}
-	//}
 }
 
-//std::vector<SquarePlane*> groupOfPlanes;
+
+double SolidBox::GetSideLength()
+{
+	return sideLength;
+}
 
 std::string SolidBox::GetShapeName()
 {
@@ -61,3 +61,7 @@ void SolidBox::PrintCubeSet()
 	}
 }
 
+ConnectionChannel SolidBox::GetConnChannel()
+{
+	return channel;
+}

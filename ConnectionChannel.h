@@ -2,13 +2,12 @@
 
 #include "Channel.h"
 #include <set>
-#include "SolidBox.h"
+#include "SquarePlane.h"
 
 class ConnectionChannel : public Channel {
 private:
-	std::set<SolidBox> CubeSet;
-	std::set<SquarePlane> PlaneSet;
-	//map of cubes to planes. cubes unique. plane sets don't have to be unique as of now?
+	std::set<SquarePlane*> PlaneSet;
+	
 
 public:
 	ConnectionChannel();
@@ -16,8 +15,10 @@ public:
 	void Disconnect();
 	void Cleanup();
 	~ConnectionChannel();
-	void AddPlanes(const std::set<SquarePlane> PlaneSet);
-	//void AddPlaneToSet(const SquarePlane& plane);
+	void AddPlane(SquarePlane* plane); // sets PlaneSet with a set of SquarePlanes
+	std::set<SquarePlane*> GetPlaneSet();
+	
+
 
 };
 

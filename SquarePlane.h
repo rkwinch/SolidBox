@@ -9,17 +9,21 @@
 //90' with a height and a length.  Additionally, the height = length for a square plane.
 class SquarePlane {
 public:
-	SquarePlane(int sideLength);
-	bool operator<(const SquarePlane& plane) const;
+	SquarePlane(double sideLength);
 	bool operator==(const SquarePlane& plane) const;
 	SquarePlane& operator=(const SquarePlane& plane);
+	bool operator<(const SquarePlane* plane) const;
+	void SetSqPlaneName(std::string name);
+	std::string GetSqPlaneName();
+	double SquarePlane::GetSqPlaneLength();
+	double SquarePlane::GetSqPlaneHeight();
+
 
 private:
-	int height;
-	int length;
+	double height;
+	double length;
 	int numOfEdges;
 	std::string name;
-
-
+	
 };
 

@@ -6,12 +6,9 @@
 
 //abstract.  Don't make instances of Shape.
 class Shape {
-protected:
 
+protected:
 	std::string name;
 	virtual std::string GetShapeName() = 0;
-	
-
-
 };
 

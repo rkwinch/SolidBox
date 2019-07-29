@@ -4,6 +4,7 @@
 #include <iostream>
 #include <set>
 #include <utility>
+#include "Solidbox.h"
 
 
 //std::pair<std::set<int>::iterator, bool> ret;
@@ -14,7 +15,9 @@
 //constructor
 ConnectionChannel::ConnectionChannel()
 {
+	
 }
+
 
 void ConnectionChannel::Connect()
 {
@@ -33,24 +36,17 @@ void ConnectionChannel::Cleanup()
 ConnectionChannel::~ConnectionChannel()
 {
 }
-//adding set of planes to the connection
-void ConnectionChannel::AddPlanes(const std::set<SquarePlane> PlaneSet)
+
+//adding a plane to the connection
+void ConnectionChannel::AddPlane(SquarePlane* plane)
 {
-	
-	this->PlaneSet = PlaneSet;
+	PlaneSet.insert(plane);
 }
 
-//void ConnectionChannel::AddPlaneToSet(const SquarePlane& plane)
-//{
-//	std::pair<std::set<SquarePlane>::iterator, bool> returnVal; // for return value for insert fxn for sets
-//	returnVal = PlaneSet.insert(plane);
-//	if (returnVal.second == false) //returnVal.second is a bool that is false if didn't insert (dup) or true if did
-//	{
-//		std::cout << "Plane already inserted.  No duplicates." << std::endl;
-//	}
-//	else
-//	{
-//		std::cout << "Plane successfully inserted!" << std::endl;
-//	}
-//}
+std::set<SquarePlane*> ConnectionChannel::GetPlaneSet()
+{
+	return PlaneSet;
+}
+
+
 
