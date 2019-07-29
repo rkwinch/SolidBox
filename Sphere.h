@@ -9,27 +9,69 @@
 #include <algorithm>
 #include "Shape.h"
 #include "ConnectionChannel.h"
-#include "CurvedSurface.h"
+//#include "CurvedSurface.h"
 #include "Utility.h"
 
 
+template<class T>
+class CurvedSurface;
 
 class Sphere : public Shape<Sphere, CurvedSurface<Sphere>> {
 
 	friend class Utility;
 
+private:
+	ConnectionChannel<Sphere, CurvedSurface<Sphere>> m_channel;
+	double m_dRadius;
+	static const int m_nSurfaces;
+
 public:
+
 	static const int m_nNumOfSurfaces = 1;
 	static std::set<std::shared_ptr<Sphere>> m_surfaceSet;
 	static std::vector<std::shared_ptr<Sphere>> m_shapeVec;
+
+	static void Create()
+	{
+		std::string strInput = "";
+		double dRadius = 0.0;
+		std::regex acceptableInputExpr("^\\s*([0-9]*\\s?[0-9]*\\s*$"); // looking for a number (if present)
+																	   // with 0-1 decimals followed by a number (if present) while allowing spaces
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
+		std::cout << "What would you like the radius to be? (in mm)" << std::endl;
+		std::cout << "ex: 0.125" << std::endl;
+		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+		dRadius = std::stod(strInput); // converting string input into a double
+
+		while (dRadius == 0.0)
+		{
+			std::cout << "Please input a value that is not 0" << std::endl;
+			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+			dRadius = std::stod(strInput);
+		}
+		std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(dRadius);
+		Sphere::m_shapeVec.push_back(sphere);
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
+	}
 
 	int GetSurfaceCount() override
 	{
 		return Sphere::m_nNumOfSurfaces;
 	}
 
+	static void PrintSolids()
+	{
+		int count = 1;
+
+		for (auto sphere : Sphere::m_shapeVec)
+		{
+			std::cout << count << ") " << sphere->m_stName << std::endl;
+			++count;
+		}
+	}
+
 	// default constructor 
-	Sphere() : m_channel(this) 
+	Sphere() : m_channel(this)
 	{
 		// not needed
 	}
@@ -52,7 +94,7 @@ public:
 	// parameterized constructor
 	Sphere(double radius) : m_channel(this)
 	{
-		m_stName = Utility::CreateUniqueName("sphere", m_nNameIDCounter);
+		m_stName = CreateUniqueName("sphere", m_nNameIDCounter);
 		std::set<std::shared_ptr<CurvedSurface<Sphere>>> surfaceSet;
 
 		//making 1 surface to go with the sphere
@@ -85,9 +127,28 @@ public:
 		return *this;
 	}
 
-	std::vector<std::shared_ptr<Sphere>> GetShapeVec()
+	static void Create()
 	{
-		return Sphere::m_shapeVec;
+		std::string strInput = "";
+		double dRadius = 0.0;
+		std::regex acceptableInputExpr("^\\s*([0-9]*\\s?[0-9]*\\s*$"); // looking for a number (if present)
+																	   // with 0-1 decimals followed by a number (if present) while allowing spaces
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
+		std::cout << "What would you like the radius to be? (in mm)" << std::endl;
+		std::cout << "ex: 0.125" << std::endl;
+		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+		dRadius = std::stod(strInput); // converting string input into a double
+
+		while (dRadius == 0.0)
+		{
+			std::cout << "Please input a value that is not 0" << std::endl;
+			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+			dRadius = std::stod(strInput);
+		}
+
+		std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(dRadius);
+		Sphere::m_shapeVec.push_back(sphere);
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 	}
 
 	void Save(std::ofstream &outFile) override
@@ -121,6 +182,7 @@ public:
 			std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(dRadius);
 			sphere->SetName(stName);
 			stName = ""; // resetting name
+			
 
 			//getting connectionchannel name
 			stName = (*itr);
@@ -147,7 +209,5 @@ public:
 		}
 	}
 		
-private:
-	double m_dRadius;
-	static const int m_nSurfaces;
+
 };

@@ -8,6 +8,7 @@
 #include "Utility.h"
 #include "SolidBox.h"
 #include "ConnectionChannel.h"
+#include "Shape.h"
 
 std::vector<std::shared_ptr<SolidBox>> SolidBox::m_shapeVec;
 
@@ -28,7 +29,7 @@ SolidBox::SolidBox(double sideLength) : m_channel(this)
 {
 	//giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
 	//will verify by putting the name into a set and check if it properly inserts.
-	m_stName = Utility::CreateUniqueName("cube", m_nNameIDCounter);
+	m_stName = CreateUniqueName("cube", m_nNameIDCounter);
 	std::set<std::shared_ptr<RectPlane<SolidBox>>> RectPlaneSet;
 
 	//making 6 planes to go with the cube
@@ -70,6 +71,40 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 double SolidBox::GetSideLength()
 {
 	return m_dSideLength;
+}
+
+void SolidBox::Create()
+{
+	std::string strInput = "";
+	double dSideLength = 0.0;
+	std::regex acceptableInputExpr("^\\s*([0-9]*\\.?[0-9]*)\\s*$"); // looking for a number (if present)
+																	// with 0-1 decimals followed by a number (if present) while allowing spaces
+	Utility::PrintNwLnsAndLnDelimiter("-", 55);
+	std::cout << "What would you like the length, width, and height to be? (in mm)" << std::endl;
+	std::cout << "ex: 4.5" << std::endl;
+	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+	dSideLength = std::stod(strInput); // converting string input into a double
+
+	while (dSideLength == 0.0) // don't want to make a box with sideLength of 0
+	{
+		std::cout << "Please input a value that is not 0" << std::endl;
+		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+		dSideLength = std::stod(strInput);
+	}
+	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(dSideLength);
+	SolidBox::m_shapeVec.push_back(box);
+	Utility::PrintNwLnsAndLnDelimiter("-", 55);
+}
+
+void SolidBox::PrintSolids()
+{
+	int count = 1;
+
+	for (auto cube : SolidBox::m_shapeVec)
+	{
+		std::cout << count << ") " << cube->m_stName << std::endl;
+		++count;
+	}
 }
 
 void SolidBox::Load(std::vector<std::string>::iterator &itr, const int &vecSize)
@@ -147,9 +182,4 @@ std::set<std::shared_ptr<RectPlane<SolidBox>>> SolidBox::GetSurfacesCopy()
 int SolidBox::GetSurfaceCount()
 {
 	return SolidBox::m_nNumOfSurfaces;
-}
-
-std::vector<std::shared_ptr<SolidBox>> SolidBox::GetShapeVec()
-{
-	return SolidBox::m_shapeVec;
 }

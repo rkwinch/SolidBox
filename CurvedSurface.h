@@ -13,7 +13,7 @@
 //#define PI 3.14159
 
 template<class T>
-class CurvedSurface : public Plane<T, CurvedSurface> {
+class CurvedSurface : public Surface<T, CurvedSurface> {
 
 		//A curved surface is a plane-equivalent for curved surfaces (i.e. spheres).   
 
@@ -111,7 +111,7 @@ class CurvedSurface : public Plane<T, CurvedSurface> {
 
 		double CalcArea() override
 		{
-			return (4 * PI * pow(m_dRadius, 2);
+			return (4 * PI * pow(m_dRadius, 2));
 		}
 };
 

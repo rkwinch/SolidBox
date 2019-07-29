@@ -16,20 +16,22 @@ class SolidBox : public Shape<SolidBox, RectPlane<SolidBox>> {
 	friend class Utility;
 
 public:
+
 	SolidBox();
 	~SolidBox();
 	SolidBox(SolidBox&);
 	SolidBox(double sideLength);
-	double GetSideLength();
 	SolidBox& operator=(SolidBox &cube);
+	double GetSideLength();
+	int GetSurfaceCount() override;
+	std::set<std::shared_ptr<RectPlane<SolidBox>>> GetSurfacesCopy() override;
 	static void Load(std::vector<std::string>::iterator &itr, const int &vecSize);
 	void Save(std::ofstream &outFile) override;
-	std::set<std::shared_ptr<RectPlane<SolidBox>>> GetSurfacesCopy() override;
-	int GetSurfaceCount() override;
-	std::vector<std::shared_ptr<SolidBox>> GetShapeVec() override;
-	static std::vector<std::shared_ptr<SolidBox>> m_shapeVec;
+	static void Create();
+	static void PrintSolids();
 
 private:
+	ConnectionChannel<SolidBox, RectPlane<SolidBox>> m_channel;
 	double m_dSideLength;
 	static const int m_nNumOfSurfaces = 6;
 };

@@ -1,6 +1,8 @@
 #pragma once
 #include <set>
 #include <string>
+#include <fstream>
+#include "Menu.h"
 
 template<class T>
 class Channel {
@@ -12,10 +14,10 @@ public:
 	virtual void Cleanup() = 0;
 	virtual void Save(std::ofstream &outFile) = 0;
 	static int m_nNameIDCounter;
-	static std::string CreateUniqueName(std::string namePrefix, int &nameIDCounter)
+	static std::string CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter)
 	{
 		std::string strName = "";
-		strName = strNamePrefix + std::to_string(++nameIDCounter);
+		strName = strNamePrefix + std::to_string(++nNameIDCounter);
 
 		auto shapeVecItr = std::find_if(T::m_shapeVec.begin(), T::m_shapeVec.end(), [&](std::shared_ptr<T> shape)->bool {return shape->GetConnName() == strName; });
 
@@ -23,13 +25,14 @@ public:
 		{
 			if (shapeVecItr != T::m_shapeVec.end())
 			{
+				--nameIDCounter;
 				throw std::exception();
 			}
 		}
 		catch (std::exception e)
 		{
 			std::cout << "Exception:  " << strNamePrefix << " naming collision" << std::endl;
-			Menu* menu = menu->GetInstance();
+			Menu* menu = Menu::GetInstance();
 			menu->ShowSolidsInMemory();
 		}
 		return strName;

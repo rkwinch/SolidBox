@@ -17,29 +17,29 @@
 #include "Sphere.h"
 #include "Menu.h"
 
-std::string Utility<T>::CreateUniqueName(std::string strNamePrefix, int &nameIDCounter)
-{
-	std::string strName = "";
-	strName = strNamePrefix + std::to_string(++nameIDCounter);
-
-	auto cubeVecItr = std::find_if(SolidBox::m_shapeVec.begin(), SolidBox::m_shapeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return box->GetShapeName() == strName; });
-	auto sphereVecItr = std::find_if(Sphere::m_shapeVec.begin(), Sphere::m_shapeVec.end(), [&](std::shared_ptr<Sphere> sphere)->bool {return sphere->GetShapeName() == strName; });
-
-	try //if in set, naming collision has occurred and don't want to construct object
-	{
-		if ((cubeVecItr != SolidBox::m_shapeVec.end()) || (sphereVecItr != Sphere::m_shapeVec.end()))
-		{
-			throw std::exception();
-		}
-	}
-	catch (std::exception e)
-	{
-		std::cout << "Exception:  " << strNamePrefix << " naming collision" << std::endl;
-		Menu* menu = menu->GetInstance();
-		menu->ShowSolidsInMemory();
-	}
-	return strName;
-}
+//std::string Utility::CreateUniqueName(std::string strNamePrefix, int &nameIDCounter)
+//{
+//	std::string strName = "";
+//	strName = strNamePrefix + std::to_string(++nameIDCounter);
+//
+//	auto cubeVecItr = std::find_if(SolidBox::m_shapeVec.begin(), SolidBox::m_shapeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return box->GetShapeName() == strName; });
+//	auto sphereVecItr = std::find_if(Sphere::m_shapeVec.begin(), Sphere::m_shapeVec.end(), [&](std::shared_ptr<Sphere> sphere)->bool {return sphere->GetShapeName() == strName; });
+//
+//	try //if in set, naming collision has occurred and don't want to construct object
+//	{
+//		if ((cubeVecItr != SolidBox::m_shapeVec.end()) || (sphereVecItr != Sphere::m_shapeVec.end()))
+//		{
+//			throw std::exception();
+//		}
+//	}
+//	catch (std::exception e)
+//	{
+//		std::cout << "Exception:  " << strNamePrefix << " naming collision" << std::endl;
+//		Menu* menu = menu->GetInstance();
+//		menu->ShowSolidsInMemory();
+//	}
+//	return strName;
+//}
 
 bool Utility::ValidateInput(std::string strInput, std::regex acceptableInputExpr)
 {
@@ -93,29 +93,69 @@ std::string Utility::GetAndValidateInput(std::regex acceptableInputExpr)
 	return strInput;
 }
 
-std::string Utility::InputInVecVal(std::string strInput, std::regex acceptableInputExpr, std::set<std::shared_ptr<T> shapeVec)
+std::string Utility::SelectShapeType()
 {
-	strInput = GetAndValidateInput(acceptableInputExpr);
+	std::string strInput = "";
+	int nInput = 0;
+	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$"); // any number or 'b' or 'B". 0 will be checked further down
+	std::vector<std::string> strShapeTypes{ "Cube", "Sphere" };
+	int nCounter = 0;
 
-	if ((strInput == "b") | (strInput == "B")) // user elected to go back to main menu
+	for (auto shape : strShapeTypes)
 	{
-		return "b";
+		std::cout << ++nCounter << ") " << shape << std::endl;
 	}
 
-	// check if cube exists
-	while ((size_t(stoi(strInput)) > SolidBox::cubeVec.size()) || (stoi(strInput) < 1))
+	std::cout << "Type the number corresponding to your desired shape" << std::endl;
+	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+
+	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+
+	if ((strInput == "b") || (strInput == "B"))
 	{
-		std::cout << "Selection out of bounds.  Please try again or press 'b' to go" << std::endl;
-		std::cout << "to the main menu." << std::endl;
-		strInput = GetAndValidateInput(acceptableInputExpr);
-
-		if ((strInput == "b") | (strInput == "B")) // user elected to go back to main menu
-		{
-			return "b";
-		}
-
+		return strInput;
 	}
+
+	nInput = stoi(strInput);
+
+	if ((nInput < 1) || (nInput > strShapeTypes.size()))
+	{
+		std::cout << "Selection out of bounds.  Please try again." << std::endl;
+		SelectShapeType();
+	}
+
 	return strInput;
+}
+
+void Utility::PrintAllSolids()
+{
+	int count = 1;
+	
+	if (SolidBox::m_shapeVec.size() != 0)
+	{
+		std::string strHeader = "SolidBox name (length of each side in mm)";
+		Utility::PrintHeader(strHeader);
+
+		for (auto cube : SolidBox::m_shapeVec)
+		{
+			std::cout << cube->GetShapeName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+		}
+		std::cout << std::endl;
+	}
+
+	count = 1;
+
+	if (Sphere::m_shapeVec.size() != 0)
+	{
+		std::string strHeader = "Sphere name (length of each side in mm)";
+		Utility::PrintHeader(strHeader);
+
+		for (auto sphere : Sphere::m_shapeVec)
+		{
+			std::cout << sphere->GetShapeName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
+		}
+		std::cout << std::endl;
+	}
 }
 
 void Utility::PrintNwLnsAndLnDelimiter(std::string strDelimiter, size_t nNumOfTimes)

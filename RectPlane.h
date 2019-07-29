@@ -15,7 +15,7 @@
 //90' with a height and a length.
 
 template<class T>
-class RectPlane : public Plane<RectPlane<T>> {
+class RectPlane : public Surface<T, RectPlane<T>> {
 
 	friend class Utility;
 	friend class SolidBox;
@@ -125,7 +125,7 @@ public:
 	
 	std::shared_ptr<RectPlane> GetCopy() override
 	{
-		return std::make_shared<RectPlane<SolidBox>>(m_dRadius, m_channel);
+		return std::make_shared<RectPlane<SolidBox>>(m_dLength, m_dHeight, m_channel);
 	}
 
 private:
