@@ -135,12 +135,12 @@ void Sphere::PrintSolids()
 
 	for (auto sphere : m_shapeVec)
 	{
-		std::cout << count << ") " << sphere->GetName() << std::endl;
+		std::cout << count << ") " << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
 		++count;
 	}
 }
 
-void Sphere::Load(std::vector<std::string>::iterator &itr, const int &vecSize)
+void Sphere::Load(std::vector<std::string>::iterator &itr)
 {
 	std::string stName = "";
 	double dRadius = 0;
@@ -148,59 +148,51 @@ void Sphere::Load(std::vector<std::string>::iterator &itr, const int &vecSize)
 	int nNumOfEdges = 0;
 
 	//getting members for sphere
-	for (int ii = 0; ii < vecSize; ++ii)
+	stName = (*itr); std::cout << "in loadsphere should be a name: " << (*itr) << std::endl;
+	itr++; std::cout << "in loadsphere should be a double: " << (*itr) << std::endl;
+	dRadius = stod(*itr);
+	itr++;
+	bHasConnection = static_cast<bool>(stoi(*itr));
+	itr++;
+
+	//constructing a sphere with given radius and setting other params
+	std::cout << "making a sphere from load with radius,hasconn,name: " << dRadius << " " << bHasConnection << " " << stName << std::endl;
+	std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(dRadius);
+	sphere->SetName(stName);
+
+	//getting connectionchannel name
+	stName = (*itr);
+	itr++;
+	sphere->GetConnChannel()->SetName(stName);
+
+	//getting and setting members for square planes
+	for (auto surface : sphere->GetConnChannel()->GetSurfaceSet())
 	{
-		stName = ""; // resetting name for spheres if there is more than one sphere
-		stName = (*itr); std::cout << "in loadsphere should be a name: " << (*itr) << std::endl;
-		itr++; std::cout << "in loadsphere should be a double: " << (*itr) << std::endl;
-		dRadius = stod(*itr);
-		itr++;
-		bHasConnection = static_cast<bool>(stoi(*itr));
-		itr++;
-
-		//constructing a sphere with given radius and setting other params
-		std::cout << "making a sphere from load with radius,hasconn,name: " << dRadius << " " << bHasConnection << " " << stName << std::endl;
-		std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(dRadius);
-		sphere->SetName(stName);
-		stName = ""; // resetting name
-
-
-		//getting connectionchannel name
 		stName = (*itr);
 		itr++;
-		sphere->GetConnChannel()->SetName(stName);
-		stName = ""; // resetting name
+		dRadius = stod(*itr);
+		itr++;
+		nNumOfEdges = stoi(*itr);
+		itr++; std::cout << "in loadsphere plane. last should be a ':' " << (*itr) << std::endl;
 
-		//getting and setting members for square planes
-		for (auto surface : sphere->GetConnChannel()->GetSurfaceSet())
-		{
-			stName = (*itr);
-			itr++;
-			dRadius = stod(*itr);
-			itr++;
-			nNumOfEdges = stoi(*itr);
-			itr++; std::cout << "in loadsphere plane. last should be a ':' " << (*itr) << std::endl;
-
-			// making cast to CurvedSurface* since it is currently Surface* (and doesn't know about radius, etc)
-			// do this by casting the smart pointer to the CurvedSurface and using get() to get the raw ptr
-			// using dynamic casting because want to make sure the pointer can be converted properly to its derived 
-			// class from the base (base should actually be a child in the first place, but need set to work with 
-			// all types of surfaces, so have set of surfaces where the surfaces are actually curvedSurfaces or rectPlanes
-			// (shouldn't be able to insert a surface anyway since it is a base abstract class)
-			//
-			// example of when to use and not to use:
-			//(1) 
-			//MyBase *base = static_cast<MyBase*>(child);
-			//MyChild *child = dynamic_cast<MyChild*>(base); // good
-			//(2)
-			//MyBase  *base = new MyBase();
-			//MyChild *child = dynamic_cast<MyChild*>(base); // bad
-			auto curvedSurfacePtr = dynamic_cast<CurvedSurface*>(surface.get());
-			curvedSurfacePtr->SetName(stName);
-			stName = ""; // resetting name
-			curvedSurfacePtr->SetRadius(dRadius);
-		}
-		itr++; // skipping ":" delimiter
-		m_shapeVec.push_back(sphere); // solid box object is completed now.
+		// making cast to CurvedSurface* since it is currently Surface* (and doesn't know about radius, etc)
+		// do this by casting the smart pointer to the CurvedSurface and using get() to get the raw ptr
+		// using dynamic casting because want to make sure the pointer can be converted properly to its derived 
+		// class from the base (base should actually be a child in the first place, but need set to work with 
+		// all types of surfaces, so have set of surfaces where the surfaces are actually curvedSurfaces or rectPlanes
+		// (shouldn't be able to insert a surface anyway since it is a base abstract class)
+		//
+		// example of when to use and not to use:
+		//(1) 
+		//MyBase *base = static_cast<MyBase*>(child);
+		//MyChild *child = dynamic_cast<MyChild*>(base); // good
+		//(2)
+		//MyBase  *base = new MyBase();
+		//MyChild *child = dynamic_cast<MyChild*>(base); // bad
+		auto curvedSurfacePtr = dynamic_cast<CurvedSurface*>(surface.get());
+		curvedSurfacePtr->SetName(stName);
+		curvedSurfacePtr->SetRadius(dRadius);
 	}
+		
+	m_shapeVec.push_back(sphere); // solid box object is completed now.
 }

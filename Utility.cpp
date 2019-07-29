@@ -48,6 +48,7 @@ std::string Utility::GetAndValidateInput(std::regex acceptableInputExpr)
 	{
 		getline(std::cin, strInput);
 		bIsValid = ValidateInput(strInput, acceptableInputExpr);
+
 		if (bIsValid)
 		{
 			strInput = RemoveSpaces(strInput, acceptableInputExpr);
@@ -192,6 +193,7 @@ void Utility::ViewFiles()
 	}
 	else
 	{
+		PrintNwLnsAndLnDelimiter("-", 55);
 		std::cout << "No files in memory" << std::endl;
 	}
 }
@@ -317,9 +319,18 @@ std::vector<std::string> Utility::TokenizeStringToVec(std::string str, char deli
 
 	while (p)
 	{
+		std::cout << "p in tokenize:  " << p << std::endl;
 		vec.push_back(p);
 		p = strtok_s(NULL, myDelimiter, &nextToken);
 	}
+
+	std::vector<std::string>::iterator itr = vec.begin();
+	while (itr != vec.end())
+	{
+		std::cout << "itr val in tokenize:  " << *itr << std::endl;
+		++itr;
+	}
+	std::cout << "returning from tokenize" << std::endl;
 
 	return vec;
 }
@@ -369,4 +380,18 @@ std::string Utility::GetShapeType(Shape* shape)
 		++counter;
 	}
 	return namePrefix;
+}
+
+int Utility::AvailableSolids()
+{
+	if ((Sphere::m_shapeVec.size() == 0) && (SolidBox::m_shapeVec.size() == 0))
+	{
+		std::cout << "No solids currently in memory" << std::endl;
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
+		return 0;
+	}
+	else
+	{
+		return (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size());
+	}
 }

@@ -30,5 +30,5 @@ public:
 	void Save(std::ofstream &outFile) override;
 	static void Create();
 	static void PrintSolids();
-	static void Load(std::vector<std::string>::iterator &itr, const int &vecSize);
+	static void Load(std::vector<std::string>::iterator &itr);
 };

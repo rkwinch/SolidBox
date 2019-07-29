@@ -137,12 +137,12 @@ void SolidBox::PrintSolids()
 
 	for (auto cube : m_shapeVec)
 	{
-		std::cout << count << ") " << cube->GetName() << std::endl;
+		std::cout << count << ") " << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
 		++count;
 	}
 }
 
-void SolidBox::Load(std::vector<std::string>::iterator &itr, const int &vecSize)
+void SolidBox::Load(std::vector<std::string>::iterator &itr)
 {
 	std::string stName = "";
 	double dLength = 0;
@@ -150,48 +150,48 @@ void SolidBox::Load(std::vector<std::string>::iterator &itr, const int &vecSize)
 	double dHeight = 0;
 	int nNumOfEdges = 0;
 
-	//getting members for solidbox(es)
-	for (int ii = 0; ii < vecSize; ++ii)
+	//getting members for solidbox
+	stName = (*itr); std::cout << "in loadsolidbox should be a name: " << (*itr) << std::endl;
+	itr++; std::cout << "in loadsolidbox should be a double: " << (*itr) << std::endl;
+	dLength = stod(*itr);
+	itr++;
+	bHasConnection = static_cast<bool>(stoi(*itr));
+	itr++;
+
+	//constructing a solid box with given length and setting other params
+	std::cout << "making a solidbox from load with length,hasconn,name: " << dLength << " " << bHasConnection << " " << stName << std::endl;
+	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(dLength);
+	box->SetName(stName);
+
+	//getting connectionchannel name
+	stName = (*itr);
+	itr++;
+	box->GetConnChannel()->SetName(stName);
+
+	//getting and setting members for square planes
+	for (auto planePtr : box->GetConnChannel()->GetSurfaceSet())
 	{
-		stName = ""; // resetting name for boxes if there is more than one solid box
-		stName = (*itr); std::cout << "in loadsolidbox should be a name: " << (*itr) << std::endl;
-		itr++; std::cout << "in loadsolidbox should be a double: " << (*itr) << std::endl;
-		dLength = stod(*itr);
-		itr++;
-		bHasConnection = static_cast<bool>(stoi(*itr));
-		itr++;
-
-		//constructing a solid box with given length and setting other params
-		std::cout << "making a solidbox from load with length,hasconn,name: " << dLength << " " << bHasConnection << " " << stName << std::endl;
-		std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(dLength);
-		box->SetName(stName);
-		stName = ""; // resetting name
-
-		//getting connectionchannel name
 		stName = (*itr);
 		itr++;
-		box->GetConnChannel()->SetName(stName);
+		dHeight = stod(*itr);
+		itr++;
+		dLength = stod(*itr);
+		itr++;
+		nNumOfEdges = stoi(*itr);
+		itr++; std::cout << "in loadsolidbox plane. last should be a ':' " << (*itr) << std::endl;
+		// for notes on why using dynamic cast here, refer to load fxn in Sphere
+		auto rectPlanePtr = dynamic_cast<RectPlane*>(planePtr.get());
+		rectPlanePtr->SetName(stName);
 		stName = ""; // resetting name
+		rectPlanePtr->SetHeight(dHeight);
+		rectPlanePtr->SetLength(dLength);
+	}
 
-		//getting and setting members for square planes
-		for (auto planePtr : box->GetConnChannel()->GetSurfaceSet())
-		{
-			stName = (*itr);
-			itr++;
-			dHeight = stod(*itr);
-			itr++;
-			dLength = stod(*itr);
-			itr++;
-			nNumOfEdges = stoi(*itr);
-			itr++; std::cout << "in loadsolidbox plane. last should be a ':' " << (*itr) << std::endl;
-			// for notes on why using dynamic cast here, refer to load fxn in Sphere
-			auto rectPlanePtr = dynamic_cast<RectPlane*>(planePtr.get());
-			rectPlanePtr->SetName(stName);
-			stName = ""; // resetting name
-			rectPlanePtr->SetHeight(dHeight);
-			rectPlanePtr->SetLength(dLength);
-		}
-		itr++; // skipping ":" delimiter
-		SolidBox::m_shapeVec.push_back(box); // solid box object is completed now.
+	SolidBox::m_shapeVec.push_back(box); // solid box object is completed now.
+
+	if (dHeight != dLength)
+	{
+		std::cout << "Invalid length and height parameters.  Cannot load cube." << std::endl;
+		box->Delete();
 	}
 }
