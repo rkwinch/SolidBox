@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <math.h>
 #include "Sphere.h"
 #include "CurvedSurface.h"
 #include "ConnectionChannel.h"
@@ -31,6 +32,8 @@ Sphere::Sphere(double radius)
 
 	//if all planes inserted correctly, then a proper ConnectionChannel has been made
 	m_dRadius = radius;
+	CalcSA();
+	CalcVol();
 	m_bHasConnection = true;
 }
 
@@ -45,6 +48,8 @@ Sphere::Sphere(Sphere& other)
 {
 	// don't change name
 	m_dRadius = other.m_dRadius;
+	this->CalcSA();
+	this->CalcVol();
 	m_channel = other.m_channel;
 	m_bHasConnection = other.m_bHasConnection; // flag for checking if the SolidBox has a connection
 }
@@ -54,6 +59,8 @@ Sphere::Sphere(Sphere& other)
 Sphere& Sphere::operator=(Sphere &sphere)
 {
 	m_dRadius = sphere.m_dRadius;
+	this->CalcSA();
+	this->CalcVol();
 	m_channel = sphere.m_channel;
 	m_bHasConnection = sphere.m_bHasConnection;
 	sphere.Delete(); //**deleting items on right side of = operator**
@@ -77,6 +84,16 @@ void Sphere::Delete()
 	m_shapeVec.erase(shapeVecItr); // removing item from vector
 }
 
+void Sphere::CalcVol()
+{
+	m_dVolume = 4.0 / 3.0 * CurvedSurface::PI * pow(m_dRadius, 3.0);
+}
+
+void Sphere::CalcSA()
+{
+	m_dSurfaceArea = 4.0 * CurvedSurface::PI * pow(m_dRadius, 2.0);
+}
+
 double Sphere::GetRadius()
 {
 	return m_dRadius;
@@ -98,7 +115,7 @@ std::vector<std::shared_ptr<Sphere>> Sphere::GetShapeVec()
 	return m_shapeVec;
 }
 
-void Sphere::Save(std::ofstream &outFile)
+void Sphere::Save(std::ofstream &outFile) 
 {
 	outFile << m_stName << ";";
 	outFile << m_dRadius << ";" << m_bHasConnection << ";";
@@ -148,15 +165,14 @@ void Sphere::Load(std::vector<std::string>::iterator &itr)
 	int nNumOfEdges = 0;
 
 	//getting members for sphere
-	stName = (*itr); std::cout << "in loadsphere should be a name: " << (*itr) << std::endl;
-	itr++; std::cout << "in loadsphere should be a double: " << (*itr) << std::endl;
+	stName = (*itr); 
+	itr++;
 	dRadius = stod(*itr);
 	itr++;
 	bHasConnection = static_cast<bool>(stoi(*itr));
 	itr++;
 
 	//constructing a sphere with given radius and setting other params
-	std::cout << "making a sphere from load with radius,hasconn,name: " << dRadius << " " << bHasConnection << " " << stName << std::endl;
 	std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(dRadius);
 	sphere->SetName(stName);
 
@@ -173,7 +189,6 @@ void Sphere::Load(std::vector<std::string>::iterator &itr)
 		dRadius = stod(*itr);
 		itr++;
 		nNumOfEdges = stoi(*itr);
-		itr++; std::cout << "in loadsphere plane. last should be a ':' " << (*itr) << std::endl;
 
 		// making cast to CurvedSurface* since it is currently Surface* (and doesn't know about radius, etc)
 		// do this by casting the smart pointer to the CurvedSurface and using get() to get the raw ptr
@@ -191,7 +206,6 @@ void Sphere::Load(std::vector<std::string>::iterator &itr)
 		//MyChild *child = dynamic_cast<MyChild*>(base); // bad
 		auto curvedSurfacePtr = dynamic_cast<CurvedSurface*>(surface.get());
 		curvedSurfacePtr->SetName(stName);
-		curvedSurfacePtr->SetRadius(dRadius);
 	}
 		
 	m_shapeVec.push_back(sphere); // solid box object is completed now.

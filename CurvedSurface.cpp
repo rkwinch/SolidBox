@@ -17,7 +17,7 @@ CurvedSurface::CurvedSurface(double radius, ConnectionChannel* channel)
 {
 	m_stName = Utility::CreateUniqueName("curvedSurf", m_nNameIDCounter);
 	m_dRadius = radius;
-	m_dArea = CalcArea();
+	CalcArea();
 	m_channel = channel;
 }
 
@@ -26,7 +26,7 @@ CurvedSurface& CurvedSurface::operator=(CurvedSurface& plane)
 {
 	// don't change name here
 	m_dRadius = plane.m_dRadius;
-	m_dArea = plane.CalcArea();
+	CalcArea();
 	m_nNumOfEdges = plane.m_nNumOfEdges;
 	*m_channel = *(plane.m_channel);
 	return *this;
@@ -44,38 +44,33 @@ bool CurvedSurface::operator<(const CurvedSurface &plane) const
 	return (m_stName < plane.m_stName);
 }
 
+void CurvedSurface::CalcArea() 
+{
+	m_dArea = 4 * PI * pow(m_dRadius, 2);
+}
+
 void CurvedSurface::SetName(std::string name)
 {
 	m_stName = name;
 }
 
-void CurvedSurface::SetRadius(double radius)
-{
-	m_dRadius = radius;
-}
-
-double CurvedSurface::GetRadius()
+double CurvedSurface::GetRadius() const
 {
 	return m_dRadius;
 }
 
-ConnectionChannel* CurvedSurface::GetConnChannel()
+ConnectionChannel* CurvedSurface::GetConnChannel() const
 {
 	return m_channel;
 }
 
-std::shared_ptr<Surface> CurvedSurface::GetCopy()
+std::shared_ptr<Surface> CurvedSurface::GetCopy() const
 {
 	return std::make_shared<CurvedSurface>(m_dRadius, m_channel);
 }
 
-void CurvedSurface::Save(std::ofstream &outFile)
+void CurvedSurface::Save(std::ofstream &outFile) const
 {
 	outFile << m_stName << ";";
 	outFile << m_dRadius << ";" << m_nNumOfEdges << ";";
-}
-
-double CurvedSurface::CalcArea() const
-{
-	return (4 * PI * pow(m_dRadius, 2));
 }

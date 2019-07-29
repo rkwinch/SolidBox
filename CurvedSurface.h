@@ -19,16 +19,14 @@ public:
 	CurvedSurface& operator=(CurvedSurface& plane);
 	bool operator==(const CurvedSurface& plane) const;
 	bool operator<(const CurvedSurface &plane) const;
+	void CalcArea() override;
 	void SetName(std::string name);
-	void SetRadius(double radius);
-	double GetRadius();
-	ConnectionChannel* GetConnChannel();
-	std::shared_ptr<Surface> GetCopy() override;
-	void Save(std::ofstream &outFile) override;
+	double GetRadius() const;
+	ConnectionChannel* GetConnChannel() const;
+	std::shared_ptr<Surface> GetCopy() const override;
+	void Save(std::ofstream &outFile) const override;
 	
 private:
-
-	double m_dRadius;
-
-	double CalcArea() const override;
+	double m_dArea = 0;
+	double m_dRadius = 0;
 };

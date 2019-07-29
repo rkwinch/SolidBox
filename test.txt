@@ -1,3 +1,2 @@
-1;1;2;6;1;1;1;
-cube1;1;1;connectionChannel1;plane1;1;1;4;plane2;1;1;4;plane3;1;1;4;plane4;1;1;4;plane5;1;1;4;plane6;1;1;4;
-sphere1;2;1;connectionChannel2;curvedSurf1;2;0;
+1;1;2;6;7;0;1;
+sphere1;0.125;1;connectionChannel2;curvedSurf7;0.125;0;

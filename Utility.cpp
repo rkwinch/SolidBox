@@ -169,10 +169,12 @@ void Utility::ViewFiles()
 {   // checking for txt files in current directory
 	WIN32_FIND_DATA file;
 	HANDLE searchHandle = FindFirstFile("*.txt", &file);
+
+	std::cout << std::endl;
+
 	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
 		int count = 0;
-		PrintNwLnsAndLnDelimiter("-", 55);
 		std::cout << "Available files:  ";
 
 		do
@@ -197,6 +199,7 @@ void Utility::ViewFiles()
 		std::cout << "No files in memory" << std::endl;
 	}
 }
+
 int Utility::NumOfFilesAvail()
 {
 	WIN32_FIND_DATA file;
@@ -224,6 +227,7 @@ char Utility::SaveOptions()
 	std::cout << "Press 's' to save to an existing file (overwrite)," << std::endl;
 	std::cout << "press 'n' to save to a new file," << std::endl;
 	std::cout << " or press 'b' to go back to the main menu.\n" << std::endl;
+	Utility::ViewFiles();
 	std::regex acceptableInputExpr("^\\s*([sSnNbB])\\s*$");
 	strInput = GetAndValidateInput(acceptableInputExpr);
 	cInput = strInput[0];
@@ -240,7 +244,6 @@ std::string Utility::PickFile()
 	HANDLE searchHandle = FindFirstFile("*.txt", &file);
 	std::regex acceptableInputExpr("^\\s*([1-9]*|b|B)\\s*$");
 
-	std::cout << "Please select a number that corresponds to the file or press 'b' to go to the main menu" << std::endl;
 	strInput = GetAndValidateInput(acceptableInputExpr);
 	cInput = strInput[0];
 
@@ -250,7 +253,6 @@ std::string Utility::PickFile()
 	}
 
 	numOfFiles = NumOfFilesAvail();
-	ViewFiles();
 	fileSelection = stoi(strInput);
 
 	if ((fileSelection < 1) || (fileSelection > numOfFiles))
@@ -319,18 +321,9 @@ std::vector<std::string> Utility::TokenizeStringToVec(std::string str, char deli
 
 	while (p)
 	{
-		std::cout << "p in tokenize:  " << p << std::endl;
 		vec.push_back(p);
 		p = strtok_s(NULL, myDelimiter, &nextToken);
 	}
-
-	std::vector<std::string>::iterator itr = vec.begin();
-	while (itr != vec.end())
-	{
-		std::cout << "itr val in tokenize:  " << *itr << std::endl;
-		++itr;
-	}
-	std::cout << "returning from tokenize" << std::endl;
 
 	return vec;
 }
@@ -393,5 +386,29 @@ int Utility::AvailableSolids()
 	else
 	{
 		return (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size());
+	}
+}
+
+void Utility::PrintSolidsWithConseqCntr()
+{
+	int count = 1;
+
+	if (SolidBox::m_shapeVec.size() != 0)
+	{
+		for (auto cube : SolidBox::m_shapeVec)
+		{
+			Utility::PrintChar(' ', 5);
+			std::cout << count++ << ") " << std::left << std::setw(10) << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+		}
+	}
+
+	if (Sphere::m_shapeVec.size() != 0)
+	{
+		for (auto sphere : Sphere::m_shapeVec)
+		{
+			Utility::PrintChar(' ', 5);
+			std::cout << count++ << ") " << std::left << std::setw(10) << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
+		}
+		std::cout << std::endl;
 	}
 }

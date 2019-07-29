@@ -18,6 +18,8 @@ protected:
 	ConnectionChannel m_channel;
 	std::string m_stName = "";
 	bool m_bHasConnection = false; // flag for checking if the shape has a connection
+	double m_dVolume = 0;
+	double m_dSurfaceArea = 0;
 
 public:
 
@@ -26,6 +28,8 @@ public:
 	virtual std::set<std::shared_ptr<Surface>> GetSurfacesCopy() = 0;
 	virtual void Save(std::ofstream &outFile) = 0;
 	virtual void Delete() = 0;
+	virtual void CalcVol() = 0;
+	virtual void CalcSA() = 0;
 
 	Shape() : m_channel(this) 
 	{
@@ -50,6 +54,16 @@ public:
 	std::string GetName()
 	{
 		return m_stName;
+	}
+	
+	double GetSA()
+	{
+		return m_dSurfaceArea;
+	}
+
+	double GetVol()
+	{
+		return m_dVolume;
 	}
 
 	int GetSurfaceCount()

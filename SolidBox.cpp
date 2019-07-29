@@ -4,6 +4,7 @@
 #include <fstream>
 #include <algorithm>
 #include <vector>
+#include <math.h>
 #include "SolidBox.h"
 #include "RectPlane.h"
 #include "ConnectionChannel.h"
@@ -33,6 +34,8 @@ SolidBox::SolidBox(double sideLength)
 
 	//if all planes inserted correctly, then a proper ChannelConnection has been made
 	m_dSideLength = sideLength;
+	CalcSA();
+	CalcVol();
 	m_bHasConnection = true;
 }
 
@@ -78,6 +81,16 @@ void SolidBox::Delete()
 
 	m_channel.Disconnect(); // setting surfaces in surfaceSet to null
 	m_shapeVec.erase(shapeVecItr); // removing item from vector
+}
+
+void SolidBox::CalcVol() 
+{
+	m_dVolume = pow(m_dSideLength, 3.0);
+}
+
+void SolidBox::CalcSA() 
+{
+	m_dSurfaceArea = 6.0 * pow(m_dSideLength, 2.0);
 }
 
 double SolidBox::GetSideLength()
@@ -151,15 +164,14 @@ void SolidBox::Load(std::vector<std::string>::iterator &itr)
 	int nNumOfEdges = 0;
 
 	//getting members for solidbox
-	stName = (*itr); std::cout << "in loadsolidbox should be a name: " << (*itr) << std::endl;
-	itr++; std::cout << "in loadsolidbox should be a double: " << (*itr) << std::endl;
+	stName = (*itr); 
+	itr++;
 	dLength = stod(*itr);
 	itr++;
 	bHasConnection = static_cast<bool>(stoi(*itr));
 	itr++;
 
 	//constructing a solid box with given length and setting other params
-	std::cout << "making a solidbox from load with length,hasconn,name: " << dLength << " " << bHasConnection << " " << stName << std::endl;
 	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(dLength);
 	box->SetName(stName);
 
@@ -178,13 +190,11 @@ void SolidBox::Load(std::vector<std::string>::iterator &itr)
 		dLength = stod(*itr);
 		itr++;
 		nNumOfEdges = stoi(*itr);
-		itr++; std::cout << "in loadsolidbox plane. last should be a ':' " << (*itr) << std::endl;
+		itr++; 
 		// for notes on why using dynamic cast here, refer to load fxn in Sphere
 		auto rectPlanePtr = dynamic_cast<RectPlane*>(planePtr.get());
 		rectPlanePtr->SetName(stName);
 		stName = ""; // resetting name
-		rectPlanePtr->SetHeight(dHeight);
-		rectPlanePtr->SetLength(dLength);
 	}
 
 	SolidBox::m_shapeVec.push_back(box); // solid box object is completed now.

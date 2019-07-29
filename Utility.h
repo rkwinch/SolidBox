@@ -6,28 +6,27 @@
 
 class Shape;
 
-class Utility {
+namespace Utility {
 
-public:
-
-	static void PrintAllSolids();
-	static std::string SelectShapeType();
-	static std::vector<std::string> TokenizeStringToVec(std::string, char delimiter);
-	static void PrintNwLnsAndLnDelimiter(std::string delimiter, size_t numOfTimes);
-	static std::string RemoveSpaces(std::string input, std::regex acceptableInputExpr);
-	static bool ValidateInput(std::string input, std::regex acceptableInputExpr);
-	static std::string GetAndValidateInput(std::regex acceptableInputExpr);
-	static void PrintHeader(std::string header);
-	static void PrintChar(char symbol, int numOfTimes);
-	static bool IsOkToSave();
-	static void ViewFiles();
-	static char SaveOptions();
-	static std::string PickFile();
-	static bool FileExists(std::string fileName);
-	static std::string PickNewFile();
-	static int NumOfFilesAvail();
-	static std::string CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter);
-	static std::string InputInVecVal(std::string strInput, std::regex acceptableInputExpr, int shapeVecSize);
-	static std::string GetShapeType(Shape* shape);
-	static int AvailableSolids();
-};
+	 void PrintAllSolids();
+	 std::string SelectShapeType();
+	 std::vector<std::string> TokenizeStringToVec(std::string, char delimiter);
+	 void PrintNwLnsAndLnDelimiter(std::string delimiter, size_t numOfTimes);
+	 std::string RemoveSpaces(std::string input, std::regex acceptableInputExpr);
+	 bool ValidateInput(std::string input, std::regex acceptableInputExpr);
+	 std::string GetAndValidateInput(std::regex acceptableInputExpr);
+	 void PrintHeader(std::string header);
+	 void PrintChar(char symbol, int numOfTimes);
+	 bool IsOkToSave();
+	 void ViewFiles();
+	 char SaveOptions();
+	 std::string PickFile();
+	 bool FileExists(std::string fileName);
+	 std::string PickNewFile();
+	 int NumOfFilesAvail();
+	 std::string CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter);
+	 std::string InputInVecVal(std::string strInput, std::regex acceptableInputExpr, int shapeVecSize);
+	 std::string GetShapeType(Shape* shape);
+	 int AvailableSolids();
+	 void PrintSolidsWithConseqCntr();
+}

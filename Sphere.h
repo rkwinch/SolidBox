@@ -30,6 +30,8 @@ public:
 	Sphere(Sphere& other);
 	Sphere& operator=(Sphere &sphere);
 	void Delete() override;
+	void CalcVol() override;
+	void CalcSA() override;
 	double GetRadius();
 	std::set<std::shared_ptr<Surface>> GetSurfacesCopy() override;	
 	std::vector<std::shared_ptr<Sphere>> GetShapeVec();

@@ -12,7 +12,8 @@ class SolidBox : public Shape {
 
 private:
 
-	double m_dSideLength;
+	double m_dSideLength = 0;
+	
 
 public:
 	static const int m_nSurfaces;
@@ -24,6 +25,8 @@ public:
 	SolidBox(SolidBox&);
 	SolidBox& operator=(SolidBox &cube);
 	void Delete() override;
+	void CalcVol() override;
+	void CalcSA() override;
 	double GetSideLength();
 	std::set<std::shared_ptr<Surface>> GetSurfacesCopy() override;
 	std::vector<std::shared_ptr<SolidBox>> GetShapeVec();
