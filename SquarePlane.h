@@ -25,7 +25,7 @@ public:
 	SquarePlane(double sideLength, ConnectionChannel* channel);
 	bool operator==(const SquarePlane& plane) const;
 	SquarePlane& operator=(const SquarePlane& plane);
-	bool operator<(const std::shared_ptr<SquarePlane> plane) const;
+	bool operator<(const SquarePlane &plane) const;
 	std::string GetSqPlaneName();
 	double GetSqPlaneLength();
 	double GetSqPlaneHeight();

@@ -27,10 +27,10 @@ private:
 	static std::string GetAndValidateInput(std::regex acceptableInputExpr);
 	static void PrintHeader(std::string header);
 	static void PrintChar(char symbol, int numOfTimes);
-	static void PrintDebugInfo(std::vector<SolidBox>::iterator cubeAndPlanesItr);
-	static void PrintCubeInfo(std::vector<SolidBox>::iterator cubeAndPlanesItr);
-	static void PrintChannelInfo(std::vector<SolidBox>::iterator cubeAndPlanesItr);
-	static void PrintPlanesInfo(std::vector<SolidBox>::iterator cubeAndPlanesItr);
+	static void PrintDebugInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeAndPlanesItr);
+	static void PrintCubeInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeAndPlanesItr);
+	static void PrintChannelInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeAndPlanesItr);
+	static void PrintPlanesInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeAndPlanesItr);
 	static void CopyExistingSolid();
 	static void DeleteExistingSolid();
 	static void MoveASolid();

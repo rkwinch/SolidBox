@@ -9,11 +9,6 @@ IMPLEMENT_SERIAL(SquarePlane, CObject, 0)
 std::set<std::string> SquarePlane::planeNames;
 int SquarePlane::nameIDCounter = 1;
 
-SquarePlane::SquarePlane()
-{
-
-}
-
 void SquarePlane::Serialize(CArchive& ar) {
 	CObject::Serialize(ar);
 
@@ -29,6 +24,13 @@ void SquarePlane::Serialize(CArchive& ar) {
 
 }
 
+// default constructor
+SquarePlane::SquarePlane()
+{
+	// only here for CObject
+}
+
+// parameterized constructor
 SquarePlane::SquarePlane(double sideLength, ConnectionChannel* channel)
 {
 	name = "";
@@ -40,20 +42,16 @@ SquarePlane::SquarePlane(double sideLength, ConnectionChannel* channel)
 	this->channel = channel;
 }
 
-std::string SquarePlane::GetSqPlaneName()
-{
-	return name;
-}
-
 //defining the == operator for SquarePlane to be based on comparisons of the name of the plane
-bool SquarePlane::operator==(const SquarePlane& plane) const
+bool SquarePlane::operator==(const SquarePlane &plane) const
 {
 	return (this->name == plane.name);
 }
 
 //defining the = operator for SquarePlane to deep copy plane
-SquarePlane& SquarePlane::operator=(const SquarePlane& plane)
+SquarePlane& SquarePlane::operator=(const SquarePlane &plane)
 {
+	// don't change name here
 	height = plane.height;
 	length = plane.length;
 	numOfEdges = plane.numOfEdges;
@@ -61,9 +59,9 @@ SquarePlane& SquarePlane::operator=(const SquarePlane& plane)
 }
 
 //defining < operator for SquarePlane to be based on comparisons of the name of the plane
-bool SquarePlane::operator<(const std::shared_ptr<SquarePlane> plane) const
+bool SquarePlane::operator<(const SquarePlane &plane) const
 {
-	return (this->name < plane->name);
+	return (this->name < plane.name);
 }
 
 double SquarePlane::GetSqPlaneLength()
@@ -84,4 +82,9 @@ ConnectionChannel* SquarePlane::GetConnChannel()
 int SquarePlane::GetNumOfEdges()
 {
 	return numOfEdges;
+}
+
+std::string SquarePlane::GetSqPlaneName()
+{
+	return name;
 }

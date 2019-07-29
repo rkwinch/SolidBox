@@ -29,8 +29,45 @@ void ConnectionChannel::Serialize(CArchive& ar) {
 
 ConnectionChannel::ConnectionChannel()
 {
-
+	// only here because of CObject
 }
+
+//destructor
+ConnectionChannel::~ConnectionChannel()
+{
+	// don't need to do anything here since memory is handled via smart pointers
+}
+
+// parameterized constructor
+ConnectionChannel::ConnectionChannel(SolidBox* cube)
+{
+	name = Utility::CreateUniqueName("connectionChannel", channelNames, nameIDCounter);
+	channelNames.insert(name);
+	this->cube = cube; // want the cube member here to have same address of cube
+					   // it is constructed from 
+	// **will get planeSet as a SolidBox is being constructed**
+}
+
+//copy constructor
+ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
+{
+	// new name for copy constructor was requested (will not copy current name)
+	// (will probably not want to call copy constructor.  pass by reference instead)
+	std::string name = Utility::CreateUniqueName("cube", channelNames, nameIDCounter);
+	channelNames.insert(name);
+
+	// allocating new memory for the copy using the length (same as height for SquarePlane
+	// implementation) of a SquarePlane* in the set of channel
+	for (auto planePtr : planeSet)
+	{
+		std::shared_ptr<SquarePlane> copyPlanePtr = std::make_shared<SquarePlane>(planePtr->GetSqPlaneHeight(), this);
+		this->planeSet.insert(copyPlanePtr);
+	}
+
+	//setting cube ptr
+	cube = channel.cube;
+}
+
 
 ConnectionChannel& ConnectionChannel::operator=(ConnectionChannel &channel)
 {
@@ -45,34 +82,14 @@ ConnectionChannel& ConnectionChannel::operator=(ConnectionChannel &channel)
 	return *this;
 }
 
-// parameterized constructor
-ConnectionChannel::ConnectionChannel(SolidBox* cube)
+bool ConnectionChannel::operator==(const ConnectionChannel& channel) const
 {
-	name = Utility::CreateUniqueName("connectionChannel", channelNames, nameIDCounter);
-	channelNames.insert(name);
-	this->cube = cube; // want the cube member here to have same address of cube
-					   // it is constructed from
-	// **will get planeSet as a SolidBox is being constructed**
+	return (name == channel.name);
 }
 
-//copy constructor
-ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
+bool ConnectionChannel::operator<(const ConnectionChannel& channel) const
 {
-	// new name for copy constructor was requested (will not copy current name)
-	std::string name = Utility::CreateUniqueName("cube", channelNames, nameIDCounter);
-	channelNames.insert(name);
-
-	// allocating new memory for the copy using the length (same as height for SquarePlane
-	// implementation) of a SquarePlane* in the set of channel
-	for (auto planePtr : planeSet)
-	{
-		std::shared_ptr<SquarePlane> copyPlanePtr = std::make_shared<SquarePlane>(planePtr->GetSqPlaneHeight(), this);
-		this->planeSet.insert(copyPlanePtr);
-	}
-
-	//allocating new memory for a copy of the cube constructed with the same sideLength
-	SolidBox* copyCube = cube;
-	this->cube = copyCube;//????????????????????????
+	return (name < channel.name);
 }
 
 //adding a plane to the connection
@@ -98,11 +115,7 @@ void ConnectionChannel::Cleanup(SquarePlane* plane)
 	//not really needed since using shared_ptr for SquarePlanes
 }
 
-//destructor
-ConnectionChannel::~ConnectionChannel()
-{
 
-}
 
 std::set<std::shared_ptr<SquarePlane>> ConnectionChannel::GetPlaneSet()
 {
@@ -112,16 +125,6 @@ std::set<std::shared_ptr<SquarePlane>> ConnectionChannel::GetPlaneSet()
 std::string ConnectionChannel::GetConnName()
 {
 	return name;
-}
-
-bool ConnectionChannel::operator==(const ConnectionChannel& channel) const
-{
-	return (name == channel.name);
-}
-
-bool ConnectionChannel::operator<(const ConnectionChannel& channel) const
-{
-	return (name < channel.name);
 }
 
 std::set<std::string>* ConnectionChannel::GetChannelNames()

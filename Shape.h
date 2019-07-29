@@ -5,6 +5,7 @@
 #include <string>
 
 //abstract.  Don't make instances of Shape.
+// make a templated class later
 class Shape {
 
 protected:

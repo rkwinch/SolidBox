@@ -1,7 +1,7 @@
 #pragma once
 
 class Channel {
-
+	// make a templated class later 
 public:
 
 	virtual void Connect() = 0;

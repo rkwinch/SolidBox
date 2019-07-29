@@ -8,6 +8,7 @@
 #include <map>
 #include <afx.h>
 #include <memory>
+#include <vector>
 
 class SolidBox : public CObject, public Shape {
 
@@ -19,6 +20,7 @@ public:
 
 	SolidBox();
 	~SolidBox();
+	SolidBox(SolidBox&); 
 	SolidBox(double sideLength);
 	double GetSideLength();
 	bool GetHasConnection();
@@ -28,7 +30,7 @@ public:
 	bool operator<(const SolidBox &cube) const;
 	bool operator==(const SolidBox &cube) const;
 	static std::set<std::string>* GetCubeNames();
-	static std::vector<SolidBox> cubeVec;
+	static std::vector<std::shared_ptr<SolidBox>> cubeVec;
 
 private:
 

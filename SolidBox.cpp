@@ -11,6 +11,7 @@
 #include "afx.h"
 #include <memory>
 #include <algorithm>
+#include <vector>
 
 
 IMPLEMENT_SERIAL(SolidBox, CObject, 0)
@@ -18,12 +19,9 @@ IMPLEMENT_SERIAL(SolidBox, CObject, 0)
 int SolidBox::nameIDCounter = 1;
 std::set<std::string> SolidBox::cubeNames;
 const int SolidBox::planesPerSolidBox = 6;
-std::vector<SolidBox> SolidBox::cubeVec;
+std::vector<std::shared_ptr<SolidBox>> SolidBox::cubeVec;
 
-SolidBox::SolidBox() : channel(this)
-{
 
-}
 void SolidBox::Serialize(CArchive& ar) {
 	CObject::Serialize(ar);
 	std::cout << "in serializing fxn" << std::endl;
@@ -50,51 +48,25 @@ void SolidBox::Serialize(CArchive& ar) {
 
 }
 
-
-bool SolidBox::operator<(const SolidBox &cube) const
+// default constructor 
+SolidBox::SolidBox() : channel(this)
 {
-	return (this->name < cube.name);
+	// only here for CObject
 }
 
-bool SolidBox::operator==(const SolidBox &cube) const
-{
-	return (this->name == cube.name);
-}
-
-SolidBox& SolidBox::operator=(SolidBox &cube)
-{
-	sideLength = cube.sideLength;
-	channel = cube.channel;
-	bHasConnection = cube.bHasConnection;
-
-	//**deleting items on right side of = operator**
-	//erasing string cube name
-	cubeNames.erase(cube.name);
-
-	//erasing string channel name
-	ConnectionChannel::channelNames.erase(cube.channel.name);
-
-	//erasing cube
-	std::vector<SolidBox>::iterator cubeVecItr = cubeVec.begin();
-	cubeVecItr = std::find(cubeVec.begin(), cubeVec.end(), cube);
-	cubeVec.erase(cubeVecItr);
-
-	//**end of deleting items from right of =**
-
-	return *this;
-}
-
+// destructor
 SolidBox::~SolidBox()
 {
-
+	// don't need to do anything here since memory is handled via smart pointers
 }
 
+// parameterized constructor
 SolidBox::SolidBox(double sideLength) : channel(this)
 {
 	bHasConnection = false; // no channel connection yet
 
-						   //giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
-						   //will verify by putting the name into a set and check if it properly inserts.
+							//giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
+							//will verify by putting the name into a set and check if it properly inserts.
 	name = Utility::CreateUniqueName("cube", cubeNames, nameIDCounter);
 	cubeNames.insert(name);
 	std::set<std::shared_ptr<SquarePlane>> squarePlaneSet;
@@ -111,6 +83,53 @@ SolidBox::SolidBox(double sideLength) : channel(this)
 	//if all planes inserted correctly, then a proper ChannelConnection has been made
 	this->sideLength = sideLength;
 	bHasConnection = true;
+}
+
+// copy constructor
+SolidBox::SolidBox(SolidBox& other)
+{
+	// don't change name
+	sideLength = other.sideLength;
+	ConnectionChannel channel = other.channel;
+	bHasConnection = other.bHasConnection; // flag for checking if the SolidBox has a connection
+	
+}
+
+bool SolidBox::operator<(const SolidBox &cube) const
+{
+	return (this->name < cube.name);
+}
+
+bool SolidBox::operator==(const SolidBox &cube) const
+{
+	return (this->name == cube.name);
+}
+
+// since it was requested that old object be discarded afterwards, this is
+// more like a move.  That is why this is not const. '=' is a move.
+SolidBox& SolidBox::operator=(SolidBox &cube)
+{
+	sideLength = cube.sideLength;
+	channel = cube.channel;
+	bHasConnection = cube.bHasConnection;
+
+	//**deleting items on right side of = operator**
+	//erasing string cube name
+	cubeNames.erase(cube.name);
+
+	//erasing string channel name
+	ConnectionChannel::channelNames.erase(cube.channel.name);
+
+	//erasing cube
+	std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr = cubeVec.begin();
+
+	                                                       // [&] is take by reference, arg type is shared ptr of solidbox (box), return type is bool, 
+	                                                       // predicate is check if the SolidBoxes are equivalent (same name by == operator)
+	cubeVecItr = std::find_if(cubeVec.begin(), cubeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return *box == cube; });
+	cubeVec.erase(cubeVecItr);
+	//**end of deleting items from right of =**
+
+	return *this;
 }
 
 std::set<std::string>* SolidBox::GetCubeNames()
