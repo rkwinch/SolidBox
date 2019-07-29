@@ -76,7 +76,12 @@ void ConnectionChannel::Connect(std::set<std::shared_ptr<Surface>> surfaceSet)
 {
 	for (auto surface : surfaceSet)
 	{
-		m_surfaceSet.insert(surface);
+		auto insert = m_surfaceSet.insert(surface);
+		
+		if (insert.second == false) // checking if already in set (has same name, need unique name, so throw exception)
+		{
+			throw std::exception("Cannot make Shape.  Duplicate surfaces detected.");
+		}
 	}
 }
 

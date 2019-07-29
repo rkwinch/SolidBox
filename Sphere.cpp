@@ -76,7 +76,7 @@ void Sphere::Delete()
 
 	if (shapeVecItr == m_shapeVec.end())
 	{
-		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
+		std::cout << "Cannot delete Shape.  Shape not found" << std::endl;
 		return;
 	}
 
@@ -102,6 +102,7 @@ double Sphere::GetRadius()
 std::set<std::shared_ptr<Surface>> Sphere::GetSurfacesCopy()
 {
 	std::set<std::shared_ptr<Surface>> surfaceSet;
+
 	for (auto surface : m_channel.GetSurfaceSet()) // should just be one surface
 	{
 		std::shared_ptr<CurvedSurface> copy = std::make_shared<CurvedSurface>(m_dRadius, &m_channel);

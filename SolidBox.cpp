@@ -75,7 +75,7 @@ void SolidBox::Delete()
 
 	if (shapeVecItr == m_shapeVec.end())
 	{
-		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
+		std::cout << "Cannot delete Shape.  Shape not found" << std::endl;
 		return;
 	}
 
@@ -101,10 +101,12 @@ double SolidBox::GetSideLength()
 std::set<std::shared_ptr<Surface>> SolidBox::GetSurfacesCopy()
 {
 	std::set<std::shared_ptr<Surface>> surfaceSet;
+
 	for (auto surface : m_channel.GetSurfaceSet())
 	{
-		std::shared_ptr<RectPlane> copy = std::make_shared<RectPlane>(m_dSideLength, m_dSideLength, &m_channel);
-		surfaceSet.insert(copy);
+		auto element = dynamic_cast<RectPlane*>(surface.get());
+		std::shared_ptr<RectPlane> copy = std::make_shared<RectPlane>(element->GetHeight(), element->GetLength(), &m_channel);
+		surfaceSet.insert(copy); // don't do error checking for set insertion since was previously in a set
 	}
 	return surfaceSet;
 }

@@ -13,6 +13,7 @@ class Menu {
 	//friend class Utility;
 
 public:
+	static const int PRINTING_WIDTH;
 
 	static Menu* GetInstance();
 	static void Run();
@@ -37,7 +38,7 @@ private:
 	void PrintChannelInfo(Shape* shape);
 	void PrintPlanesInfo(Shape* shape);
 	void LoadFile();
-	void RetrieveInitialParams(int &solidBoxNameIDCntr, int &sphereNameIDCntr, int &connChannelNmIDCntr, 
+	void RetrieveInitialParams(int &solidBoxNameIDCntr, int &sphereNameIDCntr, int &rectPrismNameIDCntr, int &connChannelNmIDCntr, 
 		                       int &rectPlnNmIDCntr, int &curvedSurfNmIDCntr, int &cubeVecSize, int &sphereVecSize, 
 							   std::vector<std::vector<std::string>>::iterator &itr);
 	void PrintShapeDebugNames();

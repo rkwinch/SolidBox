@@ -10,6 +10,7 @@
 #include "Menu.h"
 #include "SolidBox.h"
 #include "Sphere.h"
+#include "RectPrism.h"
 #include "RectPlane.h"
 #include "CurvedSurface.h"
 #include "Utility.h"
@@ -17,6 +18,7 @@
 
 class Shape;
 
+const int Menu::PRINTING_WIDTH = 30;
 
 Menu* Menu::GetInstance()
 {
@@ -108,6 +110,10 @@ void Menu::CreateShape()
 	{
 		Sphere::Create();
 	}
+	else if (nInput == 3)
+	{
+		RectPrism::Create();
+	}
 }
 
 void Menu::DeleteExistingSolid()
@@ -136,7 +142,8 @@ void Menu::DeleteExistingSolid()
 
 	nInput = stoi(strInput);
 
-	while ((static_cast<size_t>(nInput < 1)) || (static_cast<size_t>(nInput) > (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size())))
+	while ((static_cast<size_t>(nInput < 1)) || 
+		(static_cast<size_t>(nInput) > (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size() + RectPrism::m_shapeVec.size())))
 	{
 		std::cout << "Selection out of bounds.  Please try again." << std::endl;
 		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
@@ -149,17 +156,27 @@ void Menu::DeleteExistingSolid()
 		nInput = stoi(strInput);
 	}
 
-	if (static_cast<size_t>(nInput) > SolidBox::m_shapeVec.size())
+	// in RectPrism m_shapeVec
+	if (static_cast<size_t>(nInput) > (SolidBox::m_shapeVec.size() + Sphere::m_shapeVec.size()))
 	{
 		int index = nInput;
-		index -= SolidBox::m_shapeVec.size(); // get index for Sphere vector
+		index -= (SolidBox::m_shapeVec.size() + Sphere::m_shapeVec.size()); // get index for RectPrism vector
+		auto shapeVecItr = RectPrism::m_shapeVec.begin() + index - 1; // make and advance iterator to correct index
+		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
+		(*shapeVecItr)->Delete();
+	}
+	// in Sphere m_shapeVec
+	else if (static_cast<size_t>(nInput) > Sphere::m_shapeVec.size())
+	{
+		int index = nInput;
+		index -= Sphere::m_shapeVec.size();
 		auto shapeVecItr = Sphere::m_shapeVec.begin() + index - 1; // make and advance iterator to correct index
 		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		(*shapeVecItr)->Delete();
 	}
 	else
 	{
-		auto shapeVecItr = SolidBox::m_shapeVec.begin() + nInput - 1; // make and advance iterator to correct index
+		auto shapeVecItr = SolidBox::m_shapeVec.begin() + nInput - 1;
 		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		(*shapeVecItr)->Delete();
 	}
@@ -223,13 +240,22 @@ void Menu::CopyExistingSolid()
 		std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>((dynamic_cast<SolidBox*>((*shapeVecItr).get()))->GetSideLength());
 		SolidBox::m_shapeVec.push_back(box);
 	}
-	else if (static_cast<size_t>(nInput) <= (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size())) // user chose a Sphere. wrote it this way so that more shapes can
-	{                                                                            // be easily added after spheres
+	else if (static_cast<size_t>(nInput) <= (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size())) // user chose a Sphere. 
+	{                                                         // wrote it this way so that more shapes can be easily added after spheres
 		auto shapeVecItr = Sphere::m_shapeVec.begin();
 		shapeVecItr = std::next(shapeVecItr, (nInput - 1 - SolidBox::m_shapeVec.size())); // advance iterator to spot for Sphere
 		// make a new Sphere with same radius as selection
 		std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>((dynamic_cast<Sphere*>((*shapeVecItr).get()))->GetRadius());
 		Sphere::m_shapeVec.push_back(sphere);
+	}
+	else if (static_cast<size_t>(nInput) <= (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size() + RectPrism::m_shapeVec.size()))
+	{ // user chose a RectPrism
+		auto shapeVecItr = RectPrism::m_shapeVec.begin();
+		shapeVecItr = std::next(shapeVecItr, (nInput - 1 - Sphere::m_shapeVec.size() - SolidBox::m_shapeVec.size()));
+		// ????????????????????BETTER WAY TO DO THIS????????????????????????
+		std::shared_ptr<RectPrism> rectPrism = std::make_shared<RectPrism>((dynamic_cast<RectPrism*>((*shapeVecItr).get()))->GetLength(),
+			dynamic_cast<RectPrism*>((*shapeVecItr).get())->GetWidth(), dynamic_cast<RectPrism*>((*shapeVecItr).get())->GetHeight());
+		RectPrism::m_shapeVec.push_back(rectPrism);
 	}
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 }
@@ -251,8 +277,9 @@ void Menu::MoveASolid()
 		return;
 	}
 
-	std::cout << "Number of available cubes:    " << SolidBox::m_shapeVec.size() << " (2 required)" << std::endl;
-	std::cout << "Number of available spheres:  " << Sphere::m_shapeVec.size() << " (2 required)" << std::endl;
+	std::cout << "Number of available cubes:       " << SolidBox::m_shapeVec.size() << " (2 required)" << std::endl;
+	std::cout << "Number of available spheres:     " << Sphere::m_shapeVec.size() << " (2 required)" << std::endl;
+	std::cout << "Number of available rectPrisms:  " << RectPrism::m_shapeVec.size() << " (2 required)" << std::endl;
 	strInput = Utility::SelectShapeType();
 
 	if ((strInput == "b") || (strInput == "B"))
@@ -301,8 +328,8 @@ void Menu::MoveASolid()
 		}
 
 		auto shapeVecItr_To = SolidBox::m_shapeVec.begin();
-		shapeVecItr_To = std::next(shapeVecItr_To, (stoi(strMoveTo) - 1)); // find if name given is the name of a cube made 
-		//check if trying to move to the same cube
+		shapeVecItr_To = std::next(shapeVecItr_To, (stoi(strMoveTo) - 1)); // find if name given is the name of a shape made 
+		//check if trying to move to the same shape
 		if (strMoveFrom == strMoveTo)
 		{
 			std::cout << "You cannot move from and to the same cube.  Please try again." << std::endl;
@@ -337,7 +364,7 @@ void Menu::MoveASolid()
 		}
 
 		auto shapeVecItr_From = Sphere::m_shapeVec.begin();
-		shapeVecItr_From = std::next(shapeVecItr_From, (stoi(strMoveFrom) - 1)); // find if name given is the name of a cube made 
+		shapeVecItr_From = std::next(shapeVecItr_From, (stoi(strMoveFrom) - 1)); // find if name given is the name of a shape made 
 		//moveTo sphere:
 		strMoveTo = Utility::InputInVecVal(strMoveTo, acceptableInputExpr, Sphere::m_shapeVec.size());
 
@@ -348,13 +375,59 @@ void Menu::MoveASolid()
 
 		auto shapeVecItr_To = Sphere::m_shapeVec.begin();
 		shapeVecItr_To = std::next(shapeVecItr_To, (stoi(strMoveTo) - 1)); // find if name given is the name of a cube made 
-		//check if trying to move to the same cube
+		//check if trying to move to the same shape
 		if (strMoveFrom == strMoveTo)
 		{
 			std::cout << "You cannot move from and to the same sphere.  Please try again." << std::endl;
 			Menu* menu = Menu::GetInstance();
 			menu->MoveASolid();
 		}
+		// It's OK to now move From into To
+		**shapeVecItr_To = **shapeVecItr_From;
+	}
+	else if (nInput == 3)
+	{
+		if (RectPrism::m_shapeVec.size() < 2)
+		{
+			Utility::PrintNwLnsAndLnDelimiter("-", 55);
+			std::cout << "There are not enough rectPrisms in memory to make a move." << std::endl;
+			Utility::PrintNwLnsAndLnDelimiter("-", 55);
+			return;
+		}
+
+		RectPrism::PrintSolids();
+		std::cout << std::endl;
+		std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' allowing for whitespace
+
+		//------Get RectPrism selections from user----------------
+		//moveFrom rectPrism:
+		strMoveFrom = Utility::InputInVecVal(strMoveFrom, acceptableInputExpr, RectPrism::m_shapeVec.size());
+
+		if ((strMoveFrom == "b") | (strMoveFrom == "B")) // user elected to go back to main menu
+		{
+			return;
+		}
+
+		auto shapeVecItr_From = RectPrism::m_shapeVec.begin();
+		shapeVecItr_From = std::next(shapeVecItr_From, (stoi(strMoveFrom) - 1)); // find if name given is the name of a shape made 
+		//moveTo rectPrism:
+		strMoveTo = Utility::InputInVecVal(strMoveTo, acceptableInputExpr, RectPrism::m_shapeVec.size());
+
+		if ((strMoveTo == "b") | (strMoveTo == "B")) // user elected to go back to main menu
+		{
+			return;
+		}
+
+		auto shapeVecItr_To = RectPrism::m_shapeVec.begin();
+		shapeVecItr_To = std::next(shapeVecItr_To, (stoi(strMoveTo) - 1)); // find if name given is the name of a shape made 
+		//check if trying to move to the same shape
+		if (strMoveFrom == strMoveTo)
+		{
+			std::cout << "You cannot move from and to the same cube.  Please try again." << std::endl;
+			Menu* menu = Menu::GetInstance();
+			menu->MoveASolid();
+		}
+
 		// It's OK to now move From into To
 		**shapeVecItr_To = **shapeVecItr_From;
 	}
@@ -386,7 +459,8 @@ void Menu::DebugSolidBox()
 
 	nInput = stoi(strInput);
 
-	while ((static_cast<size_t>(nInput) < 1) || (static_cast<size_t>(nInput) > (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size())))
+	while ((static_cast<size_t>(nInput) < 1) || (static_cast<size_t>(nInput) > 
+		(Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size() + RectPrism::m_shapeVec.size())))
 	{
 		std::cout << "Selection out of bounds.  Please try again." << std::endl;
 		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
@@ -399,18 +473,27 @@ void Menu::DebugSolidBox()
 		nInput = stoi(strInput);
 	}
 
-	if (static_cast<size_t>(nInput) > SolidBox::m_shapeVec.size())
-	{
+	if (static_cast<size_t>(nInput) > (SolidBox::m_shapeVec.size() + Sphere::m_shapeVec.size()))
+	{ // user chose a RectPrism
 		size_t index = nInput;
-		index -= SolidBox::m_shapeVec.size(); // get index for Sphere vector
+		index -= (SolidBox::m_shapeVec.size() + Sphere::m_shapeVec.size()); // get index for RectPrism vector
+		auto shapeVecItr = RectPrism::m_shapeVec.begin() + index - 1; // make and advance iterator to correct index
+		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
+		PrintShapeDebugInfo(shapePtr);
+	}
+	else if (static_cast<size_t>(nInput) > SolidBox::m_shapeVec.size())
+	{ // user chose a Sphere
+		size_t index = nInput;
+		index -= SolidBox::m_shapeVec.size();
 		auto shapeVecItr = Sphere::m_shapeVec.begin() + index - 1; // make and advance iterator to correct index
 		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		PrintShapeDebugInfo(shapePtr);
 	}
 	else
-	{
-		auto shapeVecItr = SolidBox::m_shapeVec.begin() + nInput - 1; // make and advance iterator to correct index
+	{ // user chose a RectPrism
+		auto shapeVecItr = SolidBox::m_shapeVec.begin() + nInput - 1;
 		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		PrintShapeDebugInfo(shapePtr);
@@ -468,11 +551,13 @@ int Menu::SaveAllObjects()
 	std::ofstream outFile;
 	outFile.open(fileName);
 	//save all name ID counters for solids, then channel, then surfaces. also save vec sizes on same line 
-	outFile << SolidBox::m_nNameIDCounter << ";" << Sphere::m_nNameIDCounter << ";" << ConnectionChannel::m_nNameIDCounter << ";" << RectPlane::m_nNameIDCounter << ";";
-	outFile << CurvedSurface::m_nNameIDCounter << ";";
-	outFile << static_cast<int>(SolidBox::m_shapeVec.size()) << ";" << static_cast<int>(Sphere::m_shapeVec.size()) << ";\n";
+	outFile << SolidBox::m_nNameIDCounter << ";" << Sphere::m_nNameIDCounter << ";";
+	outFile << RectPrism::m_nNameIDCounter << ";" << ConnectionChannel::m_nNameIDCounter << ";";
+	outFile << RectPlane::m_nNameIDCounter << ";" << CurvedSurface::m_nNameIDCounter << ";";
+	outFile << static_cast<int>(SolidBox::m_shapeVec.size()) << ";" << static_cast<int>(Sphere::m_shapeVec.size()) << ";";
+	outFile << static_cast<int>(RectPrism::m_shapeVec.size()) << ";\n";
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
-	std::cout << "Saving...\n";
+	std::cout << "Saving...\n\n";
 
 	// save all shapes (cubes then spheres)
 	Utility::PrintSolidsWithConseqCntr();
@@ -485,6 +570,11 @@ int Menu::SaveAllObjects()
 	for (auto spherePtr : Sphere::m_shapeVec)
 	{
 		spherePtr->Save(outFile);
+	}
+
+	for (auto rectPrismPtr : RectPrism::m_shapeVec)
+	{
+		rectPrismPtr->Save(outFile);
 	}
 
 	outFile.close();
@@ -542,11 +632,20 @@ void Menu::LoadAllObjects()
 		}
 
 		Sphere::m_shapeVec.clear();
+
+		for (auto element : RectPrism::m_shapeVec)
+		{
+			auto elementPtr = dynamic_cast<RectPrism*>(element.get());
+			elementPtr->GetConnChannel()->Disconnect();
+		}
+
+		RectPrism::m_shapeVec.clear();
 	}
 
 	// resetting counters in case shapes were made and then deleted (making shapeVec.size() == 0 and nameIDCounters != 0)
 	SolidBox::m_nNameIDCounter = 0;
 	Sphere::m_nNameIDCounter = 0;
+	RectPrism::m_nNameIDCounter = 0;
 	ConnectionChannel::m_nNameIDCounter = 0;
 	RectPlane::m_nNameIDCounter = 0;
 	CurvedSurface::m_nNameIDCounter = 0;
@@ -572,19 +671,19 @@ void Menu::WelcomeAndOptions()
 
 void Menu::PrintShapeInfo(Shape* shapePtr)
 {
-	enum ShapeType { cube, sphere };
+	enum ShapeType { cube = 1, sphere, rectPrism };
 	std::string shapeType = Utility::GetShapeType(shapePtr);
-	std::unordered_map<std::string, ShapeType> stringToEnumMap = { {"cube", cube}, {"sphere", sphere} };
+	std::unordered_map<std::string, ShapeType> stringToEnumMap = { {"cube", cube}, {"sphere", sphere}, {"rectPrism", rectPrism} };
 	ShapeType shape = stringToEnumMap[shapeType];
 	std::string strHeader = shapeType + ":";
 
 	Utility::PrintHeader(strHeader);
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Shape name:" << shapePtr->GetName() << std::endl;
+	std::cout << std::left << std::setw(PRINTING_WIDTH) << "Shape name:" << shapePtr->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "hasConnection:" << shapePtr->GetHasConnection() << std::endl;
+	std::cout << std::left << std::setw(PRINTING_WIDTH) << "hasConnection:" << shapePtr->GetHasConnection() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Channel name:" << shapePtr->GetConnChannel()->GetName() << std::endl;
+	std::cout << std::left << std::setw(PRINTING_WIDTH) << "Channel name:" << shapePtr->GetConnChannel()->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
 
 
@@ -593,11 +692,11 @@ void Menu::PrintShapeInfo(Shape* shapePtr)
 	case cube:
 	{
 		auto cubePtr = dynamic_cast<SolidBox*>(shapePtr);
-		std::cout << std::left << std::setw(27) << "SideLength (mm):" << std::fixed << std::setprecision(3) << cubePtr->GetSideLength() << std::endl;
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "SideLength (mm):" << std::fixed << std::setprecision(3) << cubePtr->GetSideLength() << std::endl;
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(27) << "Surface Area (mm^2):" << cubePtr->GetSA() << std::endl;
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Surface Area (mm^2):" << cubePtr->GetSA() << std::endl;
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(27) << "Volume (mm^3):" << cubePtr->GetVol() << std::endl;
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Volume (mm^3):" << cubePtr->GetVol() << std::endl;
 		Utility::PrintChar(' ', 5);
 		std::cout << std::endl;
 		break;
@@ -605,11 +704,27 @@ void Menu::PrintShapeInfo(Shape* shapePtr)
 	case sphere:
 	{
 		auto spherePtr = dynamic_cast<Sphere*>(shapePtr);
-		std::cout << std::left << std::setw(27) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(27) << "Surface Area (mm^2):" << spherePtr->GetSA() << std::endl;
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Surface Area (mm^2):" << spherePtr->GetSA() << std::endl;
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(27) << "Volume (mm^3):" << spherePtr->GetVol() << std::endl;
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Volume (mm^3):" << spherePtr->GetVol() << std::endl;
+		Utility::PrintChar(' ', 5);
+		std::cout << std::endl;
+		break;
+	}
+	case rectPrism:
+	{
+		auto rectPrismPtr = dynamic_cast<RectPrism*>(shapePtr);
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Length (mm):" << std::fixed << std::setprecision(3) << rectPrismPtr->GetLength() << std::endl;
+		Utility::PrintChar(' ', 5);
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Width (mm):" << rectPrismPtr->GetWidth() << std::endl;
+		Utility::PrintChar(' ', 5);
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Height (mm):" << rectPrismPtr->GetHeight() << std::endl;
+		Utility::PrintChar(' ', 5);
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Surface Area (mm^2):" << rectPrismPtr->GetSA() << std::endl;
+		Utility::PrintChar(' ', 5);
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Volume (mm^3):" << rectPrismPtr->GetVol() << std::endl;
 		Utility::PrintChar(' ', 5);
 		std::cout << std::endl;
 		break;
@@ -624,26 +739,29 @@ void Menu::PrintShapeInfo(Shape* shapePtr)
 
 void Menu::PrintChannelInfo(Shape* shape)
 {
-	int counter = 0;
-	bool isCube = false;
-	bool isSphere = false;
-	/*std::string name = shape->GetConnChannel()->GetName();
-	std::string namePrefix = Utility::GetShapeType(shape);
-	auto cubePtr = dynamic_cast<SolidBox*>(shape);*/
+	bool bIsFirstSurface = true;
 	std::string strHeader = "Channel:";
 
 	Utility::PrintHeader(strHeader);
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Channel name:" << shape->GetConnChannel()->GetName() << std::endl;
+	std::cout << std::left << std::setw(PRINTING_WIDTH) << "Channel name:" << shape->GetConnChannel()->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Associated Shape name:" << shape->GetConnChannel()->GetShape()->GetName() << std::endl;
+	std::cout << std::left << std::setw(PRINTING_WIDTH) << "Associated Shape name:" << shape->GetConnChannel()->GetShape()->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Associated Surface name(s):" << std::endl;
+	std::cout << std::left << std::setw(PRINTING_WIDTH) << "Associated Surface name(s):";
 
 	for (auto surfacePtr : shape->GetConnChannel()->GetSurfaceSet())
 	{
-		Utility::PrintChar(' ', 32);
-		std::cout << std::left << surfacePtr->GetName() << std::endl;
+		if (bIsFirstSurface == true)
+		{
+			std::cout << std::left << surfacePtr->GetName() << std::endl;
+			bIsFirstSurface = false;
+		}
+		else
+		{
+			Utility::PrintChar(' ', PRINTING_WIDTH + 5);
+			std::cout << std::left << surfacePtr->GetName() << std::endl;
+		}
 	}
 
 	std::cout << std::endl;
@@ -661,11 +779,11 @@ void Menu::PrintPlanesInfo(Shape* shapePtr)
 	for (auto plane : shapePtr->GetConnChannel()->GetSurfaceSet())
 	{
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(27) << "Plane name:" << plane->GetName() << std::endl;
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Plane name:" << plane->GetName() << std::endl;
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(27) << "Associated channel name:" << plane->GetConnChannel()->GetName() << std::endl;
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Associated channel name:" << plane->GetConnChannel()->GetName() << std::endl;
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(27) << "Number of edges:" << plane->GetNumOfEdges() << std::endl;
+		std::cout << std::left << std::setw(PRINTING_WIDTH) << "Number of edges:" << plane->GetNumOfEdges() << std::endl;
 		Utility::PrintChar(' ', 5);
 
 		switch (shape)
@@ -673,16 +791,16 @@ void Menu::PrintPlanesInfo(Shape* shapePtr)
 		case cube:
 		{
 			auto planePtr = dynamic_cast<RectPlane*>(plane.get());
-			std::cout << std::left << std::setw(27) << "Length:" << std::fixed << std::setprecision(3) << planePtr->GetLength() << std::endl;
+			std::cout << std::left << std::setw(PRINTING_WIDTH) << "Length:" << std::fixed << std::setprecision(3) << planePtr->GetLength() << std::endl;
 			Utility::PrintChar(' ', 5);
-			std::cout << std::left << std::setw(27) << "Height:" << std::fixed << std::setprecision(3) << planePtr->GetHeight() << std::endl;
+			std::cout << std::left << std::setw(PRINTING_WIDTH) << "Height:" << std::fixed << std::setprecision(3) << planePtr->GetHeight() << std::endl;
 			std::cout << std::endl;
 			break;
 		}
 		case sphere:
 		{
 			auto spherePtr = dynamic_cast<CurvedSurface*>(plane.get());
-			std::cout << std::left << std::setw(27) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
+			std::cout << std::left << std::setw(PRINTING_WIDTH) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
 			std::cout << std::endl;
 			break;
 		}
@@ -709,6 +827,7 @@ void Menu::LoadFile()
 	int nameSize = 0;
 	int solidBoxNameIDCntr = 0;
 	int sphereNameIDCntr = 0;
+	int rectPrismNameIDCntr = 0;
 	int connChannelNmIDCntr = 0;
 	int rectPlnNmIDCntr = 0;
 	int curvedSurfNmIDCntr = 0;
@@ -753,7 +872,7 @@ void Menu::LoadFile()
 	}
 
 	itr = vecOfStrVec.begin();
-	RetrieveInitialParams(solidBoxNameIDCntr, sphereNameIDCntr, connChannelNmIDCntr, rectPlnNmIDCntr, // don't set NmIDCntrs permanently until
+	RetrieveInitialParams(solidBoxNameIDCntr, sphereNameIDCntr, rectPrismNameIDCntr, connChannelNmIDCntr, rectPlnNmIDCntr, // don't set NmIDCntrs permanently until
 		curvedSurfNmIDCntr, cubeVecSize, sphereVecSize, itr); // finished creating objects since the values will be off due to creation of objects 
 
 	while (itr != vecOfStrVec.end())
@@ -769,35 +888,43 @@ void Menu::LoadFile()
 		{
 			Sphere::Load(innerItr);
 		}
+		else if (innerItr[0].find("rectPrism") != std::string::npos) // see if string contains "rectPrism".  If so, load it 
+		{
+			RectPrism::Load(innerItr);
+		}
 		++itr;
 	}
 
 	// ensures counters are the same as when they were saved
 	SolidBox::m_nNameIDCounter = solidBoxNameIDCntr;
 	Sphere::m_nNameIDCounter = sphereNameIDCntr;
+	RectPrism::m_nNameIDCounter = rectPrismNameIDCntr;
 	ConnectionChannel::m_nNameIDCounter = connChannelNmIDCntr;
 	RectPlane::m_nNameIDCounter = rectPlnNmIDCntr;
 	CurvedSurface::m_nNameIDCounter = curvedSurfNmIDCntr;
 	inFile.close();
 }
 
-void Menu::RetrieveInitialParams(int &solidBoxNameIDCntr, int &sphereNmIDCntr, int &connChannelNmIDCntr,
+void Menu::RetrieveInitialParams(int &solidBoxNameIDCntr, int &sphereNmIDCntr, int &rectPrismNmIDCntr, int &connChannelNmIDCntr,
 	int &rectPlnNmIDCntr, int &curvedSurfNmIDCntr, int &cubeVecSize, int &sphereVecSize, std::vector<std::vector<std::string>>::iterator &itr)
 {
-	std::vector<std::string>::iterator innerItr = itr->begin();
+	std::vector<std::string>::iterator innerItr = itr->begin(); // iterator within each line of the file
 	solidBoxNameIDCntr = stoi(*innerItr);
 	innerItr++; // increment iterator to go through vec for each param 
 	sphereNmIDCntr = stoi(*innerItr);
 	innerItr++;
+	rectPrismNmIDCntr = stoi(*innerItr);
+	innerItr++;
 	connChannelNmIDCntr = stoi(*innerItr);
 	innerItr++;
 	rectPlnNmIDCntr = stoi(*innerItr);
+	innerItr++;
 	curvedSurfNmIDCntr = stoi(*innerItr);
 	++innerItr;
 	cubeVecSize = stoi(*innerItr);
 	++innerItr;
 	sphereVecSize = stoi(*innerItr);
-	++itr;
+	++itr; // move outter iterator to next position, which should be the next line in the file
 }
 
 void Menu::PrintShapeDebugNames()

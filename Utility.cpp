@@ -12,6 +12,7 @@
 #include "Menu.h"
 #include "SolidBox.h"
 #include "Sphere.h"
+#include "RectPrism.h"
 
 class ConnectionChannel;
 
@@ -73,7 +74,7 @@ std::string Utility::SelectShapeType()
 	std::string strInput = "";
 	int nInput = 0;
 	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$"); // any number or 'b' or 'B". 0 will be checked further down
-	std::vector<std::string> strShapeTypes{ "Cube", "Sphere" };
+	std::vector<std::string> strShapeTypes{ "Cube", "Sphere", "RectPrism" };
 	int nCounter = 0;
 
 	std::cout << "\nType the number corresponding to your desired shape" << std::endl;
@@ -116,7 +117,7 @@ void Utility::PrintAllSolids()
 		{
 			std::cout << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
 		}
-		std::cout << std::endl;
+		std::cout << "\n" << std::endl;
 	}
 
 	count = 1;
@@ -130,7 +131,22 @@ void Utility::PrintAllSolids()
 		{
 			std::cout << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
 		}
-		std::cout << std::endl;
+		std::cout << "\n" << std::endl;
+	}
+
+	count = 1;
+
+	if (RectPrism::m_shapeVec.size() != 0)
+	{
+		std::string strHeader = "RectPrism name (length of each side in mm)";
+		Utility::PrintHeader(strHeader);
+
+		for (auto rectPrism : RectPrism::m_shapeVec)
+		{
+			std::cout << rectPrism->GetName() << " (" << std::fixed << std::setprecision(3) << rectPrism->GetLength();
+			std::cout << " x " << rectPrism->GetWidth() << " x " << rectPrism->GetHeight() << ")" << std::endl;
+		}
+		std::cout << "\n" << std::endl;
 	}
 }
 
@@ -227,7 +243,6 @@ char Utility::SaveOptions()
 	std::cout << "Press 's' to save to an existing file (overwrite)," << std::endl;
 	std::cout << "press 'n' to save to a new file," << std::endl;
 	std::cout << " or press 'b' to go back to the main menu.\n" << std::endl;
-	Utility::ViewFiles();
 	std::regex acceptableInputExpr("^\\s*([sSnNbB])\\s*$");
 	strInput = GetAndValidateInput(acceptableInputExpr);
 	cInput = strInput[0];
@@ -377,7 +392,7 @@ std::string Utility::GetShapeType(Shape* shape)
 
 int Utility::AvailableSolids()
 {
-	if ((Sphere::m_shapeVec.size() == 0) && (SolidBox::m_shapeVec.size() == 0))
+	if ((Sphere::m_shapeVec.size() == 0) && (SolidBox::m_shapeVec.size() == 0) && (RectPrism::m_shapeVec.size() == 0))
 	{
 		std::cout << "No solids currently in memory" << std::endl;
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
@@ -385,7 +400,7 @@ int Utility::AvailableSolids()
 	}
 	else
 	{
-		return (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size());
+		return (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size() + RectPrism::m_shapeVec.size());
 	}
 }
 
@@ -398,7 +413,8 @@ void Utility::PrintSolidsWithConseqCntr()
 		for (auto cube : SolidBox::m_shapeVec)
 		{
 			Utility::PrintChar(' ', 5);
-			std::cout << count++ << ") " << std::left << std::setw(10) << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+			std::cout << count++ << ") " << std::left << std::setw(10) << cube->GetName();
+			std::cout << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
 		}
 	}
 
@@ -407,7 +423,19 @@ void Utility::PrintSolidsWithConseqCntr()
 		for (auto sphere : Sphere::m_shapeVec)
 		{
 			Utility::PrintChar(' ', 5);
-			std::cout << count++ << ") " << std::left << std::setw(10) << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
+			std::cout << count++ << ") " << std::left << std::setw(10) << sphere->GetName();
+			std::cout << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
+		}
+	}
+
+	if (RectPrism::m_shapeVec.size() != 0)
+	{
+		for (auto rectPrism : RectPrism::m_shapeVec)
+		{
+			Utility::PrintChar(' ', 5);
+			std::cout << count++ << ") " << std::left << std::setw(10) << rectPrism->GetName();
+			std::cout << " (" << std::fixed << std::setprecision(3) << rectPrism->GetLength() << " x " << rectPrism->GetWidth();
+			std::cout << " x " << rectPrism->GetHeight() << ")" << std::endl;
 		}
 		std::cout << std::endl;
 	}
