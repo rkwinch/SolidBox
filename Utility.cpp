@@ -10,6 +10,8 @@
 #include <afxwin.h>
 #include <algorithm>
 #include <vector>
+#include <Windows.h>
+#include <fstream>
 #include "ConnectionChannel.h"
 #include "SquarePlane.h"
 #include "SolidBox.h"
@@ -240,6 +242,13 @@ void Utility::DebugSolidBox()
 void Utility::SaveAllObjects()
 {
 	int count = 0;
+
+	if (!IsOkToSave())
+	{
+		std::cout << "There are no solid boxes to save." << std::endl;
+		return;
+	}
+	ViewFiles();
 	CFile solidBoxFile;
 	solidBoxFile.Open(_T("Box.txt"), CFile::modeCreate | CFile::modeWrite);
 	CArchive archive(&solidBoxFile, CArchive::store);
@@ -608,3 +617,54 @@ bool Utility::IsOkToSave() // if no solids have been made, return false
 	return (SolidBox::cubeVec.size() > 0);
 }
 
+void Utility::ViewFiles()
+{   // checking for txt files in current directory
+	WIN32_FIND_DATA file;
+	HANDLE searchHandle = FindFirstFile("*.txt", &file); 
+	if (searchHandle)
+	{
+		int count = 1;
+		std::string fileName = file.cFileName;
+		std::ifstream fileToOpen; // checking if file can be opened.
+		fileToOpen.open(fileName);
+		
+		if (!fileToOpen) // file already open and don't want to view it here
+		{
+			return;
+		}
+
+		fileToOpen.close();
+		PrintNwLnsAndLnDelimiter("-", 55);
+		std::cout << "Available files:  ";
+		
+		do
+		{
+			if (count == 1)
+			{
+				std::cout <<  count << ") " << file.cFileName << std::endl;
+			}
+			else
+			{
+				std::cout << std::setw(18) << "" << count << ") " << file.cFileName << std::endl;
+			}
+			++count;
+		} while (FindNextFile(searchHandle, &file));
+
+		FindClose(searchHandle);
+	}
+}
+
+char Utility::SaveOptions()
+{
+	std::string strInput = "";
+	char cInput = 0;
+	std::cout << "Press 's' to save to an existing file (overwrite)," << std::endl;
+	std::cout << "press 'n' to save to a new file," << std::endl;
+	std::cout << " or press 'b' to go back to the main menu." << std::endl;
+	//get input (y, n, or b)
+	std::regex acceptableInputExpr("^\\s*(s|S|n|N|b|B)\\s*$");
+	strInput = GetAndValidateInput(acceptableInputExpr);
+	cInput = strInput[0];
+
+	return cInput;
+}
