@@ -8,6 +8,7 @@
 #include "SquarePlane.h"
 #include "Channel.h"
 #include "Utility.h"
+//#include "afx.h"
 
 int SolidBox::nameIDCounter = 1;
 std::set<SolidBox> cubeSet; // will change for mapping option later
@@ -16,6 +17,18 @@ const int SolidBox::planesPerSolidBox = 6;
 std::map <SolidBox*, std::set<SquarePlane*>> SolidBox::cubeAndPlanesMap;
 std::map<std::string, double> SolidBox::cubeAndSideLengthMap;
 std::map<std::string, SolidBox*> SolidBox::cubeNameAndCubeMap;
+
+//IMPLEMENT_SERIAL(SolidBox, CObject, 1)
+
+//void SolidBox::Serialize(CArchive& ar) {
+//	CObject::Serialize(ar);
+//
+//	//if (ar.IsStoring())
+//		//ar << empID << empName << age;
+//	//else
+//		//ar >> empID >> empName >> age;
+//}
+
 
 bool SolidBox::operator<(const SolidBox &cube) const
 {
@@ -56,7 +69,7 @@ SolidBox::SolidBox(double sideLength) : channel(this)
 
 						   //giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
 						   //will verify by putting the name into a set and check if it properly inserts.
-	std::string name = Utility::CreateUniqueName("cube", cubeNames, nameIDCounter);
+	name = Utility::CreateUniqueName("cube", cubeNames, nameIDCounter);
 	cubeAndSideLengthMap.insert(std::pair<std::string, double>(name, sideLength));
 	cubeNames.insert(name);
 	std::string planeName = "";
@@ -93,17 +106,13 @@ std::string SolidBox::GetShapeName()
 	return name;
 }
 
-//static function to print SolidBoxes made so far
-void SolidBox::PrintCubeSet()
-{
-	for (auto setElement : SolidBox::cubeNames)
-	{
-		//std::cout << setElement << " (" << setElementstd::endl;
-	}
-}
-
 ConnectionChannel* SolidBox::GetConnChannel()
 {
 	return &channel;
+}
+
+bool SolidBox::GetHasConnection()
+{
+	return hasConnection;
 }
 

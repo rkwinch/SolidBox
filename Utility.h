@@ -1,6 +1,10 @@
 #pragma once
 #include <string>
 #include <set>
+#include <regex>
+#include <map>
+#include "SolidBox.h"
+#include "SquarePlane.h"
 
 //solid is moved to other solid the previous solid should be removed from the memory.
 //
@@ -18,16 +22,22 @@ class Utility
 {
 public:
 	static void Run();
-	static bool ValidateMenuInput(std::string input);
-	static void Utility::DebugSolidBox();
-	static std::string Utility::CreateUniqueName(std::string namePrefix, std::set<std::string> nameSet, int &nameIDCounter);
-	static void Utility::ShowSolidsInMemory();
-	static void Utility::PrintLineDelimiter(std::string delimiter, int numOfTimes);
+	static std::string CreateUniqueName(std::string namePrefix, std::set<std::string> nameSet, int &nameIDCounter);
 
 private:
-	static bool ValidateSideLengthInput(std::string input);
 	static void CreateSolidBox();
 	static void WelcomeAndOptions();
-	static char MenuInputToChar(std::string input);
-
+	static void PrintLineDelimiter(std::string delimiter, int numOfTimes);
+	static std::string RemoveSpaces(std::string input, std::regex acceptableInputExpr);
+	static bool ValidateInput(std::string input, std::regex acceptableInputExpr);
+	static void DebugSolidBox();
+	static void ShowSolidsInMemory();
+	static std::string GetAndValidateInput(std::regex acceptableInputExpr);
+	static void PrintHeader(std::string header);
+	static void PrintChar(char symbol, int numOfTimes);
+	static void PrintDebugInfo(std::map<std::string, SolidBox*>::iterator cubeNameAndCubeItr, std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr);
+	static void PrintCubeInfo(std::map<std::string, SolidBox*>::iterator cubeNameAndCubeItr, std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr);
+	static void PrintChannelInfo(std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr);
+	static void PrintPlanesInfo(std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr);
+	static void CopyExistingSolid();
 };

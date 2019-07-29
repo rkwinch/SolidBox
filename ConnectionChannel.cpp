@@ -14,29 +14,29 @@ std::set<std::string> ConnectionChannel::channelNames;
 // parameterized constructor
 ConnectionChannel::ConnectionChannel(SolidBox* cube)
 {
+    name = Utility::CreateUniqueName("connectionChannel", channelNames, nameIDCounter);
+	channelNames.insert(name);
+
 	// will get planeSet as a SolidBox is being constructed
 
 	this->cube = cube; // want the cube member here to have same address of cube
 	                   // it is constructed from
-
-	std::string name = Utility::CreateUniqueName("connectionChannel", channelNames, nameIDCounter);
 }
 
 //copy constructor
 ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
 {
+	// new name for copy constructor was requested (will not copy current name)
+	std::string name = Utility::CreateUniqueName("cube", channelNames, nameIDCounter);
+	channelNames.insert(name);
+
 	// allocating new memory for the copy using the length (same as height for SquarePlane
 	// implementation) of a SquarePlane* in the set of channel
 	for (auto planePtr : planeSet)
 	{
 		SquarePlane* copyPlanePtr = new SquarePlane(planePtr->GetSqPlaneHeight(), this);
 		this->planeSet.insert(copyPlanePtr);
-	}
-
-	// new name for copy constructor was requested (will not copy current name)
-	std::string name = Utility::CreateUniqueName("cube", channelNames, nameIDCounter);
-	channelNames.insert(name);
-	
+	}	
 
 	//allocating new memory for a copy of the cube constructed with the same sideLength
 	SolidBox* copyCube = new SolidBox(this->cube->GetSideLength());
@@ -91,3 +91,7 @@ std::set<std::string>* ConnectionChannel::GetChannelNames()
 	return &ConnectionChannel::channelNames;
 }
 
+SolidBox* ConnectionChannel::GetSolidBox()
+{
+	return cube;
+}

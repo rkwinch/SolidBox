@@ -31,5 +31,6 @@ public:
 	std::set<SquarePlane*> GetPlaneSet();
 	static std::set<std::string>* GetChannelNames();
 	ConnectionChannel(const ConnectionChannel& channel);
+	SolidBox* GetSolidBox();
 
 };

@@ -51,3 +51,13 @@ double SquarePlane::GetSqPlaneHeight()
 {
 	return height;
 }
+
+ConnectionChannel* SquarePlane::GetConnChannel()
+{
+	return channel;
+}
+
+int SquarePlane::GetNumOfEdges()
+{
+	return numOfEdges;
+}

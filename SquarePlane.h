@@ -16,9 +16,10 @@ public:
 	bool operator<(const SquarePlane* plane) const;
 	void SetSqPlaneName(std::string name);
 	std::string GetSqPlaneName();
-	double SquarePlane::GetSqPlaneLength();
-	double SquarePlane::GetSqPlaneHeight();
-
+	double GetSqPlaneLength();
+	double GetSqPlaneHeight();
+	ConnectionChannel* GetConnChannel();
+	int GetNumOfEdges();
 
 private:
 	double height;
