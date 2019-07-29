@@ -42,4 +42,6 @@ private:
 	static void PrintPlanesInfo(std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr);
 	static void CopyExistingSolid();
 	static void DeleteExistingSolid();
+	static void MoveASolid();
+	static std::map<std::string, std::shared_ptr<SolidBox>>::iterator ValAndGetCubeNmItr(std::string input, std::regex acceptableInputExpr);
 };

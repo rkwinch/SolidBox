@@ -51,13 +51,29 @@ bool SolidBox::operator==(const SolidBox &cube) const
 	return (this->name == cube.name);
 }
 
-SolidBox& SolidBox::operator=(const SolidBox &cube)
+SolidBox& SolidBox::operator=(SolidBox &cube)
 {
 	
 	this->sideLength = cube.sideLength;
 	this->channel = cube.channel;
 	this->hasConnection = cube.hasConnection;
-	//write code to delete old one.
+	//delete items on right side of = operator
+	/*channel->Disconnect(channel->planeSet);
+	channel->Connect(cube.channel->planeSet);*/
+	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr;
+	cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(cube.name);
+	SolidBox::cubeAndSideLengthMap.erase(cubeNameAndCubeItr->first); 
+	std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr;
+	cubeAndPlanesItr = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr->second);
+	for (auto plane : cubeAndPlanesItr->second)
+	{
+		SquarePlane::planeNames.erase(plane->name);
+	}
+	SolidBox::cubeAndPlanesMap.erase(cubeAndPlanesItr->first);
+	SolidBox::cubeNameAndCubeMap.erase(cube.name);
+	SolidBox::cubeNames.erase(cube.name);
+	ConnectionChannel::channelNames.erase(cube.channel->name);
+
 	return *this;
 }
 
@@ -84,29 +100,19 @@ SolidBox::SolidBox(double sideLength) : channel(std::make_shared<ConnectionChann
 	name = Utility::CreateUniqueName("cube", cubeNames, nameIDCounter);
 	cubeAndSideLengthMap.insert(std::pair<std::string, double>(name, sideLength));
 	cubeNames.insert(name);
+	std::set<std::shared_ptr<SquarePlane>> squarePlaneSet;
 
 	//making 6 planes to go with the cube
 	for (int i = 0; i < SolidBox::planesPerSolidBox; i++)
 	{
-		//std::shared_ptr<int> p1 = std::make_shared<int>();
 		std::shared_ptr<SquarePlane> plane = std::make_shared<SquarePlane>(sideLength, channel);
-		channel->Connect(plane);
+		squarePlaneSet.insert(plane);
 	}
-	for (auto planeName : SquarePlane::planeNames)
-	{
-		std::cout << "planeNames in planeName set so far:  " << planeName << std::endl;
-	}
-	for (auto plane : channel->GetPlaneSet())
-	{
-		std::cout << "plane name in set from channel:  " << plane->GetSqPlaneName() << std::endl;
-	}
-	//std::set<std::string> SquarePlane::planeNames;
+	channel->Connect(squarePlaneSet);
+
 	//if all planes inserted correctly, then a proper ChannelConnection has been made
-	if ((channel->GetPlaneSet()).size() == 6)
-	{
-		this->sideLength = sideLength;
-		hasConnection = true;
-	}
+	this->sideLength = sideLength;
+	hasConnection = true;
 }
 
 std::set<std::string>* SolidBox::GetCubeNames()

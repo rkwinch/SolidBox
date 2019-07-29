@@ -34,8 +34,12 @@ ConnectionChannel::ConnectionChannel()
 ConnectionChannel& ConnectionChannel::operator=(const ConnectionChannel &channel)
 {
 	//don't change name
-	this->planeSet = channel.planeSet;
+	//this->planeSet = channel.planeSet;
+
 	*(this->cube) = *(channel.cube);
+	this->Disconnect(planeSet);
+	this->Connect(channel.planeSet);
+	
 	//code to delete old channel
 	return *this;
 }
@@ -73,15 +77,21 @@ ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
 }
 
 //adding a plane to the connection
-void ConnectionChannel::Connect(std::shared_ptr<SquarePlane> plane)
+void ConnectionChannel::Connect(std::set<std::shared_ptr<SquarePlane>> planeSet)
 {
-	planeSet.insert(plane);
+	for (auto plane : planeSet)
+	{
+		this->planeSet.insert(plane);
+	}
 }
 
 //template <class T>
-void ConnectionChannel::Disconnect(SquarePlane* plane)
+void ConnectionChannel::Disconnect(std::set<std::shared_ptr<SquarePlane>> planeSet)
 {
-
+	for (auto plane : planeSet)
+	{
+		plane = nullptr;
+	}
 }
 
 //cleans up memory when disconnecting a channel

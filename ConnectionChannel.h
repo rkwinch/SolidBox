@@ -13,6 +13,7 @@ class SolidBox;
 class ConnectionChannel : public CObject/*, public Channel*/ {
 
 	friend class Utility;
+	friend class SolidBox;
 private:
 	std::set<std::shared_ptr<SquarePlane>> planeSet;
 	std::string name;
@@ -32,9 +33,9 @@ public:
 	ConnectionChannel& operator=(const ConnectionChannel &channel);
 	ConnectionChannel(std::shared_ptr<SolidBox> cube);
 	//template <class T>
-	void Connect(std::shared_ptr<SquarePlane> plane) /*override*/;
+	void Connect(std::set<std::shared_ptr<SquarePlane>> planeSet) /*override*/;
 	//template <class T>
-	void Disconnect(SquarePlane* plane) /*override*/;
+	void Disconnect(std::set<std::shared_ptr<SquarePlane>> planeSet) /*override*/;
 	//template <class T>
 	void Cleanup(SquarePlane* plane) /*override*/;
 	~ConnectionChannel();

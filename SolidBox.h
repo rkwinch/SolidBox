@@ -24,7 +24,7 @@ public:
 	std::shared_ptr<ConnectionChannel> GetConnChannel();
 	bool operator<(const SolidBox &cube) const;
 	bool operator==(const SolidBox &cube) const;
-	SolidBox& operator=(const SolidBox &plane);
+	SolidBox& operator=(SolidBox &cube);
 	bool GetHasConnection();
 	static std::map <std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>> cubeAndPlanesMap;
 	static std::set<std::string>* GetCubeNames();

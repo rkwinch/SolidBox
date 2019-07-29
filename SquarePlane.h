@@ -13,6 +13,7 @@
 class SquarePlane : public CObject {
 
 	friend class Utility;
+	friend class SolidBox;
 public:
 	DECLARE_SERIAL(SquarePlane)
 	void Serialize(CArchive& ar);
