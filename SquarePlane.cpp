@@ -5,6 +5,7 @@
 #include "Utility.h"
 #include "ConnectionChannel.h"
 
+class SolidBox;
 
 IMPLEMENT_SERIAL(SquarePlane, CObject, 0)
 
@@ -32,7 +33,7 @@ SquarePlane::SquarePlane()
 }
 
 // parameterized constructor
-SquarePlane::SquarePlane(double sideLength, ConnectionChannel<SquarePlane>* channel)
+SquarePlane::SquarePlane(double sideLength, ConnectionChannel<SolidBox>* channel)
 {
 	name = "";
 	name = Utility::CreateUniqueName("plane", nameIDCounter);
@@ -74,7 +75,7 @@ double SquarePlane::GetSqPlaneHeight()
 	return height;
 }
 
-ConnectionChannel<SquarePlane>* SquarePlane::GetConnChannel()
+ConnectionChannel<SolidBox>* SquarePlane::GetConnChannel()
 {
 	return channel;
 }

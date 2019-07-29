@@ -17,6 +17,9 @@
 #include "SolidBox.h"
 #include "Utility.h"
 
+//initializing static member variable
+int ConnectionChannel<SolidBox>::nameIDCounter = 1;
+
 void Utility::Run()
 {
 	std::string strInput = "";
@@ -275,7 +278,7 @@ int Utility::SaveAllObjects()
 
 	solidBoxFile.Open(fileName.c_str(), CFile::modeCreate | CFile::modeWrite);
 	CArchive archive(&solidBoxFile, CArchive::store);
-	archive << SolidBox::nameIDCounter << ConnectionChannel::nameIDCounter << SquarePlane::nameIDCounter;
+	archive << SolidBox::nameIDCounter << ConnectionChannel<SolidBox>::nameIDCounter << SquarePlane::nameIDCounter;
 	archive << static_cast<int>(SolidBox::cubeVec.size());
 	PrintNwLnsAndLnDelimiter("-", 55);
 	std::cout << "Saving...";
@@ -330,17 +333,17 @@ void Utility::LoadAllObjects()
 		{
 			//do nothing here since deleting and loading data will occur below
 		}
-	
+
 		// deleting old data
 		for (auto element : SolidBox::cubeVec)
 		{
-			element->channel.Disconnect(element->channel.planeSet);
+			element->channel.Disconnect();
 		}
 		SolidBox::cubeVec.clear();
 	}
 
 	SolidBox::nameIDCounter = 1; // resetting nameIDCounters in case boxes were made
-	ConnectionChannel::nameIDCounter = 1; // and then deleted (making SolidBox::cubeVec.size() == 0 
+	ConnectionChannel<SolidBox>::nameIDCounter = 1; // and then deleted (making SolidBox::cubeVec.size() == 0 
 	SquarePlane::nameIDCounter = 1; // and the nameIDCounters != 1)
 	LoadASolidBox();
 	PrintNwLnsAndLnDelimiter("-", 55);
@@ -585,7 +588,7 @@ void Utility::ViewFiles()
 			{
 				std::cout << std::setw(18) << "" << count << ") " << file.cFileName << std::endl;
 			}
-			
+
 		} while (FindNextFile(searchHandle, &file));
 
 		FindClose(searchHandle);
@@ -669,7 +672,7 @@ char Utility::SaveOptions()
 	cInput = strInput[0];
 	return cInput;
 }
-	
+
 std::string Utility::PickFile()
 {
 	char cInput = 0;
@@ -756,7 +759,7 @@ void Utility::DeleteBox(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVec
 		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
 		return;
 	}
-	(*cubeVecItr)->channel.Disconnect((*cubeVecItr)->channel.planeSet); // setting planes in planeSet to null
+	(*cubeVecItr)->channel.Disconnect(); // setting planes in planeSet to null
 	SolidBox::cubeVec.erase(cubeVecItr); // removing item from vector
 }
 
@@ -844,7 +847,7 @@ void Utility::LoadASolidBox()
 
 	// ensures counters are the same as when they were saved
 	SolidBox::nameIDCounter = solidBoxNameIDCntr;
-	ConnectionChannel::nameIDCounter = connChannelNmIDCntr;
+	ConnectionChannel<SolidBox>::nameIDCounter = connChannelNmIDCntr;
 	SquarePlane::nameIDCounter = sqPlnNmIDCntr;
 	ar.Close();
 	file.Close();
@@ -862,6 +865,3 @@ std::vector<std::string> Utility::TokenizeStringToVec(std::string str)
 	std::vector<std::string> x;
 	return x;
 }
-
-
-	

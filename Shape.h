@@ -12,3 +12,4 @@ protected:
 	std::string name;
 	virtual std::string GetShapeName() = 0;
 };
+

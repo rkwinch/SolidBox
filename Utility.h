@@ -14,10 +14,10 @@ class Utility
 
 public:
 	static void Run();
-	static std::string CreateUniqueName(std::string namePrefix,  int &nameIDCounter);
+	static std::string CreateUniqueName(std::string namePrefix, int &nameIDCounter);
 	static int SaveAllObjects();
 	static void LoadAllObjects();
-	static std::vector<std::string> Utility::TokenizeStringToVec(std::string);
+	static std::vector<std::string> TokenizeStringToVec(std::string);
 
 private:
 	static void CreateSolidBox();
