@@ -14,8 +14,9 @@ class Menu {
 
 public:
 	static const int PRINTING_WIDTH;
-
-	static Menu* GetInstance();
+	
+	bool GetIsSpeechFlag();
+	static Menu* GetInstance(const bool &speechFlag = false);
 	static void Run();
 	void CreateShape();
 	void DeleteExistingSolid();
@@ -27,10 +28,9 @@ public:
 	void LoadAllObjects();
 
 private:
+	bool isSpeech = false;
 
-	static Menu* m_instance; // used to help enforce only one instance of Menu
-
-	Menu(); // private because want to control when it is instantiated for Singleton purposes 
+	Menu(bool isSpeech = false); // private because want to control when it is instantiated for Singleton purposes 
 	~Menu();
 	void WelcomeAndOptions();
 	void PrintShapeDebugInfo(Shape* shape);

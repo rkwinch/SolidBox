@@ -6,37 +6,29 @@
 #include <vector>
 
 
-class Speech {
+namespace Speech {
 
-public:
+	static const ULONGLONG grammarId = 0;
+	static wchar_t* ruleName1 = L"ruleName1";
+	static std::vector<std::string> units = { "zero", "one", "two", "three", "four", "five", "six",
+											"seven", "eight", "nine", "ten", "eleven", "twelve",
+											 "thirteen", "fourteen", "fifteen", "sixteen",
+											 "seventeen", "eighteen", "nineteen" };
+	static std::vector<std::string> tens = { "", "", "twenty", "thirty", "forty", "fifty", "sixty",
+										  "seventy", "eighty", "ninety" };
+	static std::vector<std::string> scales = { "hundred", "thousand", "million" };
+	static std::map<std::string, std::string> strToStrMap;
+	static std::map<std::string, int> strToIntMap;
+	static std::vector<std::string> keywordVec;
 
-	
-
+	int GetAndValidateInteger();
+	double RetrieveDouble();
+	int RetrieveInteger();
+	ISpRecoGrammar* InitGrammar(ISpRecoContext* recoContext);
+	std::string GetText(ISpRecoContext* reco_context);
+	std::string ToNarrow(const wchar_t *s, char dfault = '?',
+		const std::locale& loc = std::locale());
+	double ConvertPhraseToDouble(std::string input);
+	int ConvertPhraseToInteger(std::string input);
 	std::string StartListening();
-	ISpRecoGrammar* SetGrammar(ISpRecoContext* context);
-	Speech();
-	~Speech();
-	std::vector<std::string> ParseKeywords(std::string input);
-	double ConvertKeywordsToDouble(std::vector<std::string> vec);
-	
-private:
-
-	std::map<std::string, std::string> strToStrMap;
-	std::map<std::string, int> strToIntMap;
-	std::vector<std::string> keywordVec;
-	std::vector<std::string> unitsVec;
-	std::vector<std::string> tensVec;
-	std::vector<std::string> scaleVec;
-	std::vector<std::string> singleDigitsVec;
-	std::vector<std::string> othersVec;
-	
-	void InitializeOthers();
-	void InitializeSingleDigits();
-	void InitializeScales();
-	void InitializeTens();
-	void InitializeUnits();
-	void InitializeMap();
-	void InitializeKeyWords();
-	//std::vector<std::string> ParseKeywords(std::string input);
-
-};
+}

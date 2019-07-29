@@ -14,6 +14,7 @@
 #include "RectPlane.h"
 #include "CurvedSurface.h"
 #include "Utility.h"
+#include "Speech.h"
 
 
 
@@ -21,28 +22,50 @@ class Shape;
 
 const int Menu::PRINTING_WIDTH = 30;
 
-Menu* Menu::GetInstance()
+bool Menu::GetIsSpeechFlag()
 {
-	if (m_instance == nullptr)
-	{
-		m_instance = new Menu();
-	}
-	return m_instance;
+	return isSpeech;
+}
+
+Menu* Menu::GetInstance(const bool &speechFlag)
+{
+	static Menu m_instance(speechFlag); // used to help enforce only one instance of Menu
+	return &m_instance;
 }
 
 void Menu::Run()
 {
+	int nInput = 0;
+	bool bIsSpeech = false;
+	bool bQuit = false;
 	std::string strInput = "";
 	char cInput = 0;
-	Menu* menu = Menu::GetInstance();
-	std::cout << "Welcome to SolidBox." << std::endl;
-
-	while (tolower(cInput) != 'q')
+	Menu* menu = Menu::GetInstance(bIsSpeech);
+	bIsSpeech = menu->GetIsSpeechFlag();
+	std::cout << "Welcome to SolidBox.\n" << std::endl;
+	std::regex acceptableInputExpr;
+	                                                     
+	while ((tolower(cInput)) != 'q' && (bQuit == false))
 	{
 		menu->WelcomeAndOptions();
-		std::regex acceptableInputExpr("^\\s*([1-8|q|Q])\\s*$"); // looking for 1-8 or q or Q                                                         
-		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-		cInput = strInput[0]; // making string of length 1 into a single char
+
+		if (bIsSpeech) // for speech input
+		{ 
+			nInput = Speech::RetrieveInteger();
+
+			if (nInput == -1)
+			{
+				bQuit = true;
+			}
+			
+		}
+		else // for keyboard input
+		{
+			acceptableInputExpr = ("^\\s*([1-8|q|Q])\\s*$"); // looking for 1-8 or q or Q    
+			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+			cInput = strInput[0]; // making string of length 1 into a single char
+		}
+
 		if (cInput == '1')
 		{
 			menu->CreateShape();
@@ -78,15 +101,14 @@ void Menu::Run()
 	}
 }
 
-Menu::Menu()
+Menu::Menu(bool speechFlag) : isSpeech(speechFlag)
 {
 	// empty for now
 }
 
 Menu::~Menu()
 {
-	delete m_instance;
-	m_instance = nullptr; // resetting for good practices
+	// empty for now
 }
 
 // prompt user to select a shape type, validate input, then call appropriate function to shape selection
@@ -334,7 +356,7 @@ void Menu::MoveASolid()
 		if (strMoveFrom == strMoveTo)
 		{
 			std::cout << "You cannot move from and to the same cube.  Please try again." << std::endl;
-			Menu* menu = Menu::GetInstance();
+			Menu* menu = Menu::GetInstance(isSpeech);
 			menu->MoveASolid();
 		}
 
@@ -380,7 +402,7 @@ void Menu::MoveASolid()
 		if (strMoveFrom == strMoveTo)
 		{
 			std::cout << "You cannot move from and to the same sphere.  Please try again." << std::endl;
-			Menu* menu = Menu::GetInstance();
+			Menu* menu = Menu::GetInstance(isSpeech);
 			menu->MoveASolid();
 		}
 		// It's OK to now move From into To
@@ -425,7 +447,7 @@ void Menu::MoveASolid()
 		if (strMoveFrom == strMoveTo)
 		{
 			std::cout << "You cannot move from and to the same cube.  Please try again." << std::endl;
-			Menu* menu = Menu::GetInstance();
+			Menu* menu = Menu::GetInstance(isSpeech);
 			menu->MoveASolid();
 		}
 
@@ -658,7 +680,15 @@ void Menu::LoadAllObjects()
 void Menu::WelcomeAndOptions()
 {
 	std::cout << "What would you like to do?" << std::endl;
-	std::cout << "(enter a number or press 'q' to quit)\n\n" << std::endl;
+	if (isSpeech)
+	{
+		std::cout << "(say a number or say \"quit\" to quit)\n\n" << std::endl;
+	}
+	else
+	{
+		std::cout << "(enter a number or press 'q' to quit)\n\n" << std::endl;
+	}
+	
 	std::cout << "1)  Create a shape" << std::endl;
 	std::cout << "2)  Delete a solid box" << std::endl;
 	std::cout << "3)  Show available solids" << std::endl;
@@ -949,5 +979,3 @@ void Menu::PrintShapeDebugNames()
 	}
 	std::cout << std::endl;
 }
-
-Menu* Menu::m_instance = nullptr;

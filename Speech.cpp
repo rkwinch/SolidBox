@@ -6,13 +6,15 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <algorithm>
+#include <cmath>
+#include <sstream>
+#include <stdexcept>
 #include "Speech.h"
 #include "Utility.h"
 
-
 std::string Speech::StartListening()
 {
-	std::string sample = "";
 	if (FAILED(::CoInitialize(nullptr)))
 	{
 		return "ERROR";
@@ -20,309 +22,282 @@ std::string Speech::StartListening()
 
 	HRESULT hr;
 	ISpRecognizer* recognizer;
+	ISpRecoContext* recoContext;
+	ISpRecoGrammar* recoGrammar;
+	HANDLE handleEvent;
+	ULONGLONG interest;
+	std::string text = "";
+
 	hr = CoCreateInstance(CLSID_SpSharedRecognizer, nullptr, CLSCTX_ALL, IID_ISpRecognizer, reinterpret_cast<void**>(&recognizer));
+	hr = recognizer->CreateRecoContext(&recoContext);
+	hr = recoContext->Pause(0);
+	recoGrammar = InitGrammar(recoContext);
+	hr = recoContext->SetNotifyWin32Event();
+	handleEvent = recoContext->GetNotifyEventHandle();
+	interest = SPFEI(SPEI_RECOGNITION);
+	hr = recoContext->SetInterest(interest, interest);
+	hr = recoGrammar->SetRuleState(ruleName1, 0, SPRS_ACTIVE);
+	hr = recoContext->Resume(0);
 
-	/*
-	* add stuff
-	* add stuff
-	* add stuff
-	*/
-
-	return sample;
+	HANDLE handles[1];
+	handles[0] = handleEvent;
+	WaitForMultipleObjects(1, handles, FALSE, INFINITE);
+	text = GetText(recoContext);
+	recoGrammar->Release();
+	::CoUninitialize();
+	return text;
 }
 
-ISpRecoGrammar* Speech::SetGrammar(ISpRecoContext* context)
+double Speech::RetrieveDouble()
 {
-
-	/*
-	* add stuff
-	* add stuff
-	* add stuff
-	*/
-
-	ISpRecoGrammar * sample = nullptr;
-	return sample;
+	double dNum = 0.0;
+	std::string input = StartListening();
+	return (dNum = ConvertPhraseToDouble(input));
 }
 
-Speech::Speech()
+int Speech::RetrieveInteger()
 {
-	InitializeMap();
-	InitializeKeyWords();
-	InitializeUnits();
-	InitializeScales();
-	InitializeTens();
-}
+	int nNum = 0;
+	std::string input = "";
 
-Speech::~Speech()
-{
-
-}
-
-double Speech::ConvertKeywordsToDouble(std::vector<std::string> vec)
-{
-	double retDouble = 0.0;
-	std::string value = "";
-	bool isBegin = true;
-	int lastScale = 0;
-	int currentScale = 0;
-	std::string element = "";
-
-	for (size_t i = 0; i < vec.size(); ++i)
+	do
 	{
-		element = vec[i];
+		input = StartListening();
 
-		if (isBegin)
+		if (input == "quit")
 		{
-			auto itr = find(unitsVec.begin(), unitsVec.begin() + 18, element); // is 1-19
-			auto itr2 = find(tensVec.begin() + 18, tensVec.begin() + 26, element);
-			std::vector<std::string>::iterator scalesVecItr = scaleVec.begin();
-
-			if (itr != unitsVec.end())
-			{
-				value += std::to_string(strToIntMap[element]);
-
-				if (vec.size() > i + 1)
-				{
-					scalesVecItr = find(scaleVec.begin(), scaleVec.end(), vec[i + 1]);
-
-					if (scalesVecItr != scaleVec.end())
-					{
-						if (*itr == "hundred")
-						{
-							value += "00";
-						}
-						else if (*itr == "thousand")
-						{
-							value += "000";
-						}
-						else if (*itr == "million")
-						{
-							value += "000000";
-						}
-						else
-						{
-							throw std::exception("Invalid scale.");
-						}
-						++i;
-					}
-				}
-			}
-			else if (itr2 != tensVec.end()) // is 20-90
-			{
-				value += std::to_string(strToIntMap[element]);
-
-				if (vec.size() > i + 1) // check if next value is present and if it is a single digit
-				{
-					itr = find(unitsVec.begin(), unitsVec.end(), vec[i + 1]);
-					
-					if (itr != unitsVec.end())
-					{
-						value[value.size() - 1] = (char)(strToIntMap[vec[i + 1]]); // make singles digit match (would be zero otherwise)
-						++i;
-						
-						if (vec.size() > i + 1)
-						{
-							scalesVecItr = find(scaleVec.begin(), scaleVec.end(), vec[i + 1]);
-							
-							if (scalesVecItr != scaleVec.end())
-							{
-								if (*itr == "hundred")
-								{
-									value += "00";
-								}
-								else if (*itr == "thousand")
-								{
-									value += "000";
-								}
-								else if (*itr == "million")
-								{
-									value += "000000";
-								}
-								else
-								{
-									throw std::exception("Invalid scale.");
-								}
-								++i;
-							}
-						}
-					}
-				}
-			}
-			else if()
-			isBegin = false;
+			return -1;
 		}
 
-	}
+		nNum = ConvertPhraseToInteger(input);
+	} while (nNum < 1 || nNum > 8); // numbers to options on Run fxn of Menu
 
-	return retDouble;
+	return nNum;
 }
 
-std::vector<std::string> Speech::ParseKeywords(std::string input)
+std::string Speech::GetText(ISpRecoContext* reco_context)
 {
-	int numKeywords = 0;
-	int counter = 0;
-	std::string intermedString = Utility::FilterNonChars(input); // replace all non characters with spaces
-	std::vector<std::string> vec = Utility::TokenizeStringToVec(intermedString, ' '); // tokenize input for further processing
-	std::vector<std::string> returnVec;
+	const ULONG maxEvents = 10;
+	SPEVENT events[maxEvents];
+	ULONG eventCount;
+	HRESULT hr;
+	std::string test = "";
+	ISpRecoResult* recoResult;
+	wchar_t* text;
 
-	// getting keywords from vector of input
-	for (auto element : vec)
+	hr = reco_context->GetEvents(maxEvents, events, &eventCount);
+	recoResult = reinterpret_cast<ISpRecoResult*>(events[0].lParam);
+	hr = recoResult->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, FALSE, &text, NULL);
+	test = ToNarrow(text);
+	CoTaskMemFree(text);
+	return test;
+}
+
+std::string Speech::ToNarrow(const wchar_t *s, char dfault,
+	const std::locale& loc)
+{
+	std::ostringstream stm;
+
+	while (*s != L'\0') {
+		stm << std::use_facet< std::ctype<wchar_t> >(loc).narrow(*s++, dfault);
+	}
+	return stm.str();
+}
+
+ISpRecoGrammar* Speech::InitGrammar(ISpRecoContext* recoContext)
+{
+	HRESULT hr;
+	SPSTATEHANDLE state;
+	ISpRecoGrammar* recoGrammar;
+
+	hr = recoContext->CreateGrammar(grammarId, &recoGrammar);
+	WORD langId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+	recoGrammar->ResetGrammar(langId);
+	recoGrammar->GetRule(ruleName1, 0, SPRAF_TopLevel | SPRAF_Active, true, &state);
+	std::wstring words[] = { L"one", L"two", L"three", L"four", L"five", L"six", L"seven", L"eight", L"nine", L"ten" , L"quit" };
+
+	for (auto &item : words) {
+		recoGrammar->AddWordTransition(state, NULL, item.c_str(), L" ", SPWT_LEXICAL, 1, nullptr);
+	}
+
+	recoGrammar->Commit(0);
+	return recoGrammar;
+}
+
+int Speech::ConvertPhraseToInteger(std::string input)
+{
+	std::istringstream strStream;
+	std::string word;
+	int current = 0;
+	int result = 0;
+	std::vector<std::string> strVec;
+	std::vector<std::string> trimmedVec;
+	std::string trimmedInput = "";
+	std::map<std::string, std::pair<int, int>> wordsToNumMap;
+
+	for (auto &character : input) // making sure all of the input is uniformly lowercase
 	{
-		auto itr = find(keywordVec.begin(), keywordVec.end(), element);
+		tolower(character);
+	}
 
-		if (itr != keywordVec.end())
+	for (size_t i = 0; i < input.size(); ++i) // removing all other characters that aren't letters, such as
+	{                                         // nyphens, commas, periods, etc
+		if (!isalpha(input[i]))
 		{
-			returnVec.push_back(element);
+			input[i] = ' ';
 		}
 	}
 
-	return returnVec;
+	strVec = Utility::TokenizeStringToVec(input, ' ');
+
+	for (auto element : strVec) // only keeping words of interest (in units, scales, tens, or is "point")
+	{
+		auto unitsItr = find(units.begin(), units.end(), element);
+		auto scalesItr = find(scales.begin(), scales.end(), element);
+		auto tensItr = find(tens.begin(), tens.end(), element);
+
+		if ((unitsItr != units.end()) || (scalesItr != scales.end()) || (tensItr != tens.end()))
+		{
+			trimmedVec.push_back(element);
+		}
+	}
+
+	for (auto element : trimmedVec)
+	{
+		trimmedInput += (element + ' ');
+	}
+
+	trimmedInput.erase(trimmedInput.begin() + trimmedInput.size() - 1); // removing last space
+
+	for (size_t i = 0; i < units.size(); ++i)
+	{
+		wordsToNumMap[units[i]] = std::make_pair(1, i);
+	}
+
+	for (size_t i = 0; i < tens.size(); ++i)
+	{
+		wordsToNumMap[tens[i]] = std::make_pair(1, 10 * i);
+	}
+
+	for (size_t i = 0; i < scales.size(); ++i)
+	{
+		wordsToNumMap[scales[i]] = std::make_pair(pow(10, i ? i * 3 : 2), 0);
+	}
+
+	strStream.str(trimmedInput);
+
+	while (std::getline(strStream, word, ' '))
+	{
+		double scale = 0;
+		double increment = 0;
+		std::tie(scale, increment) = wordsToNumMap[word];
+
+		current = current * scale + increment;
+
+		if (scale > 100)
+		{
+			result += current;
+			current = 0;
+		}
+	}
+
+	return result + current;
 }
 
-void Speech::InitializeMap()
+double Speech::ConvertPhraseToDouble(std::string input)
 {
-	strToIntMap.insert(std::pair<std::string, int>("one", 1));
-	strToIntMap.insert(std::pair<std::string, int>("two", 2));
-	strToIntMap.insert(std::pair<std::string, int>("three", 3));
-	strToIntMap.insert(std::pair<std::string, int>("four", 4));
-	strToIntMap.insert(std::pair<std::string, int>("five", 5));
-	strToIntMap.insert(std::pair<std::string, int>("six", 6));
-	strToIntMap.insert(std::pair<std::string, int>("seven", 7));
-	strToIntMap.insert(std::pair<std::string, int>("eight", 8));
-	strToIntMap.insert(std::pair<std::string, int>("nine", 9));
-	strToIntMap.insert(std::pair<std::string, int>("ten", 10));
-	strToIntMap.insert(std::pair<std::string, int>("eleven", 11));
-	strToIntMap.insert(std::pair<std::string, int>("twelve", 12));
-	strToIntMap.insert(std::pair<std::string, int>("thirteen", 13));
-	strToIntMap.insert(std::pair<std::string, int>("fourteen", 14));
-	strToIntMap.insert(std::pair<std::string, int>("fifteen", 15));
-	strToIntMap.insert(std::pair<std::string, int>("sixteen", 16));
-	strToIntMap.insert(std::pair<std::string, int>("seventeen", 17));
-	strToIntMap.insert(std::pair<std::string, int>("eighteen", 18));
-	strToIntMap.insert(std::pair<std::string, int>("nineteen", 19));
+	std::istringstream strStream;
+	std::string word;
+	double current = 0;
+	double result = 0;
+	double deci = 0;
+	int deciIndex = 0;
+	std::vector<std::string> strVec;
+	std::vector<std::string> trimmedVec;
+	std::string trimmedInput = "";
+	std::map<std::string, std::pair<int, int>> wordsToNumMap;
 
-	strToIntMap.insert(std::pair<std::string, int>("twenty", 20));
-	strToIntMap.insert(std::pair<std::string, int>("thirty", 30));
-	strToIntMap.insert(std::pair<std::string, int>("fourty", 40));
-	strToIntMap.insert(std::pair<std::string, int>("fifty", 50));
-	strToIntMap.insert(std::pair<std::string, int>("sixty", 60));
-	strToIntMap.insert(std::pair<std::string, int>("seventy", 70));
-	strToIntMap.insert(std::pair<std::string, int>("eighty", 80));
-	strToIntMap.insert(std::pair<std::string, int>("ninety", 90));
-}
+	for (auto &character : input) // making sure all of the input is uniformly lowercase
+	{
+		tolower(character);
+	}
 
-void Speech::InitializeKeyWords()
-{
-	keywordVec.resize(31);
+	for (size_t i = 0; i < input.size(); ++i) // removing all other characters that aren't letters, such as
+	{                                         // nyphens, commas, periods, etc
+		if (!isalpha(input[i]))
+		{
+			input[i] = ' ';
+		}
+	}
 
-	keywordVec[0] = "one";
-	keywordVec[1] = "two";
-	keywordVec[2] = "three";
-	keywordVec[3] = "four";
-	keywordVec[4] = "five";
-	keywordVec[5] = "six";
-	keywordVec[6] = "seven";
-	keywordVec[7] = "eight";
-	keywordVec[8] = "nine";
-	keywordVec[9] = "ten";
-	keywordVec[10] = "eleven";
-	keywordVec[11] = "twelve";
-	keywordVec[12] = "thirteen";
-	keywordVec[13] = "fourteen";
-	keywordVec[14] = "fifteen";
-	keywordVec[15] = "sixteen";
-	keywordVec[16] = "seventeen";
-	keywordVec[17] = "eighteen";
-	keywordVec[18] = "nineteen";
+	strVec = Utility::TokenizeStringToVec(input, ' ');
 
-	keywordVec[19] = "twenty";
-	keywordVec[20] = "thirty";
-	keywordVec[21] = "fourty";
-	keywordVec[22] = "fifty";
-	keywordVec[23] = "sixty";
-	keywordVec[24] = "seventy";
-	keywordVec[25] = "eighty";
-	keywordVec[26] = "ninety";
+	for (auto element : strVec) // only keeping words of interest (in units, scales, tens, or is "point")
+	{
+		auto unitsItr = find(units.begin(), units.end(), element);
+		auto scalesItr = find(scales.begin(), scales.end(), element);
+		auto tensItr = find(tens.begin(), tens.end(), element);
 
-	keywordVec[27] = "hundred";
-	keywordVec[28] = "thousand";
-	keywordVec[29] = "million";
-	keywordVec[30] = "point";
-}
+		if ((unitsItr != units.end()) || (scalesItr != scales.end()) || (tensItr != tens.end()) || element == "point")
+		{
+			trimmedVec.push_back(element);
+		}
+	}
 
-void Speech::InitializeUnits()
-{
-	unitsVec.resize(19);
+	for (auto element : trimmedVec)
+	{
+		trimmedInput += (element + ' ');
+	}
 
-	unitsVec[0] = "one";
-	unitsVec[1] = "two";
-	unitsVec[2] = "three";
-	unitsVec[3] = "four";
-	unitsVec[4] = "five";
-	unitsVec[5] = "six";
-	unitsVec[6] = "seven";
-	unitsVec[7] = "eight";
-	unitsVec[8] = "nine";
+	trimmedInput.erase(trimmedInput.begin() + trimmedInput.size() - 1); // removing last space
 
-	unitsVec[9] = "ten";
-	unitsVec[10] = "eleven";
-	unitsVec[11] = "twelve";
-	unitsVec[12] = "thirteen";
-	unitsVec[13] = "fourteen";
-	unitsVec[14] = "fifteen";
-	unitsVec[15] = "sixteen";
-	unitsVec[16] = "seventeen";
-	unitsVec[17] = "eighteen";
-	unitsVec[18] = "nineteen";
-}
+	for (size_t i = 0; i < units.size(); ++i)
+	{
+		wordsToNumMap[units[i]] = std::make_pair(1, i);
+	}
 
-void Speech::InitializeSingleDigits()
-{
-	singleDigitsVec.resize(9);
+	for (size_t i = 0; i < tens.size(); ++i)
+	{
+		wordsToNumMap[tens[i]] = std::make_pair(1, 10 * i);
+	}
 
-	singleDigitsVec[0] = "one";
-	singleDigitsVec[1] = "two";
-	singleDigitsVec[2] = "three";
-	singleDigitsVec[3] = "four";
-	singleDigitsVec[4] = "five";
-	singleDigitsVec[5] = "six";
-	singleDigitsVec[6] = "seven";
-	singleDigitsVec[7] = "eight";
-	singleDigitsVec[8] = "nine";
-}
+	for (size_t i = 0; i < scales.size(); ++i)
+	{
+		wordsToNumMap[scales[i]] = std::make_pair(pow(10, i ? i * 3 : 2), 0);
+	}
 
-void Speech::InitializeOthers()
-{
-	othersVec[0] = "ten";
-	othersVec[1] = "eleven";
-	othersVec[2] = "twelve";
-	othersVec[3] = "thirteen";
-	othersVec[4] = "fourteen";
-	othersVec[5] = "fifteen";
-	othersVec[6] = "sixteen";
-	othersVec[7] = "seventeen";
-	othersVec[8] = "eighteen";
-	othersVec[9] = "nineteen";
-}
-void Speech::InitializeTens()
-{
-	tensVec.resize(8);
+	strStream.str(trimmedInput);
 
-	tensVec[0] = "twenty";
-	tensVec[1] = "thirty";
-	tensVec[2] = "fourty";
-	tensVec[3] = "fifty";
-	tensVec[4] = "sixty";
-	tensVec[5] = "seventy";
-	tensVec[6] = "eighty";
-	tensVec[7] = "ninety";
-}
+	while (std::getline(strStream, word, ' '))
+	{
+		if (word == "point")
+		{
+			deciIndex++;
+		}
 
-void Speech::InitializeScales()
-{
-	scaleVec.resize(3);
+		if (deciIndex && (word != "point"))
+		{
+			auto val = wordsToNumMap[word].second;
+			if ((std::find(units.begin(), units.end(), word) == units.end()) || val < 0 || val > 9)
+			{
+				throw std::exception("Invalid number.");
+			}
 
-	scaleVec[0] = "hundred";
-	scaleVec[1] = "thousand";
-	scaleVec[2] = "million";
+			deci += val / std::pow(10.0, deciIndex++);
+		}
+		else if (!deciIndex)
+		{
+			double scale = 0;
+			double increment = 0;
+			std::tie(scale, increment) = wordsToNumMap[word];
+			current = current * scale + increment;
+			if (scale > 100)
+			{
+				result += current;
+				current = 0;
+			}
+		}
+	}
+
+	return result + current + deci;
 }
