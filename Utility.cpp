@@ -6,19 +6,17 @@
 #include <set>
 #include <iomanip>
 #include <memory>
-#include <afx.h>
-#include <afxwin.h>
 #include <algorithm>
 #include <vector>
-#include <Windows.h>
 #include <fstream>
+#include <Windows.h>
 #include "ConnectionChannel.h"
 #include "SquarePlane.h"
 #include "SolidBox.h"
 #include "Utility.h"
 
 //initializing static member variable
-int ConnectionChannel<SolidBox>::nameIDCounter = 1;
+int ConnectionChannel<SolidBox>::nameIDCounter = 0;
 
 void Utility::Run()
 {
@@ -245,6 +243,7 @@ int Utility::SaveAllObjects()
 {
 	int count = 0;
 	char cInput = 0;
+	int numOfFiles = 0;
 	std::string fileName = "";
 	//if no boxes to save, return and don't save
 	if (!IsOkToSave())
@@ -252,16 +251,23 @@ int Utility::SaveAllObjects()
 		std::cout << "There are no solid boxes to save." << std::endl;
 		return 0;
 	}
+
 	// view current files in memory and get input from the user to go to main menu,
 	// save a new file, or replace an existing file
 	ViewFiles();
+	numOfFiles = NumOfFilesAvail();
 	cInput = SaveOptions();
 
 	if (tolower(cInput) == 'b')
 	{
 		return 0;
 	}
-	else if (tolower(cInput) == 's')
+	else if ((tolower(cInput) == 's') && (numOfFiles == 0))
+	{
+		std::cout << "Cannot pick an existing file.  No files in memory." << std::endl;
+		fileName = PickNewFile();
+	}
+	else if(tolower(cInput) == 's')
 	{
 		fileName = PickFile();
 		if (fileName.length() == 0) // user elected to go back to the main menu
@@ -274,12 +280,10 @@ int Utility::SaveAllObjects()
 		fileName = PickNewFile();
 	}
 	// saving objects to file now
-	CFile solidBoxFile;
-
-	solidBoxFile.Open(fileName.c_str(), CFile::modeCreate | CFile::modeWrite);
-	CArchive archive(&solidBoxFile, CArchive::store);
-	archive << SolidBox::nameIDCounter << ConnectionChannel<SolidBox>::nameIDCounter << SquarePlane::nameIDCounter;
-	archive << static_cast<int>(SolidBox::cubeVec.size());
+	std::ofstream outFile;
+	outFile.open(fileName);
+	outFile << SolidBox::nameIDCounter << ";" << ConnectionChannel<SolidBox>::nameIDCounter << ";" << SquarePlane::nameIDCounter << ";";
+	outFile << static_cast<int>(SolidBox::cubeVec.size()) << ";\n";
 	PrintNwLnsAndLnDelimiter("-", 55);
 	std::cout << "Saving...";
 
@@ -295,11 +299,10 @@ int Utility::SaveAllObjects()
 			std::cout << std::setw(9) << "" << std::left << cubePtr->name << " (" << std::fixed << std::setprecision(3) << cubePtr->sideLength << ")" << std::endl;
 		}
 
-		SaveASolidBox(cubePtr, archive, solidBoxFile); // does the actual saving of the objects
+		cubePtr->SaveASolidBox(outFile); // does the actual saving of the objects
 	}
 
-	archive.Close();
-	solidBoxFile.Close();
+	outFile.close();
 	PrintNwLnsAndLnDelimiter("-", 55);
 	return 1;
 }
@@ -342,9 +345,9 @@ void Utility::LoadAllObjects()
 		SolidBox::cubeVec.clear();
 	}
 
-	SolidBox::nameIDCounter = 1; // resetting nameIDCounters in case boxes were made
-	ConnectionChannel<SolidBox>::nameIDCounter = 1; // and then deleted (making SolidBox::cubeVec.size() == 0 
-	SquarePlane::nameIDCounter = 1; // and the nameIDCounters != 1)
+	SolidBox::nameIDCounter = 0; // resetting nameIDCounters in case boxes were made
+	ConnectionChannel<SolidBox>::nameIDCounter = 0; // and then deleted (making SolidBox::cubeVec.size() == 0 
+	SquarePlane::nameIDCounter = 0; // and the nameIDCounters != 0)
 	LoadASolidBox();
 	PrintNwLnsAndLnDelimiter("-", 55);
 }
@@ -368,7 +371,7 @@ void Utility::WelcomeAndOptions()
 std::string Utility::CreateUniqueName(std::string strNamePrefix, int &nameIDCounter)
 {
 	std::string strName = "";
-	strName = strNamePrefix + std::to_string(nameIDCounter++);
+	strName = strNamePrefix + std::to_string(++nameIDCounter);
 
 	auto cubeVecItr = std::find_if(SolidBox::cubeVec.begin(), SolidBox::cubeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return box->GetShapeName() == strName; });
 
@@ -542,7 +545,6 @@ void Utility::PrintPlanesInfo(std::vector<std::shared_ptr<SolidBox>>::iterator c
 		std::cout << std::left << std::setw(26) << "Height:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneHeight() << std::endl;
 		std::cout << std::endl;
 	}
-
 }
 
 void Utility::PrintDebugInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
@@ -616,48 +618,6 @@ int Utility::NumOfFilesAvail()
 	return count; // return # of files
 }
 
-void Utility::SaveASolidBox(std::shared_ptr<SolidBox> solidBoxPtr, CArchive &archive, CFile &solidBoxFile)
-{
-	archive << solidBoxPtr->sideLength << solidBoxPtr->bHasConnection;
-	int nameLength = static_cast<int>(solidBoxPtr->GetShapeName().size());
-	archive << nameLength;
-
-	for (auto i : solidBoxPtr->GetShapeName())
-	{
-		archive << i;
-	}
-
-	SaveAConnectionChannel(solidBoxPtr, archive, solidBoxFile); // takes care of channel member and its associated planes
-}
-
-void Utility::SaveAConnectionChannel(std::shared_ptr<SolidBox> solidBoxPtr, CArchive &archive, CFile &solidBoxFile)
-{
-	int nameLength = static_cast<int>(solidBoxPtr->GetConnChannel()->GetConnName().size());
-	archive << nameLength;
-
-	for (auto i : solidBoxPtr->GetConnChannel()->GetConnName())
-	{
-		archive << i;
-	}
-
-	for (auto squarePlaneItr : solidBoxPtr->GetConnChannel()->GetPlaneSet())
-	{
-		SaveASquarePlane(squarePlaneItr, archive, solidBoxFile); // takes care of all of the square planes
-	}
-}
-
-void Utility::SaveASquarePlane(std::shared_ptr<SquarePlane> planePtr, CArchive &archive, CFile &solidBoxFile)
-{
-	archive << planePtr->GetSqPlaneHeight() << planePtr->GetSqPlaneLength() << planePtr->GetNumOfEdges();
-	int nameLength = static_cast<int>(planePtr->GetSqPlaneName().size());
-	archive << nameLength;
-
-	for (auto i : planePtr->GetSqPlaneName())
-	{
-		archive << i;
-	}
-}
-
 char Utility::SaveOptions()
 {
 	std::string strInput = "";
@@ -691,8 +651,9 @@ std::string Utility::PickFile()
 	{
 		return strInput;
 	}
-	ViewFiles();
+
 	numOfFiles = NumOfFilesAvail();
+	ViewFiles();
 	fileSelection = stoi(strInput);
 
 	if ((fileSelection < 1) || (fileSelection > numOfFiles))
@@ -765,19 +726,17 @@ void Utility::DeleteBox(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVec
 
 void Utility::LoadASolidBox()
 {
-	int numOfEdges = 0;
-	double height = 0;
-	double length = 0;
-	char letter = 0;
 	int vecSize = 0;
 	int nameSize = 0;
 	int solidBoxNameIDCntr = 0;
 	int connChannelNmIDCntr = 0;
 	int sqPlnNmIDCntr = 0;
-	std::string name = "";
-	bool hasConnection = false;
 	std::string strInput = "";
-	char cInput = 0;
+	std::string strDataFromFile = "";
+	std::vector<std::string> vec;
+	std::ifstream inFile;
+	std::vector<std::string>::iterator itr;
+	std::string strLineData = "";
 
 	ViewFiles();
 	std::cout << "Please type the number corresponding to the file you with to load" << std::endl;
@@ -789,79 +748,71 @@ void Utility::LoadASolidBox()
 		return;
 	}
 
-	CFile file;
-	file.Open(strInput.c_str(), CFile::modeRead | CFile::typeBinary);
-	CArchive ar(&file, CArchive::load);
-	ar >> solidBoxNameIDCntr >> connChannelNmIDCntr >> sqPlnNmIDCntr;
-	ar >> vecSize;
+	inFile.open(strInput);
 
-	//getting members for solidbox(es)
-	for (int ii = 0; ii < vecSize; ++ii)
+	while (getline(inFile, strLineData))
 	{
-		ar >> length >> hasConnection >> nameSize;
-		name = ""; // resetting name for boxes if there is more than one solid box
+		strDataFromFile += strLineData + ":;";
+	}
 
-		//getting cube name
-		for (int ii = 0; ii < nameSize; ++ii)
+	vec = TokenizeStringToVec(strDataFromFile, ';');
+	std::cout << "items in vec:  " << std::endl;
+	for (auto element : vec)
+	{
+		std::cout << element << std::endl;
+	}
+	itr = vec.begin();
+	RetrieveInitialParams(solidBoxNameIDCntr, connChannelNmIDCntr, sqPlnNmIDCntr, vecSize, itr); // don't set NmIDCntrs permanently until
+	                                                 // finished creating objects since the values will be off due to creation of objects 
+	while (itr != vec.end())
+	{
+
+		if ((*itr).find("cube") != std::string::npos) // see if the string contains "cube"
+			// it should if that line is for a solidbox.  If so, load it.
 		{
-			ar >> letter;
-			name += letter;
+			SolidBox::LoadSolidBox(itr, vecSize);
 		}
-
-		//constructing a solid box with given length and setting other params
-		std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(length);
-		box->SetName(name);
-		ar >> nameSize;
-		name = ""; // resetting name
-
-		//getting connectionchannel name
-		for (int ii = 0; ii < nameSize; ++ii)
-		{
-			ar >> letter;
-			name += letter;
-		}
-
-		box->GetConnChannel()->SetName(name);
-
-		//getting and setting members for square planes
-		for (auto planePtr : box->GetConnChannel()->GetPlaneSet())
-		{
-			ar >> height >> length >> numOfEdges;
-			planePtr->SetHeight(height);
-			planePtr->SetLength(length);
-			planePtr->SetNumOfEdges(numOfEdges);
-			ar >> nameSize;
-			name = ""; // resetting name
-
-			for (int ii = 0; ii < nameSize; ++ii) // reading in sq plane name
-			{
-				ar >> letter;
-				name += letter;
-			}
-
-			planePtr->SetName(name);
-		}
-
-		SolidBox::cubeVec.push_back(box); // solid box object is completed now.
 	}
 
 	// ensures counters are the same as when they were saved
 	SolidBox::nameIDCounter = solidBoxNameIDCntr;
 	ConnectionChannel<SolidBox>::nameIDCounter = connChannelNmIDCntr;
 	SquarePlane::nameIDCounter = sqPlnNmIDCntr;
-	ar.Close();
-	file.Close();
+	inFile.close();
 }
 
-std::vector<std::string> Utility::TokenizeStringToVec(std::string str)
+void Utility::RetrieveInitialParams(int &solidBoxNameIDCntr, int &connChannelNmIDCntr, int &sqPlnNmIDCntr, int &vecSize, std::vector<std::string>::iterator &itr)
 {
+	std::cout << "solidboxnameidcntr:  " << (*itr) << std::endl;
+	solidBoxNameIDCntr = stoi(*itr);
+	itr++; // increment iterator to go through vec for each param
+	std::cout << "connchannelnmidcntr:  " << (*itr) << std::endl;
+	connChannelNmIDCntr = stoi(*itr);
+	itr++;
+	std::cout << "sqplnnmidcntr:  " << (*itr) << std::endl;
+	sqPlnNmIDCntr = stoi(*itr);
+	itr++;
+	std::cout << "vecsize:  " << (*itr) << std::endl;
+	vecSize = stoi(*itr);
+	itr++; std::cout << "in retrieve initial params. should be ':' " << (*itr) << std::endl;
+	itr++; // move past ":" delimiter
+}
+
+
+
+std::vector<std::string> Utility::TokenizeStringToVec(std::string str, char delimiter)
+{
+	char *myDelimiter = &delimiter;
+	std::vector<std::string> vec;
 	char *myString = const_cast<char*>(str.c_str());
 	char* nextToken = NULL;
-	char *p = strtok_s(myString, " ", &nextToken);
-	while (p) {
-		std::cout << p << std::endl;
-		p = strtok_s(NULL, " ", &nextToken);
+	char *p = strtok_s(myString, myDelimiter, &nextToken);
+
+	while (p) 
+	{
+		vec.push_back(p);
+		p = strtok_s(NULL, myDelimiter, &nextToken);
 	}
-	std::vector<std::string> x;
-	return x;
+	
+	return vec;
 }

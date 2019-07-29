@@ -1,49 +1,18 @@
-#include "SolidBox.h"
-#include "Shape.h"
 #include <string>
-#include "ConnectionChannel.h"
 #include <set>
 #include <iostream>
 #include <map>
-#include "Channel.h"
-#include "Utility.h"
-#include "afx.h"
+#include <fstream>
 #include <memory>
 #include <algorithm>
 #include <vector>
+#include "Utility.h"
+#include "SolidBox.h"
+#include "ConnectionChannel.h"
 
-
-IMPLEMENT_SERIAL(SolidBox, CObject, 0)
-
-int SolidBox::nameIDCounter = 1;
+int SolidBox::nameIDCounter = 0;
 const int SolidBox::planesPerSolidBox = 6;
 std::vector<std::shared_ptr<SolidBox>> SolidBox::cubeVec;
-
-
-void SolidBox::Serialize(CArchive& ar) {
-	CObject::Serialize(ar);
-	std::cout << "in serializing fxn" << std::endl;
-	//double sideLength;
-	//std::shared_ptr<ConnectionChannel> channel;
-	//bool hasConnection; // flag for checking if the SolidBox has a connection
-	//std::string name;
-	//static int nameIDCounter; // used for naming unique cubes
-	//static const int planesPerSolidBox;
-
-	if (ar.IsStoring())
-	{
-		ar << bHasConnection << sideLength << (int)planesPerSolidBox;
-		//ex: ar << empID << empName << age;
-	}
-
-	else
-	{
-		int(planesPerSolidBox);
-		ar >> bHasConnection >> sideLength >> planesPerSolidBox;
-		//ex: ar >> empID >> empName >> age;
-	}
-
-}
 
 // default constructor 
 SolidBox::SolidBox() : channel(this)
@@ -70,11 +39,12 @@ SolidBox::SolidBox(double sideLength) : channel(this)
 	//making 6 planes to go with the cube
 	for (int i = 0; i < SolidBox::planesPerSolidBox; ++i)
 	{
+		std::cout << "about to make a plane with sidelength of: " << sideLength << std::endl;
 		std::shared_ptr<SquarePlane> plane = std::make_shared<SquarePlane>(sideLength, &channel);
 		squarePlaneSet.insert(plane);
 	}
 
-	channel.Connect();
+	channel.Connect(squarePlaneSet);
 
 	//if all planes inserted correctly, then a proper ChannelConnection has been made
 	this->sideLength = sideLength;
@@ -89,16 +59,6 @@ SolidBox::SolidBox(SolidBox& other)
 	ConnectionChannel<SolidBox> channel = other.channel;
 	bHasConnection = other.bHasConnection; // flag for checking if the SolidBox has a connection
 
-}
-
-bool SolidBox::operator<(const SolidBox &cube) const
-{
-	return (this->name < cube.name);
-}
-
-bool SolidBox::operator==(const SolidBox &cube) const
-{
-	return (this->name == cube.name);
 }
 
 // since it was requested that old object be discarded afterwards, this is
@@ -117,29 +77,11 @@ double SolidBox::GetSideLength()
 	return sideLength;
 }
 
-std::string SolidBox::GetShapeName()
-{
-	return name;
-}
 
-ConnectionChannel<SolidBox>* SolidBox::GetConnChannel()
-{
-	return &channel;
-}
-
-bool SolidBox::GetHasConnection()
-{
-	return bHasConnection;
-}
 
 int SolidBox::GetPlnsPerSolidBx()
 {
 	return planesPerSolidBox;
-}
-
-void SolidBox::SetName(std::string name)
-{
-	this->name = name;
 }
 
 void SolidBox::Delete()
@@ -157,3 +99,63 @@ void SolidBox::Delete()
 	SolidBox::cubeVec.erase(cubeVecItr); // removing item from vector
 }
 
+void SolidBox::LoadSolidBox(std::vector<std::string>::iterator &itr, const int &vecSize)
+{
+	std::string stName = "";
+	double dLength = 0;
+	bool bHasConnection = false;
+	double dHeight = 0;
+	int nNumOfEdges = 0;
+
+	//getting members for solidbox(es)
+	for (int ii = 0; ii < vecSize; ++ii)
+	{
+		stName = ""; // resetting name for boxes if there is more than one solid box
+		stName = (*itr); std::cout << "in loadsolidbox should be a name: " << (*itr) << std::endl;
+		itr++; std::cout << "in loadsolidbox should be a double: " << (*itr) << std::endl;
+		dLength = stod(*itr);
+		itr++;
+		bHasConnection = static_cast<bool>(stoi(*itr));
+		itr++;
+
+		//constructing a solid box with given length and setting other params
+		std::cout << "making a solidbox from load with length,hasconn,name: " << dLength << " " << bHasConnection << " " << stName << std::endl;
+		std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(dLength);
+		box->SetName(stName);
+		stName = ""; // resetting name
+
+		//getting connectionchannel name
+		stName = (*itr);
+		itr++;
+		box->GetConnChannel()->SetName(stName);
+		stName = ""; // resetting name
+
+		//getting and setting members for square planes
+		for (auto planePtr : box->GetConnChannel()->GetPlaneSet())
+		{
+			stName = (*itr);
+			itr++;
+			dHeight = stod(*itr);
+			itr++;
+			dLength = stod(*itr);
+			itr++;
+			nNumOfEdges = stoi(*itr);
+			itr++; std::cout << "in loadsolidbox plane. last should be a ':' " << (*itr) << std::endl;
+			planePtr->SetName(stName);
+			stName = ""; // resetting name
+			planePtr->SetHeight(dHeight);
+			planePtr->SetLength(dLength);
+			planePtr->SetNumOfEdges(nNumOfEdges);
+		}
+		itr++; // skipping ":" delimiter
+		SolidBox::cubeVec.push_back(box); // solid box object is completed now.
+	}
+}
+
+void SolidBox::SaveASolidBox(std::ofstream &outFile)
+{
+	outFile << name << ";";
+	outFile << sideLength << ";" << bHasConnection << ";";
+	channel.SaveAConnectionChannel(outFile); // takes care of channel member and its associated planes
+	outFile << "\n";
+}

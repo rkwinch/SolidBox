@@ -1,30 +1,13 @@
-#include <afx.h>
 #include <iostream>
 #include <vector>
+#include <fstream>
 #include "SquarePlane.h"
 #include "Utility.h"
 #include "ConnectionChannel.h"
 
 class SolidBox;
 
-IMPLEMENT_SERIAL(SquarePlane, CObject, 0)
-
-int SquarePlane::nameIDCounter = 1;
-
-void SquarePlane::Serialize(CArchive& ar) {
-	CObject::Serialize(ar);
-
-	if (ar.IsStoring())
-	{
-		//ex: ar << empID << empName << age;
-	}
-
-	else
-	{
-		//ex: ar >> empID >> empName >> age;
-	}
-
-}
+int SquarePlane::nameIDCounter = 0;
 
 // default constructor
 SquarePlane::SquarePlane()
@@ -109,3 +92,10 @@ void SquarePlane::SetNumOfEdges(int numOfEdges)
 {
 	this->numOfEdges = numOfEdges;
 }
+
+void SquarePlane::SaveASquarePlane(std::ofstream &outFile)
+{
+	outFile << name << ";";
+	outFile << height << ";" << length << ";" << numOfEdges << ";";
+}
+

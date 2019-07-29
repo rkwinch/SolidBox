@@ -1,15 +1,15 @@
 #pragma once
 
 #include <set>
-#include <afx.h>
 #include <memory>
 #include <vector>
 #include "Channel.h"
 
+
 class SquarePlane;
 
 template<class T>
-class ConnectionChannel : public CObject, public Channel {
+class ConnectionChannel : public Channel {
 
 	friend class Utility;
 
@@ -19,15 +19,7 @@ private:
 	T* cube;
 	static int nameIDCounter;
 
-	void SetName(std::string name)
-	{
-		this->name = name;
-	}
-
 public:
-	DECLARE_SERIAL(ConnectionChannel)
-	IMPLEMENT_SERIAL(ConnectionChannel<T>, CObject, 0)
-
 	//default constructor
 	ConnectionChannel()
 	{
@@ -95,7 +87,7 @@ public:
 	}
 
 	//adding a plane to the connection
-	void Connect() override
+	void Connect(std::set<std::shared_ptr<SquarePlane>> planeSet) override
 	{
 		for (auto plane : planeSet)
 		{
@@ -133,20 +125,18 @@ public:
 		return cube;
 	}
 
+	void SetName(std::string name)
+	{
+		this->name = name;
+	}
 
-	void Serialize(CArchive& ar) {
-		CObject::Serialize(ar);
-
-		if (ar.IsStoring())
+	void SaveAConnectionChannel(std::ofstream &outFile)
+	{
+		outFile << name << ";";
+		for (auto element : planeSet) // should this vary per type???
 		{
-			//ex: ar << empID << empName << age;
+			element->SaveASquarePlane(outFile); // takes care of all of the square planes
 		}
-
-		else
-		{
-			//ex: ar >> empID >> empName >> age;
-		}
-
 	}
 };
 

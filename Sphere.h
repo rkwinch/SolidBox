@@ -3,42 +3,26 @@
 #include <string>
 #include <set>
 #include <map>
-#include <afx.h>
 #include <memory>
 #include <vector>
 #include "Shape.h"
 #include "ConnectionChannel.h"
 
-class Sphere : public CObject, public Shape{
+class Sphere : public Shape<Sphere> {
+
+	friend class Utility;
 
 public:
-	DECLARE_SERIAL(Sphere)
-	void Serialize(CArchive& ar);
-
 	Sphere();
 	~Sphere();
 	Sphere(Sphere&);
-	Sphere(double radius);
+	Sphere(double sideLength);
 	double GetRadius();
-	bool GetHasConnection();
-	std::string GetShapeName() override;
-	ConnectionChannel<Sphere>* GetConnChannel();
-	Sphere& operator=(Sphere &sphere);
-	bool operator<(const Sphere &sphere) const;
-	bool operator==(const Sphere &sphere) const;
-	static std::vector<std::shared_ptr<Sphere>> sphereVec;
+	static std::vector<std::shared_ptr<Sphere>> cubeVec;
+	static int GetPlnsPerSphere();
 	void Delete();
-
+	
 private:
-	void SetName(std::string name);
 	double radius;
-	ConnectionChannel<Sphere> channel;
-	bool bHasConnection;
-	static int nameIDCounter;
+	static const int planesPerSphere;
 };
-
-
-
-
-
-

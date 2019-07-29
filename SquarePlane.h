@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <afx.h>
 #include <memory>
 #include "ConnectionChannel.h"
 
@@ -11,15 +10,12 @@
 
 class SolidBox;
 
-class SquarePlane : public CObject {
+class SquarePlane {
 
 	friend class Utility;
 	friend class SolidBox;
 
 public:
-	DECLARE_SERIAL(SquarePlane)
-	void Serialize(CArchive& ar);
-
 	static int nameIDCounter;
 	SquarePlane();
 	SquarePlane(double sideLength, ConnectionChannel<SolidBox>* channel);
@@ -31,6 +27,11 @@ public:
 	double GetSqPlaneHeight();
 	ConnectionChannel<SolidBox>* GetConnChannel();
 	int GetNumOfEdges();
+	void SetName(std::string name);
+	void SetLength(double length);
+	void SetHeight(double height);
+	void SetNumOfEdges(int numOfEdges);
+	void SaveASquarePlane(std::ofstream &outFile);
 
 private:
 	double height;
@@ -38,8 +39,4 @@ private:
 	int numOfEdges;
 	std::string name;
 	ConnectionChannel<SolidBox>* channel;
-	void SetName(std::string name);
-	void SetLength(double length);
-	void SetHeight(double height);
-	void SetNumOfEdges(int numOfEdges);
 };

@@ -3,43 +3,33 @@
 #include <string>
 #include <set>
 #include <map>
-#include <afx.h>
 #include <memory>
 #include <vector>
 #include "Shape.h"
 #include "ConnectionChannel.h"
 
-class SolidBox;
-
-class SolidBox : public CObject, public Shape {
+class SolidBox : public Shape<SolidBox> {
 
 	friend class Utility;
 
 public:
-	DECLARE_SERIAL(SolidBox)
-	void Serialize(CArchive& ar);
-
 	SolidBox();
 	~SolidBox();
 	SolidBox(SolidBox&);
 	SolidBox(double sideLength);
 	double GetSideLength();
 	bool GetHasConnection();
-	std::string GetShapeName() override;
-	ConnectionChannel<SolidBox>* GetConnChannel();
 	SolidBox& operator=(SolidBox &cube);
-	bool operator<(const SolidBox &cube) const;
-	bool operator==(const SolidBox &cube) const;
 	static std::vector<std::shared_ptr<SolidBox>> cubeVec;
 	static int GetPlnsPerSolidBx();
 	void Delete();
+	static void LoadSolidBox(std::vector<std::string>::iterator &itr, const int &vecSize);
+	void SaveASolidBox(std::ofstream &outFile);
 
 private:
-	void SetName(std::string name);
 	double sideLength;
 	ConnectionChannel<SolidBox> channel;
 	bool bHasConnection; // flag for checking if the SolidBox has a connection
-	std::string name;
 	static int nameIDCounter; // used for naming unique cubes
 	static const int planesPerSolidBox;
 };

@@ -17,7 +17,7 @@ public:
 	static std::string CreateUniqueName(std::string namePrefix, int &nameIDCounter);
 	static int SaveAllObjects();
 	static void LoadAllObjects();
-	static std::vector<std::string> TokenizeStringToVec(std::string);
+	static std::vector<std::string> TokenizeStringToVec(std::string, char delimiter);
 
 private:
 	static void CreateSolidBox();
@@ -39,9 +39,9 @@ private:
 	static void MoveASolid();
 	static std::string InputInMapVal(std::string input, std::regex acceptableInputExpr);
 	static void PrintSolidsInMemory();
-	static void SaveASolidBox(std::shared_ptr<SolidBox> solidBoxPtr, CArchive &archive, CFile &solidBoxFile);
-	static void SaveAConnectionChannel(std::shared_ptr<SolidBox> solidBoxPtr, CArchive &archive, CFile &solidBoxFile);
-	static void SaveASquarePlane(std::shared_ptr<SquarePlane> plane, CArchive &archive, CFile &solidBoxFile);
+	static void SaveASolidBox(std::shared_ptr<SolidBox> solidBoxPtr, std::ofstream &outFile);
+	static void SaveAConnectionChannel(std::shared_ptr<SolidBox> solidBoxPtr, std::ofstream &outFile);
+	static void SaveASquarePlane(std::shared_ptr<SquarePlane> plane, std::ofstream &outFile);
 	static void LoadASolidBox();
 	static bool IsOkToSave();
 	static void ViewFiles();
@@ -52,5 +52,6 @@ private:
 	static void DeleteBox(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr);
 	static int NumOfFilesAvail();
 	//static std::vector<std::string> Utility::TokenizeString(std::string);
+	static void RetrieveInitialParams(int &solidBoxNameIDCntr, int &connChannelNmIDCntr, int &sqPlnNmIDCntr, int &vecSize, std::vector<std::string>::iterator &itr);
 };
 
