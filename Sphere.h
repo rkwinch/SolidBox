@@ -2,16 +2,11 @@
 
 #include <string>
 #include <set>
-#include <memory>
 #include <vector>
-#include <iostream>
 #include <fstream>
-#include <algorithm>
 #include "Shape.h"
-#include "Surface.h"
-#include "CurvedSurface.h"
-#include "ConnectionChannel.h"
-#include "Utility.h"
+
+class Surface;
 
 class Sphere : public Shape {
 

@@ -14,6 +14,8 @@
 #include "Sphere.h"
 #include "RectPrism.h"
 #include "Speech.h"
+#include "RectPlane.h"
+#include "CurvedSurface.h"
 
 class ConnectionChannel;
 
@@ -101,7 +103,7 @@ int Utility::SelectShapeType()
 	if (bSpeechEnabled)
 	{
 		nInput = Speech::RetrievePosInteger();
-		
+
 		if (nInput == -1) // user elected to go back to the main menu
 		{
 			return -1;
@@ -110,7 +112,7 @@ int Utility::SelectShapeType()
 	else
 	{
 		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-		
+
 		if ((strInput == "b") || (strInput == "B"))
 		{
 			return -1;
@@ -118,13 +120,13 @@ int Utility::SelectShapeType()
 
 		nInput = stoi(strInput);
 	}
-	
+
 	if ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()))
 	{
 		std::cout << "\nSelection out of bounds.  Please try again." << std::endl;
 		nInput = SelectShapeType();
 	}
-	
+
 	return nInput;
 }
 
@@ -132,14 +134,17 @@ std::string Utility::SelectAvailableShapeType(int minAvailShapes)
 {
 	std::string strInput = "";
 	int nInput = 0;
+	int solidBoxVecSize = static_cast<int>(SolidBox::m_shapeVec.size());
+	int sphereVecSize = static_cast<int>(Sphere::m_shapeVec.size());
+	int rectPrismVecSize = static_cast<int>(RectPrism::m_shapeVec.size());
 	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$"); // any number or 'b' or 'B". 0 will be checked further down
 	std::vector<std::string> strShapeTypes;
 	int nCounter = 0;
 	Menu* menu = Menu::GetInstance();
 	bool bSpeechEnabled = menu->GetIsSpeechFlag();
 
-	if ((SolidBox::m_shapeVec.size() < minAvailShapes) && (Sphere::m_shapeVec.size() < minAvailShapes)
-		&& (RectPrism::m_shapeVec.size() < minAvailShapes))
+	if ((solidBoxVecSize < minAvailShapes) && (sphereVecSize < minAvailShapes)
+		&& (rectPrismVecSize < minAvailShapes))
 	{
 		return ""; // not enough shapes
 	}
@@ -155,11 +160,11 @@ std::string Utility::SelectAvailableShapeType(int minAvailShapes)
 		std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
 	}
 
-	if (SolidBox::m_shapeVec.size() >= minAvailShapes) strShapeTypes.push_back("cube");
+	if (solidBoxVecSize >= minAvailShapes) strShapeTypes.push_back("cube");
 
-	if (Sphere::m_shapeVec.size() >= minAvailShapes) strShapeTypes.push_back("sphere");
+	if (sphereVecSize >= minAvailShapes) strShapeTypes.push_back("sphere");
 
-	if (RectPrism::m_shapeVec.size() >= minAvailShapes) strShapeTypes.push_back("rectPrism");
+	if (rectPrismVecSize >= minAvailShapes) strShapeTypes.push_back("rectPrism");
 
 	for (auto shape : strShapeTypes)
 	{
@@ -184,13 +189,13 @@ std::string Utility::SelectAvailableShapeType(int minAvailShapes)
 			nInput = stoi(strInput);
 		}
 
-		if (nInput < 1 || static_cast<size_t>(nInput) > strShapeTypes.size())
+		if ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()))
 		{
 			std::cout << "\nSelection out of bounds.  Please try again." << std::endl;
 		}
 
-	}while ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()));
-	
+	} while ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()));
+
 	return strShapeTypes[nInput - 1];
 }
 
@@ -335,15 +340,9 @@ char Utility::SaveOptions()
 	Menu* menu = Menu::GetInstance();
 	bool isSpeech = menu->GetIsSpeechFlag();
 
-	PrintNwLnsAndLnDelimiter("-", 55);
-
 	if (isSpeech)
 	{
-		std::cout << "Say \"save\" to save an existing file (overwrite)," << std::endl;
-		std::cout << "say \"new\" to save to a new file," << std::endl;
-		std::cout << "or say \"back\" to go back to the main menu.\n" << std::endl;
-
-		while ((strInput != "save") || (strInput != "new") || (strInput != "back"))
+		while ((strInput != "save") && (strInput != "new") && (strInput != "back"))
 		{
 			strInput = Speech::StartListening();
 
@@ -353,20 +352,51 @@ char Utility::SaveOptions()
 			}
 		}
 
-		if (strInput == "save") return 's';
-		else if (strInput == "new") return 'n';
-		else return 'b';
+		if (strInput == "save") cInput = 's';
+		else if (strInput == "new") cInput = 'n';
+		else cInput = 'b';
 	}
 	else
 	{
-		std::cout << "Press 's' to save to an existing file (overwrite)," << std::endl;
-		std::cout << "press 'n' to save to a new file," << std::endl;
-		std::cout << "or press 'b' to go back to the main menu.\n" << std::endl;
 		std::regex acceptableInputExpr("^\\s*([sSnNbB])\\s*$");
 		strInput = GetAndValidateInput(acceptableInputExpr);
 		cInput = strInput[0];
 	}
-	
+
+	return cInput;
+}
+
+char Utility::LoadOptions()
+{
+	std::string strInput = "";
+	std::string fileName = "";
+	char cInput = 0;
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
+
+	if (isSpeech)
+	{
+		while ((strInput != "yes") && (strInput != "no") && (strInput != "back"))
+		{
+			strInput = Speech::StartListening();
+
+			for (auto character : strInput)
+			{
+				character = tolower(character);
+			}
+		}
+
+		if (strInput == "yes") cInput = 'y';
+		else if (strInput == "no") cInput = 'n';
+		else cInput = 'b';
+	}
+	else
+	{
+		std::regex acceptableInputExpr("^\\s*([yYnNbB])\\s*$");
+		strInput = GetAndValidateInput(acceptableInputExpr);
+		cInput = strInput[0];
+	}
+
 	return cInput;
 }
 
@@ -387,7 +417,7 @@ std::string Utility::PickFile()
 		if (isSpeech)
 		{
 			fileSelection = Speech::RetrievePosInteger();
-			
+
 			if (fileSelection == -1) return "b";
 		}
 		else
@@ -442,13 +472,31 @@ bool Utility::FileExists(std::string fileName)
 
 std::string Utility::PickNewFile()
 {
+	std::vector<std::string> fileNameVec;
 	std::string fileName = "";
 	std::regex acceptableInputExpr("^\\s*([a-zA-Z0-9_]*)\\s*$");
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
 
-	std::cout << "Please type the name (no extension) of the new file" << std::endl;
-	std::cout << "For example, \"myFile\" would be acceptable (no quotes)" << std::endl;
-	fileName = GetAndValidateInput(acceptableInputExpr);
-	fileName += ".txt";
+	if (isSpeech)
+	{
+		std::cout << "Please say the name (no extension) of the new file." << std::endl;
+		std::cout << "For example, \"my document\" would be acceptable (no quotes)" << std::endl;
+
+		while (fileName == "")
+		{
+			fileName = Speech::StartListening();
+		}
+
+		Speech::FileNameConversion(fileName);
+	}
+	else
+	{
+		std::cout << "Please type the name (no extension) of the new file" << std::endl;
+		std::cout << "For example, \"myFile\" would be acceptable (no quotes)" << std::endl;
+		fileName = GetAndValidateInput(acceptableInputExpr);
+		fileName += ".txt";
+	}
 
 	if (FileExists(fileName))
 	{
@@ -465,30 +513,15 @@ std::vector<std::string> Utility::TokenizeStringToVec(std::string str, char deli
 	std::vector<std::string> vec;
 	char *myString = const_cast<char*>(str.c_str());
 	char* nextToken = NULL;
-	char *p = strtok_s(myString, myDelimiter, &nextToken);
+	char *element = strtok_s(myString, myDelimiter, &nextToken);
 
-	while (p)
+	while (element)
 	{
-		vec.push_back(p);
-		p = strtok_s(NULL, myDelimiter, &nextToken);
+		vec.push_back(element);
+		element = strtok_s(NULL, myDelimiter, &nextToken);
 	}
 
 	return vec;
-}
-
-std::string Utility::FilterNonChars(std::string input)
-{
-	std::string retString = input;
-
-	for (size_t i = 0; i < retString.length(); ++i)
-	{
-		if (!isalpha(retString[i]))
-		{
-			retString[i] = ' ';
-		}
-	}
-
-	return retString;
 }
 
 std::string Utility::CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter)
@@ -511,13 +544,13 @@ int Utility::RetrieveVecInput(std::regex acceptableInputExpr, int shapeVecSize)
 		if (isSpeech)
 		{
 			nInput = Speech::RetrievePosInteger();
-			
+
 			if (nInput == -1) return -1; // user elected to go back to main menu
 		}
 		else
 		{
 			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-			
+
 			if ((strInput == "b") | (strInput == "B")) return -1; // user elected to go back to main menu
 
 			nInput = stoi(strInput);
@@ -601,4 +634,75 @@ void Utility::PrintSolidsWithConseqCntr()
 		}
 		std::cout << std::endl;
 	}
+}
+
+void Utility::PrintSaveOptions()
+{
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
+
+	if (isSpeech)
+	{
+		std::cout << "Say \"save\" to save an existing file (overwrite)," << std::endl;
+		std::cout << "say \"new\" to save to a new file," << std::endl;
+		std::cout << "or say \"back\" to go back to the main menu.\n" << std::endl;
+	}
+	else
+	{
+		std::cout << "Press 's' to save to an existing file (overwrite)," << std::endl;
+		std::cout << "press 'n' to save to a new file," << std::endl;
+		std::cout << "or press 'b' to go back to the main menu.\n" << std::endl;
+	}
+}
+
+void Utility::PrintLoadOptions()
+{
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
+
+	if (isSpeech)
+	{
+		std::cout << "Say \"yes\" to save your date before loading, \"no\" to overwrite the current data with a file," << std::endl;
+		std::cout << "or \"back\" to go back to the main menu." << std::endl;
+	}
+	else
+	{
+		std::cout << "Press 'y' to save your data before loading, 'n' to overwrite the current data with a file," << std::endl;
+		std::cout << "or 'b' to go back to the main menu." << std::endl;
+	}
+}
+
+void Utility::DeleteAllData()
+{
+	for (auto element : SolidBox::m_shapeVec) // deleting all SolidBoxes
+	{
+		auto elementPtr = dynamic_cast<SolidBox*>(element.get());
+		elementPtr->GetConnChannel()->Disconnect();
+	}
+
+	SolidBox::m_shapeVec.clear();
+
+	for (auto element : Sphere::m_shapeVec) // deleting all Spheres
+	{
+		auto elementPtr = dynamic_cast<Sphere*>(element.get());
+		elementPtr->GetConnChannel()->Disconnect();
+	}
+
+	Sphere::m_shapeVec.clear();
+
+	for (auto element : RectPrism::m_shapeVec) // deleting all RectPrisms
+	{
+		auto elementPtr = dynamic_cast<RectPrism*>(element.get());
+		elementPtr->GetConnChannel()->Disconnect();
+	}
+
+	RectPrism::m_shapeVec.clear();
+
+	// resetting counters in case shapes were made and then deleted (making shapeVec.size() == 0 and nameIDCounters != 0)
+	SolidBox::m_nNameIDCounter = 0;
+	Sphere::m_nNameIDCounter = 0;
+	RectPrism::m_nNameIDCounter = 0;
+	ConnectionChannel::m_nNameIDCounter = 0;
+	RectPlane::m_nNameIDCounter = 0;
+	CurvedSurface::m_nNameIDCounter = 0;
 }

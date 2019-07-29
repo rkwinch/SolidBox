@@ -31,4 +31,5 @@ namespace Speech {
 	double ConvertPhraseToDouble(std::string input);
 	int ConvertPhraseToInteger(std::string input);
 	std::string StartListening();
+	void FileNameConversion(std::string &fileName);
 }

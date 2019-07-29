@@ -255,6 +255,7 @@ bool RectPrism::Move()
 {
 	int strMoveFrom = 0;
 	int strMoveTo = 0;
+	int rectPrismVecSize = static_cast<int>(RectPrism::m_shapeVec.size());
 	auto shapeVecItr_To = RectPrism::m_shapeVec.begin();
 	auto shapeVecItr_From = RectPrism::m_shapeVec.begin();
 	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' while allowing for whitespace
@@ -268,32 +269,32 @@ bool RectPrism::Move()
 		//moveFrom rectPrism:
 		do
 		{
-			strMoveFrom = Utility::RetrieveVecInput(acceptableInputExpr, RectPrism::m_shapeVec.size());
+			strMoveFrom = Utility::RetrieveVecInput(acceptableInputExpr, rectPrismVecSize);
 
 			if (strMoveFrom == -1) return false; // user elected to go back to main menu
 
-			if (strMoveFrom < RectPrism::m_shapeVec.size() || strMoveFrom > RectPrism::m_shapeVec.size())
+			if ((strMoveFrom < rectPrismVecSize) || (strMoveFrom > rectPrismVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while (strMoveFrom < RectPrism::m_shapeVec.size() || strMoveFrom > RectPrism::m_shapeVec.size());
+		} while ((strMoveFrom < rectPrismVecSize) || (strMoveFrom > rectPrismVecSize));
 
 		shapeVecItr_From = std::next(shapeVecItr_From, (strMoveFrom - 1));
 
 		//moveTo rectPrism:
 		do
 		{
-			strMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, RectPrism::m_shapeVec.size());
+			strMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, rectPrismVecSize);
 
 			if (strMoveTo == -1) return false; // user elected to go back to main menu
 
-			if (strMoveTo < RectPrism::m_shapeVec.size() || strMoveTo > RectPrism::m_shapeVec.size())
+			if ((strMoveTo < rectPrismVecSize) || (strMoveTo > rectPrismVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while (strMoveTo < RectPrism::m_shapeVec.size() || strMoveTo > RectPrism::m_shapeVec.size());
+		} while ((strMoveTo < rectPrismVecSize) || (strMoveTo > rectPrismVecSize));
 
 		shapeVecItr_To = std::next(shapeVecItr_To, (strMoveTo - 1));
 

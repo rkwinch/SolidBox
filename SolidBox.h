@@ -3,6 +3,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <fstream>
 #include "Shape.h"
 
 class RectPlane;

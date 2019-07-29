@@ -199,8 +199,8 @@ int Speech::ConvertPhraseToInteger(std::string input)
 
 	while (std::getline(strStream, word, ' '))
 	{
-		double scale = 0;
-		double increment = 0;
+		int scale = 0;
+		int increment = 0;
 		std::tie(scale, increment) = wordsToNumMap[word];
 
 		current = current * scale + increment;
@@ -311,4 +311,25 @@ double Speech::ConvertPhraseToDouble(std::string input)
 	}
 
 	return result + current + deci;
+}
+
+void Speech::FileNameConversion(std::string &fileName)
+{   // removing special characters
+	fileName.erase(std::remove_if(fileName.begin(), fileName.end(),
+		[&](char element) {return (!isalpha(element) && (element != ' ') && (!isdigit(element))); }), fileName.end());
+	
+	// making letter camel case after making all of them lowercase (more uniform)
+	for (int i = 0; i < static_cast<int>(fileName.size()); ++i)
+	{
+		fileName[i] = tolower(fileName[i]);
+
+		if ((i > 0) && (fileName[i - 1] == ' ') && (!isdigit(fileName[i])))
+		{
+			fileName[i] = toupper(fileName[i]);
+		}
+	}
+
+	// removing spaces and adding file extension of .txt
+	fileName.erase(std::remove_if(fileName.begin(), fileName.end(), [&](char element) {return element == ' '; }), fileName.end());
+	fileName += ".txt";
 }

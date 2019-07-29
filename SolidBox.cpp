@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <vector>
 #include <math.h>
+#include <iomanip>
 #include "SolidBox.h"
 #include "RectPlane.h"
 #include "ConnectionChannel.h"
@@ -212,6 +213,7 @@ bool SolidBox::Move()
 {
 	int strMoveFrom = 0;
 	int strMoveTo = 0;
+	int solidBoxVecSize = static_cast<int>(SolidBox::m_shapeVec.size());
 	auto shapeVecItr_To = SolidBox::m_shapeVec.begin();
 	auto shapeVecItr_From = SolidBox::m_shapeVec.begin();
 	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' while allowing for whitespace
@@ -229,28 +231,28 @@ bool SolidBox::Move()
 
 			if (strMoveFrom == -1) return false; // user elected to go back to main menu
 			
-			if (strMoveFrom < SolidBox::m_shapeVec.size() || strMoveFrom > SolidBox::m_shapeVec.size())
+			if ((strMoveFrom < solidBoxVecSize) || (strMoveFrom > solidBoxVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while (strMoveFrom < SolidBox::m_shapeVec.size() || strMoveFrom > SolidBox::m_shapeVec.size());
+		} while ((strMoveFrom < solidBoxVecSize) || (strMoveFrom > solidBoxVecSize));
 		
 		shapeVecItr_From = std::next(shapeVecItr_From, (strMoveFrom - 1));
 
 		//moveTo cube:
 		do
 		{
-			strMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, SolidBox::m_shapeVec.size());
+			strMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, solidBoxVecSize);
 
 			if (strMoveTo == -1) return false; // user elected to go back to main menu
 
-			if (strMoveTo < SolidBox::m_shapeVec.size() || strMoveTo > SolidBox::m_shapeVec.size())
+			if ((strMoveTo < solidBoxVecSize) || (strMoveTo > solidBoxVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while (strMoveTo < SolidBox::m_shapeVec.size() || strMoveTo > SolidBox::m_shapeVec.size());
+		} while ((strMoveTo < solidBoxVecSize) || (strMoveTo > solidBoxVecSize));
 		
 		shapeVecItr_To = std::next(shapeVecItr_To, (strMoveTo - 1));
 

@@ -12,7 +12,6 @@ namespace Utility {
 	 int SelectShapeType();
 	 std::string SelectAvailableShapeType(int minAvailableShapes);
 	 std::vector<std::string> TokenizeStringToVec(std::string, char delimiter);
-	 std::string FilterNonChars(std::string input);
 	 void PrintNwLnsAndLnDelimiter(std::string delimiter, size_t numOfTimes);
 	 std::string RemoveSpaces(std::string input, std::regex acceptableInputExpr);
 	 bool ValidateInput(std::string input, std::regex acceptableInputExpr);
@@ -22,6 +21,7 @@ namespace Utility {
 	 bool IsOkToSave();
 	 void ViewFiles();
 	 char SaveOptions();
+	 char LoadOptions();
 	 std::string PickFile();
 	 bool FileExists(std::string fileName);
 	 std::string PickNewFile();
@@ -31,5 +31,7 @@ namespace Utility {
 	 std::string GetShapeType(Shape* shape);
 	 int AvailableSolids();
 	 void PrintSolidsWithConseqCntr();
-	
+	 void PrintSaveOptions();
+	 void PrintLoadOptions();
+	 void DeleteAllData();
 }

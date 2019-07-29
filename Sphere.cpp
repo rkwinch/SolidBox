@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <math.h>
+#include <iomanip>
 #include "Sphere.h"
 #include "CurvedSurface.h"
 #include "ConnectionChannel.h"
@@ -216,6 +217,7 @@ bool Sphere::Move()
 {
 	int strMoveFrom = 0;
 	int strMoveTo = 0;
+	int sphereVecSize = static_cast<int>(Sphere::m_shapeVec.size());
 	auto shapeVecItr_To = Sphere::m_shapeVec.begin();
 	auto shapeVecItr_From = Sphere::m_shapeVec.begin();
 	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' while allowing for whitespace
@@ -229,32 +231,32 @@ bool Sphere::Move()
 		//moveFrom Sphere:
 		do
 		{
-			strMoveFrom = Utility::RetrieveVecInput(acceptableInputExpr, Sphere::m_shapeVec.size());
+			strMoveFrom = Utility::RetrieveVecInput(acceptableInputExpr, sphereVecSize);
 
 			if (strMoveFrom == -1) return false; // user elected to go back to main menu
 
-			if (strMoveFrom < Sphere::m_shapeVec.size() || strMoveFrom > Sphere::m_shapeVec.size())
+			if ((strMoveFrom < sphereVecSize) || (strMoveFrom > sphereVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while (strMoveFrom < Sphere::m_shapeVec.size() || strMoveFrom > Sphere::m_shapeVec.size());
+		} while ((strMoveFrom < sphereVecSize) || (strMoveFrom > sphereVecSize));
 
 		shapeVecItr_From = std::next(shapeVecItr_From, (strMoveFrom - 1));
 
 		//moveTo Sphere:
 		do
 		{
-			strMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, Sphere::m_shapeVec.size());
+			strMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, sphereVecSize);
 
 			if (strMoveTo == -1) return false; // user elected to go back to main menu
 
-			if (strMoveTo < Sphere::m_shapeVec.size() || strMoveTo > Sphere::m_shapeVec.size())
+			if ((strMoveTo < sphereVecSize) || (strMoveTo > sphereVecSize))
 			{
 				std::cout << "Invalid entry.  Please try again." << std::endl;
 			}
 
-		} while (strMoveTo < Sphere::m_shapeVec.size() || strMoveTo > Sphere::m_shapeVec.size());
+		} while ((strMoveTo < sphereVecSize) || (strMoveTo > sphereVecSize));
 
 		shapeVecItr_To = std::next(shapeVecItr_To, (strMoveTo - 1));
 
@@ -266,6 +268,6 @@ bool Sphere::Move()
 	} while (strMoveFrom == strMoveTo);
 
 	// It's OK to now move From into To
-	**shapeVecItr_To = **shapeVecItr_From;
+	**shapeVecItr_To = **shapeVecItr_From; // calls move constructor
 	return true;
 }

@@ -60,7 +60,7 @@ void Menu::Run()
 				
 				if (nInput == -1)
 				{
-					bQuit == true;
+					bQuit = true;
 					break;
 				}
 			}
@@ -473,6 +473,8 @@ int Menu::SaveAllObjects()
 	char cInput = 0;
 	int numOfFiles = 0;
 	std::string fileName = "";
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
 
 	//if no shape to save, return and don't save
 	if (!Utility::IsOkToSave())
@@ -486,6 +488,7 @@ int Menu::SaveAllObjects()
 	// view current files in memory and get input from the user to go to main menu,
 	// save a new file, or replace an existing file
 	numOfFiles = Utility::NumOfFilesAvail();
+	Utility::PrintSaveOptions();
 	cInput = Utility::SaveOptions();
 
 	if (tolower(cInput) == 'b')
@@ -550,6 +553,9 @@ int Menu::SaveAllObjects()
 
 void Menu::LoadAllObjects()
 {
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
+
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 
 	if (SolidBox::m_shapeVec.size() != 0)
@@ -557,11 +563,13 @@ void Menu::LoadAllObjects()
 		std::string strInput = "";
 		char cInput = 0;
 		std::regex acceptableInputExpr("^\\s*([bByYnN])\\s*$"); // looking for single character that is b, B, y, Y, n, or N
+		Menu* menu = Menu::GetInstance();
+		bool isSpeech = menu->GetIsSpeechFlag();
+
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		std::cout << "Do you want to save your current data (will be overwritten) before loading a file?" << std::endl;
-		std::cout << "Press 'y' to save your data before loading, 'n' to overwrite the current data with a file," << std::endl;
-		std::cout << "or 'b' to go back to the main menu" << std::endl;
-		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-		cInput = strInput[0];
+		Utility::PrintLoadOptions();
+		cInput = Utility::LoadOptions();
 
 		if (tolower(cInput) == 'b')
 		{
@@ -577,44 +585,12 @@ void Menu::LoadAllObjects()
 			}
 
 		}
-		else if (tolower(cInput) == 'n')
-		{
-			//do nothing here since deleting and loading data will occur below
-		}
+		else if (tolower(cInput) == 'n') {} //do nothing here since deleting and loading data will occur below
 
 		// deleting old data
-		for (auto element : SolidBox::m_shapeVec)
-		{
-			auto elementPtr = dynamic_cast<SolidBox*>(element.get());
-			elementPtr->GetConnChannel()->Disconnect();
-		}
-
-		SolidBox::m_shapeVec.clear();
-
-		for (auto element : Sphere::m_shapeVec)
-		{
-			auto elementPtr = dynamic_cast<Sphere*>(element.get());
-			elementPtr->GetConnChannel()->Disconnect();
-		}
-
-		Sphere::m_shapeVec.clear();
-
-		for (auto element : RectPrism::m_shapeVec)
-		{
-			auto elementPtr = dynamic_cast<RectPrism*>(element.get());
-			elementPtr->GetConnChannel()->Disconnect();
-		}
-
-		RectPrism::m_shapeVec.clear();
+		Utility::DeleteAllData();
 	}
 
-	// resetting counters in case shapes were made and then deleted (making shapeVec.size() == 0 and nameIDCounters != 0)
-	SolidBox::m_nNameIDCounter = 0;
-	Sphere::m_nNameIDCounter = 0;
-	RectPrism::m_nNameIDCounter = 0;
-	ConnectionChannel::m_nNameIDCounter = 0;
-	RectPlane::m_nNameIDCounter = 0;
-	CurvedSurface::m_nNameIDCounter = 0;
 	LoadFile(); // does actual loading of everything
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 }

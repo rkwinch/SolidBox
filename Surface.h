@@ -2,13 +2,11 @@
 
 #include <string>
 #include <fstream>
-#include <algorithm>
 #include <vector>
 #include "Shape.h"
-#include "ConnectionChannel.h"
-#include "Menu.h"
 
-class Observer;
+class ConnectionChannel;
+class Surface;
 
 class Surface {
 
