@@ -28,6 +28,16 @@ public:
 	static std::set<std::shared_ptr<Sphere>> m_surfaceSet;
 	static std::vector<std::shared_ptr<Sphere>> m_shapeVec;
 
+	ConnectionChannel<Sphere, CurvedSurface<Sphere>>* GetConnChannel()
+	{
+		return &m_channel;
+	}
+
+	std::string GetConnName()
+	{
+		return m_channel.GetName();
+	}
+
 	static void Create()
 	{
 		std::string strInput = "";
@@ -49,6 +59,23 @@ public:
 		std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(dRadius);
 		Sphere::m_shapeVec.push_back(sphere);
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
+	}
+
+	void Delete()
+	{
+		std::vector<std::shared_ptr<Sphere>>::iterator shapeVecItr = m_shapeVec.begin();
+		// [&] is take by reference, arg type is shared ptr of surface type (solidbox or sphere at this point), return type is bool, 
+		// predicate is check if the shapes are equivalent (same name by == operator)
+		shapeVecItr = std::find_if(m_shapeVec.begin(), m_shapeVec.end(), [&](std::shared_ptr<Sphere> shape)->bool {return *shape == *this; });
+
+		if (shapeVecItr == m_shapeVec.end())
+		{
+			std::cout << "Cannot delete solid.  Solid not found" << std::endl;
+			return;
+		}
+
+		m_channel.Disconnect(); // setting surfaces in surfaceSet to null
+		m_shapeVec.erase(shapeVecItr); // removing item from vector
 	}
 
 	int GetSurfaceCount() override

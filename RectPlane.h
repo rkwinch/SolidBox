@@ -38,12 +38,12 @@ public:
 	// parameterized constructor
 	RectPlane(double length, double height, ConnectionChannel<T, RectPlane>* channel)
 	{
-			m_stName = Utility::CreateUniqueName("plane", m_nNameIDCounter);
-			m_dLength = length;
-			m_dHeight = height;
-			m_nNumOfEdges = 4;
-			m_dArea = m_dLength * m_dHeight;
-			this->m_channel = m_channel;
+			this->m_stName = Utility::CreateUniqueName("plane", this->m_nNameIDCounter);
+			this->m_dLength = length;
+			this->m_dHeight = height;
+			this->m_nNumOfEdges = 4;
+			this->m_dArea = this->m_dLength * this->m_dHeight;
+			this->m_channel = channel;
 	}
 
 	//defining the == operator for RectPlane to be based on comparisons of the name of the plane
@@ -56,10 +56,11 @@ public:
 	RectPlane& operator=(const RectPlane& plane)
 	{
 			// don't change name here
-			m_dHeight = plane.m_dHeight;
-			m_dLength = plane.m_dLength;
-			m_nNumOfEdges = plane.m_nNumOfEdges;
-			m_dArea = plane.m_dArea;
+			this->m_dHeight = plane.m_dHeight;
+			this->m_dLength = plane.m_dLength;
+			this->m_nNumOfEdges = plane.m_nNumOfEdges;
+			this->m_dArea = plane.m_dArea;
+			*(this->m_channel) = *(plane.m_channel);
 			return *this;
 	}
 
@@ -71,68 +72,68 @@ public:
 
 	std::string GetSqPlaneName()
 	{
-		return m_stName;
+		return this->m_stName;
 	}
 
 	double GetSqPlaneLength()
 	{
-		return m_dLength;
+		return this->m_dLength;
 	}
 
 	double GetSqPlaneHeight()
 	{
-		return m_dHeight;
+		return this->m_dHeight;
 	}
 
 	ConnectionChannel<T, RectPlane>* GetConnChannel()
 	{
-		return m_channel;
+		return this->m_channel;
 	}
 
 	int GetNumOfEdges()
 	{
-		return m_nNumOfEdges;
+		return this->m_nNumOfEdges;
 	}
 
 	double GetArea()
 	{
-		return m_dArea;
+		return this->m_dArea;
 	}
 
 	void SetName(std::string name)
 	{
-		m_stName = name;
+		this->m_stName = name;
 	}
 
 	void SetLength(double length)
 	{
-		m_dLength = length;
+		this->m_dLength = length;
 	}
 
 	void SetHeight(double height)
 	{
-		m_dHeight = height;
+		this->m_dHeight = height;
 	}
 
 	void SetNumOfEdges(int numOfEdges)
 	{
-		m_nNumOfEdges = numOfEdges;
+		this->m_nNumOfEdges = numOfEdges;
 	}
 
 	double CalcArea() override
 	{
-		return (m_dHeight * m_dLength);
+		return (this->m_dHeight * this->m_dLength);
 	}
 
 	void Save(std::ofstream &outFile)
 	{
-		outFile << m_stName << ";";
-		outFile << m_dHeight << ";" << m_dLength << ";" << m_nNumOfEdges << ";";
+		outFile << this->m_stName << ";";
+		outFile << this->m_dHeight << ";" << this->m_dLength << ";" << this->m_nNumOfEdges << ";";
 	}
 	
 	std::shared_ptr<RectPlane> GetCopy() override
 	{
-		return std::make_shared<RectPlane<T>>(m_dLength, m_dHeight, m_channel);
+		return std::make_shared<RectPlane<T>>(this->m_dLength, this->m_dHeight, this->m_channel);
 	}
 
 };

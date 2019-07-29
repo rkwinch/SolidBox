@@ -4,7 +4,7 @@
 #include "Channel.h"
 
 template<class T, class M>
-class ConnectionChannel : public Channel<M> {
+class ConnectionChannel : public Channel<T, M> {
 
 	friend class Utility;
 
@@ -14,16 +14,16 @@ private:
 
 public:
 	//default constructor
-	ConnectionChannel()
+	ConnectionChannel() 
 	{
 		// only here because of CObject
 	}
 
 	//parameterized constructor
-	ConnectionChannel(T* shape)
+	ConnectionChannel(T* shape) 
 	{
-		m_stName = Utility::CreateUniqueName("connectionChannel", m_nNameIDCounter);
-		m_shape = shape; // want the shape member here to have same address of shape
+		this->m_stName = Channel<T,M>::CreateUniqueName("connectionChannel", this->m_nNameIDCounter);
+		this->m_shape = shape; // want the shape member here to have same address of shape
 						 // it is constructed from 
 		// **will get surfaceSet as a shape is being constructed**
 	}
@@ -33,7 +33,7 @@ public:
 	{
 		// new name for copy constructor was requested (will not copy current name)
 		// (will probably not want to call copy constructor.  pass by reference instead)
-		m_stName = Utility::CreateUniqueName("channel", m_nNameIDCounter);
+		this->m_stName = Channel<T,M>::CreateUniqueName("channel", this->m_nNameIDCounter);
 
 		// allocating new memory for the copy 
 		for (auto surface : channel.m_surfaceSet)
@@ -43,11 +43,11 @@ public:
 		}
 		
 		//setting shape ptr
-		m_shape = channel.m_shape;
+		this->m_shape = channel.m_shape;
 	}
 	
 	//destructor
-	~ConnectionChannel()
+	~ConnectionChannel() 
 	{
 		// don't need to do anything here since memory is handled via smart pointers
 	}
@@ -56,10 +56,10 @@ public:
 	ConnectionChannel& operator=(ConnectionChannel &channel)
 	{
 		//don't change name
-		std::set<std::shared_ptr<M>>::iterator channelPlaneSetItr = channel.planeSet.begin();
-		for (auto plane : planeSet)
+		typename std::set<std::shared_ptr<M>>::iterator channelPlaneSetItr = channel.m_surfaceSet.begin();
+		for (auto surface: m_surfaceSet)
 		{
-			*plane = **(channelPlaneSetItr);
+			*surface = **(channelPlaneSetItr);
 			++channelPlaneSetItr;
 		}
 
@@ -69,13 +69,13 @@ public:
 	//operator ==
 	bool operator==(const ConnectionChannel& channel) const
 	{
-		return (m_stName == channel.m_stName);
+		return (this->m_stName == channel.m_stName);
 	}
 
 	//operator <
 	bool operator<(const ConnectionChannel& channel) const
 	{
-		return (m_stName < channel.m_stName);
+		return (this->m_stName < channel.m_stName);
 	}
 
 	//adding a plane to the connection
@@ -83,7 +83,7 @@ public:
 	{
 		for (auto surface : surfaceSet)
 		{
-			this->surfaceSet.insert(surface);
+			this->m_surfaceSet.insert(surface);
 		}
 	}
 
@@ -104,32 +104,32 @@ public:
 
 	std::set<std::shared_ptr<M>> GetSurfaceSet()
 	{
-		return m_surfaceSet;
+		return this->m_surfaceSet;
 	}
 
 	T* GetShape()
 	{
-		return m_shape;
+		return this->m_shape;
 	}
 
-	std::string GetConnName()
+	std::string GetName()
 	{
-		return m_stName;
+		return this->m_stName;
 	}
 
 	T* GetShapePtr()
 	{
-		return m_shape;
+		return this->m_shape;
 	}
 
 	void SetName(std::string name)
 	{
-		m_stName = name;
+		this->m_stName = name;
 	}
 
 	void Save(std::ofstream &outFile) override
 	{
-		outFile << m_stName << ";";
+		outFile << this->m_stName << ";";
 		for (auto surface : m_surfaceSet) // can be RectPlane or CurvedSurface
 		{
 			surface->Save(outFile); // takes care of all of the surfaces

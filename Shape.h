@@ -4,9 +4,7 @@
 #include <vector>
 #include <string>
 #include "Utility.h"
-
-template<class T, class M>
-class ConnectionChannel;
+#include "ConnectionChannel.h"
 
 //abstract.  Don't make instances of Shape.
 template<class T, class  M>
@@ -14,6 +12,7 @@ class Shape {
 
 protected:
 
+	//ConnectionChannel<T, M> m_channel; fix this later
 	std::string m_stName = "";
 	bool m_bHasConnection = false; // flag for checking if the shape has a connection
 
@@ -26,7 +25,7 @@ public:
 	virtual int GetSurfaceCount() = 0;
 	virtual std::set<std::shared_ptr<M>> GetSurfacesCopy() = 0;
 	virtual void Save(std::ofstream &outFile) = 0; 
-	
+
 	bool operator<(const T &shape) const
 	{
 		return (this->m_stName < shape.m_stName);
@@ -78,8 +77,8 @@ public:
 			return "b";
 		}
 
-		// check if cube exists
-		while ((size_t(stoi(strInput)) > T::shapeVec.size()) || (stoi(strInput) < 1))
+		// check if shape exists
+		while ((size_t(stoi(strInput)) > T::m_shapeVec.size()) || (stoi(strInput) < 1))
 		{
 			std::cout << "Selection out of bounds.  Please try again or press 'b' to go" << std::endl;
 			std::cout << "to the main menu." << std::endl;
@@ -103,28 +102,7 @@ public:
 	{
 		return m_bHasConnection;
 	}
-
-	ConnectionChannel<T, M>* GetConnChannel()
-	{
-		return &m_channel;
-	}
 	
-	void Delete()
-	{
-		std::vector<std::shared_ptr<T>>::iterator shapeVecItr = T::m_shapeVec.begin();
-		// [&] is take by reference, arg type is shared ptr of surface type (solidbox or sphere at this point), return type is bool, 
-		// predicate is check if the shapes are equivalent (same name by == operator)
-		shapeVecItr = std::find_if(m_shapeVec.begin(), m_shapeVec.end(), [&](std::shared_ptr<T> shape)->bool {return *shape == *this; });
-
-		if (shapeVecItr == m_shapeVec.end())
-		{
-			std::cout << "Cannot delete solid.  Solid not found" << std::endl;
-			return;
-		}
-
-		m_channel.Disconnect(); // setting surfaces in surfaceSet to null
-		T::m_shapeVec.erase(shapeVecItr); // removing item from vector
-	}
 	//virtual static void Load(std::vector<std::string>::iterator &itr, const int &vecSize) = 0; 		
 };
 

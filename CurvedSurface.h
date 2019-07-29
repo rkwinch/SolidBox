@@ -14,7 +14,7 @@ template<class T, class M>
 class ConnectionChannel;
 
 template<class T>
-class CurvedSurface : public Surface<T, CurvedSurface> {
+class CurvedSurface : public Surface<T, CurvedSurface<T>> {
 
 		//A curved surface is a plane-equivalent for curved surfaces (i.e. spheres).   
 
@@ -23,7 +23,7 @@ class CurvedSurface : public Surface<T, CurvedSurface> {
 
 	public:
 		static const int PI;
-		static int CurvedSurface<T>::m_nNameIDCounter;
+		static int m_nNameIDCounter;
 
 		CurvedSurface()
 		{
@@ -33,10 +33,10 @@ class CurvedSurface : public Surface<T, CurvedSurface> {
 		// parameterized constructor
 		CurvedSurface(double radius, ConnectionChannel<T, CurvedSurface>* channel)
 		{
-			m_stName = Utility::CreateUniqueName("curvedSurf", nameIDCounter);
-			m_dRadius = radius;
-			m_dArea = CalcArea();
-			this->m_channel = m_channel;
+			this->m_stName = Utility::CreateUniqueName("curvedSurf", m_nNameIDCounter);
+			this->m_dRadius = radius;
+			this->m_dArea = CalcArea();
+			this->m_channel = channel;
 		}
 
 		//defining the == operator for CurvedSurface to be based on comparisons of the name
@@ -49,9 +49,10 @@ class CurvedSurface : public Surface<T, CurvedSurface> {
 		CurvedSurface& operator=(const CurvedSurface& plane)
 		{
 			// don't change name here
-			m_dHeight = plane.m_dHeight;
-			m_dLength = plane.m_dLength;
-			m_nNumOfEdges = plane.m_nNumOfEdges;
+			this->m_dRadius = plane.m_dRadius;
+			this->m_dArea = plane.CalcArea();
+			this->m_nNumOfEdges = plane.m_nNumOfEdges;
+			*(this->m_channel) = *(plane.m_channel);
 			return *this;
 		}
 
@@ -63,17 +64,17 @@ class CurvedSurface : public Surface<T, CurvedSurface> {
 
 		void SetName(std::string name)
 		{
-			m_stName = name;
+			this->m_stName = name;
 		}
 
 		std::string GetName()
 		{
-			return m_stName;
+			return this->m_stName;
 		}
 
 		ConnectionChannel<T, CurvedSurface>* GetConnChannel()
 		{
-			return m_channel;
+			return this->m_channel;
 		}
 
 		void SetNumOfEdges(int numOfEdges)
@@ -83,28 +84,28 @@ class CurvedSurface : public Surface<T, CurvedSurface> {
 
 		int GetNumOfEdges()
 		{
-			return m_nNumOfEdges;
+			return this->m_nNumOfEdges;
 		}
 
 		void SetRadius(double radius)
 		{
-			m_dRadius = radius;
+			this->m_dRadius = radius;
 		}
 
 		double GetRadius()
 		{
-			return m_dRadius;
+			return this->m_dRadius;
 		}
 
 		void Save(std::ofstream &outFile)
 		{
-			outFile << name << ";";
-			outFile << m_dRadius << ";" << numOfEdges << ";";
+			outFile << this->m_stName << ";";
+			outFile << this->m_dRadius << ";" << this->m_nNumOfEdges << ";";
 		}
 
 		std::shared_ptr<CurvedSurface> GetCopy() override
 		{
-			return std::make_shared<CurvedSurface>(m_dRadius, m_channel);
+			return std::make_shared<CurvedSurface>(this->m_dRadius, this->m_channel);
 		}
 
 	private:

@@ -6,7 +6,7 @@
 #include <fstream>
 #include "Menu.h"
 
-template<class T>
+template<class T, class M>
 class Channel {
 	
 protected:
@@ -16,11 +16,12 @@ protected:
 
 public:
 	
-	virtual void Connect(std::set<std::shared_ptr<T>> surfaceSet) = 0;
+	virtual void Connect(std::set<std::shared_ptr<M>> surfaceSet) = 0;
 	virtual void Disconnect() = 0;
 	virtual void Cleanup() = 0;
 	virtual void Save(std::ofstream &outFile) = 0;
 	static int m_nNameIDCounter;
+
 	static std::string CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter)
 	{
 		std::string strName = "";
@@ -46,6 +47,6 @@ public:
 	}
 };
 
-template<class T>
-int Channel<T>::m_nNameIDCounter = 0;
+template<class T, class M>
+int Channel<T, M>::m_nNameIDCounter = 0;
 

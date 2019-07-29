@@ -10,9 +10,8 @@
 #include <Windows.h>
 #include "Utility.h"
 #include "Menu.h"
-
-class SolidBox;
-class Sphere;
+#include "SolidBox.h"
+#include "Sphere.h"
 
 template<class T, class M>
 class ConnectionChannel;

@@ -5,8 +5,8 @@
 #include <memory>
 #include <algorithm>
 #include <vector>
-#include "Shape.h"
 #include "SolidBox.h"
+#include "RectPlane.h"
 #include "ConnectionChannel.h"
 #include "Utility.h"
 
@@ -30,7 +30,7 @@ SolidBox::SolidBox(double sideLength) : m_channel(this)
 {
 	//giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
 	//will verify by putting the name into a set and check if it properly inserts.
-	m_stName = CreateUniqueName("cube", m_nNameIDCounter);
+	m_stName = Shape::CreateUniqueName("cube", m_nNameIDCounter);
 	std::set<std::shared_ptr<RectPlane<SolidBox>>> RectPlaneSet;
 
 	//making 6 planes to go with the cube
@@ -53,7 +53,7 @@ SolidBox::SolidBox(SolidBox& other)
 {
 	// don't change name
 	m_dSideLength = other.m_dSideLength;
-	ConnectionChannel<SolidBox, RectPlane<SolidBox>> channel = other.m_channel;
+	m_channel = other.m_channel;
 	m_bHasConnection = other.m_bHasConnection; // flag for checking if the SolidBox has a connection
 
 }
@@ -72,6 +72,11 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 double SolidBox::GetSideLength()
 {
 	return m_dSideLength;
+}
+
+ConnectionChannel<SolidBox, RectPlane<SolidBox>>* SolidBox::GetConnChannel()
+{
+	return &m_channel;
 }
 
 void SolidBox::Create()
@@ -95,6 +100,28 @@ void SolidBox::Create()
 	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(dSideLength);
 	SolidBox::m_shapeVec.push_back(box);
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
+}
+
+std::string SolidBox::GetConnName()
+{
+	return m_channel.GetName();
+}
+
+void SolidBox::Delete()
+{
+	std::vector<std::shared_ptr<SolidBox>>::iterator shapeVecItr = m_shapeVec.begin();
+	// [&] is take by reference, arg type is shared ptr of surface type (solidbox or sphere at this point), return type is bool, 
+	// predicate is check if the shapes are equivalent (same name by == operator)
+	shapeVecItr = std::find_if(m_shapeVec.begin(), m_shapeVec.end(), [&](std::shared_ptr<SolidBox> shape)->bool {return *shape == *this; });
+
+	if (shapeVecItr == m_shapeVec.end())
+	{
+		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
+		return;
+	}
+
+	m_channel.Disconnect(); // setting surfaces in surfaceSet to null
+	m_shapeVec.erase(shapeVecItr); // removing item from vector
 }
 
 void SolidBox::PrintSolids()

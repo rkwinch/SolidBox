@@ -119,6 +119,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Menu.cpp" />
     <ClCompile Include="SolidBox.cpp" />
     <ClCompile Include="Utility.cpp" />
   </ItemGroup>

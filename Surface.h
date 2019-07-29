@@ -17,7 +17,7 @@ protected:
 
 public:
 	
-	double d_Area = 0;
+	double m_dArea = 0;
 	virtual double CalcArea() = 0;
 	
 	virtual std::shared_ptr<M> GetCopy() = 0;
