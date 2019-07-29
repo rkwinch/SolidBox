@@ -112,7 +112,6 @@ void Sphere::Create()
 	double dRadius = 0.0;
 	std::regex acceptableInputExpr("^\\s*([0-9]*\\.?[0-9]*)\\s*$"); // looking for a number (if present)
 																   // with 0-1 decimals followed by a number (if present) while allowing spaces
-	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 	std::cout << "What would you like the radius to be? (in mm)" << std::endl;
 	std::cout << "ex: 0.125" << std::endl;
 	strInput = Utility::GetAndValidateInput(acceptableInputExpr);

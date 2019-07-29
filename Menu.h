@@ -37,5 +37,7 @@ private:
 	void PrintChannelInfo(Shape* shape);
 	void PrintPlanesInfo(Shape* shape);
 	void LoadASolidBox();
-	void RetrieveInitialParams(int &solidBoxNameIDCntr, int &connChannelNmIDCntr, int &sqPlnNmIDCntr, int &vecSize, std::vector<std::string>::iterator &itr);
+	void RetrieveInitialParams(int &solidBoxNameIDCntr, int &connChannelNmIDCntr, 
+		                       int &sqPlnNmIDCntr, int &vecSize, std::vector<std::string>::iterator &itr);
+	void PrintShapeDebugNames();
 };

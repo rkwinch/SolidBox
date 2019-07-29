@@ -75,13 +75,15 @@ std::string Utility::SelectShapeType()
 	std::vector<std::string> strShapeTypes{ "Cube", "Sphere" };
 	int nCounter = 0;
 
+	std::cout << "\nType the number corresponding to your desired shape" << std::endl;
+	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+
 	for (auto shape : strShapeTypes)
 	{
 		std::cout << ++nCounter << ") " << shape << std::endl;
 	}
 
-	std::cout << "Type the number corresponding to your desired shape" << std::endl;
-	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+	std::cout << std::endl;
 	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
 	
 	if ((strInput == "b") || (strInput == "B"))
@@ -93,6 +95,7 @@ std::string Utility::SelectShapeType()
 	
 	if ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()))
 	{
+		std::cout << "\nSelection out of bounds.  Please try again." << std::endl;
 		strInput = SelectShapeType();
 	}
 	

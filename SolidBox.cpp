@@ -115,7 +115,6 @@ void SolidBox::Create()
 	double dSideLength = 0.0;
 	std::regex acceptableInputExpr("^\\s*([0-9]*\\.?[0-9]*)\\s*$"); // looking for a number (if present)
 																	// with 0-1 decimals followed by a number (if present) while allowing spaces
-	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 	std::cout << "What would you like the length, width, and height to be? (in mm)" << std::endl;
 	std::cout << "ex: 4.5" << std::endl;
 	strInput = Utility::GetAndValidateInput(acceptableInputExpr);

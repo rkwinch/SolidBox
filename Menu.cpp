@@ -89,6 +89,7 @@ Menu::~Menu()
 // prompt user to select a shape type, validate input, then call appropriate function to shape selection
 void Menu::CreateShape()
 {
+	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 	std::string strInput = Utility::SelectShapeType();
 	int nInput = 0;
 
@@ -96,7 +97,7 @@ void Menu::CreateShape()
 	{
 		return;
 	}
-	std::cout << "strInput:  " << strInput << std::endl;
+
 	nInput = stoi(strInput);
 
 	if (nInput == 1)
@@ -363,46 +364,57 @@ void Menu::DebugSolidBox()
 	int nInput = 0;
 	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$"); // want one number or 'b' or 'B' allowing for whitespace
 
-
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
-	strInput = Utility::SelectShapeType();
+	std::cout << "Type the number corresponding to the desired shape for detailed information" << std::endl;
+	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+	PrintShapeDebugNames();
+	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
 
 	if ((strInput == "b") || (strInput == "B"))
 	{
 		return;
 	}
 
-	std::cout << "Type the number corresponding to the desired shape for detailed information" << std::endl;
-	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+	SolidBox::PrintSolids();
+	Sphere::PrintSolids();
+	std::cout << std::endl;
 	nInput = stoi(strInput);
 
-	if (nInput == 1)
+	if ((Sphere::m_shapeVec.size() == 0) && (SolidBox::m_shapeVec.size() == 0))
 	{
-		SolidBox::PrintSolids();
-		std::cout << std::endl;
-		strInput = Utility::InputInVecVal(strInput, acceptableInputExpr, SolidBox::m_shapeVec.size());
-		if ((strInput == "b") || (strInput == "B"))
-		{
-			return;
-		}
-		auto shapeVecItr = SolidBox::m_shapeVec.begin() + (stoi(strInput) - 1); // advance iterator by the # given by user 
+		std::cout << "No solids currently in memory" << std::endl;
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
+		return;
+	}
+
+	if (nInput > (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size()))
+	{
+		std::cout << "Selection out of bounds.  Please try again." << std::endl;
+		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+	}
+
+	while ((nInput < 1) || (nInput > (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size())))
+	{
+		std::cout << "Selection out of bounds.  Please try again." << std::endl;
+		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+		
+	}
+
+	if (nInput > SolidBox::m_shapeVec.size())
+	{
+		int index = nInput;
+		index -= SolidBox::m_shapeVec.size(); // get index for Sphere vector
+		auto shapeVecItr = Sphere::m_shapeVec.begin() + index - 1; // make and advance iterator to correct index
 		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		PrintShapeDebugInfo(shapePtr);
 	}
-	else if (nInput == 2)
+	else
 	{
-		Sphere::PrintSolids();
-		std::cout << std::endl;
-		strInput = Utility::InputInVecVal(strInput, acceptableInputExpr, Sphere::m_shapeVec.size());
-		if ((strInput == "b") || (strInput == "B"))
-		{
-			return;
-		}
-		auto shapeVecItr = Sphere::m_shapeVec.begin() + (stoi(strInput) - 1); // advance iterator by the # given by user
+		auto shapeVecItr = SolidBox::m_shapeVec.begin() + nInput - 1; // make and advance iterator to correct index
 		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
-		PrintShapeDebugInfo(shapePtr);    
+		PrintShapeDebugInfo(shapePtr);
 	}
 
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
@@ -535,6 +547,7 @@ void Menu::WelcomeAndOptions()
 	std::cout << "6)  Debug a solid (print information)" << std::endl;
 	std::cout << "7)  Save" << std::endl;
 	std::cout << "8)  Load" << std::endl;
+	std::cout << std::endl;
 }
 
 void Menu::PrintShapeInfo(Shape* shapePtr)
@@ -556,25 +569,25 @@ void Menu::PrintShapeInfo(Shape* shapePtr)
 
 	switch (shape)
 	{
-		case cube:
-		{
-			auto cubePtr = dynamic_cast<SolidBox*>(shapePtr);
-			std::cout << std::left << std::setw(18) << "SideLength (mm):" << std::fixed << std::setprecision(3) << cubePtr->GetSideLength() << std::endl;
-			std::cout << std::endl;
-			break;
-		}
-		case sphere:
-		{
-			auto spherePtr = dynamic_cast<Sphere*>(shapePtr);
-			std::cout << std::left << std::setw(18) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
-			std::cout << std::endl;
-			break;
-		}
-		default:
-		{
-			std::cout << "Not a valid shape" << std::endl;
-			break;
-		}
+	case cube:
+	{
+		auto cubePtr = dynamic_cast<SolidBox*>(shapePtr);
+		std::cout << std::left << std::setw(18) << "SideLength (mm):" << std::fixed << std::setprecision(3) << cubePtr->GetSideLength() << std::endl;
+		std::cout << std::endl;
+		break;
+	}
+	case sphere:
+	{
+		auto spherePtr = dynamic_cast<Sphere*>(shapePtr);
+		std::cout << std::left << std::setw(18) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
+		std::cout << std::endl;
+		break;
+	}
+	default:
+	{
+		std::cout << "Not a valid shape" << std::endl;
+		break;
+	}
 	}
 }
 
@@ -583,23 +596,23 @@ void Menu::PrintChannelInfo(Shape* shape)
 	int counter = 0;
 	bool isCube = false;
 	bool isSphere = false;
-	std::string name = shape->GetConnChannel()->GetName();
+	/*std::string name = shape->GetConnChannel()->GetName();
 	std::string namePrefix = Utility::GetShapeType(shape);
-	auto cubePtr = dynamic_cast<SolidBox*>(shape);
+	auto cubePtr = dynamic_cast<SolidBox*>(shape);*/
 	std::string strHeader = "Channel:";
 
 	Utility::PrintHeader(strHeader);
 	Utility::PrintChar(' ', 5);
-	//std::cout << std::left << std::setw(27) << "Channel name:" << cubePtr->GetConnChannel()->GetName() << std::endl;
+	std::cout << std::left << std::setw(27) << "Channel name:" << shape->GetConnChannel()->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Associated Shape name:" << cubePtr->GetConnChannel()->GetShape()->GetName() << std::endl;
+	std::cout << std::left << std::setw(27) << "Associated Shape name:" << shape->GetConnChannel()->GetShape()->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Associated plane name(s):" << std::endl;
+	std::cout << std::left << std::setw(27) << "Associated Surface name(s):" << std::endl;
 
-	for (auto planePtr : cubePtr->GetConnChannel()->GetSurfaceSet())
+	for (auto surfacePtr : shape->GetConnChannel()->GetSurfaceSet())
 	{
 		Utility::PrintChar(' ', 32);
-		std::cout << std::left << planePtr->GetName() << std::endl;
+		std::cout << std::left << surfacePtr->GetName() << std::endl;
 	}
 
 	std::cout << std::endl;
@@ -626,27 +639,27 @@ void Menu::PrintPlanesInfo(Shape* shapePtr)
 
 		switch (shape)
 		{
-			case cube:
-			{
-				auto planePtr = dynamic_cast<RectPlane*>(plane.get()); 
-				std::cout << std::left << std::setw(26) << "Length:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneLength() << std::endl;
-				Utility::PrintChar(' ', 5);
-				std::cout << std::left << std::setw(26) << "Height:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneHeight() << std::endl;
-				std::cout << std::endl;
-				break;
-			}
-			case sphere:
-			{
-				auto spherePtr = dynamic_cast<CurvedSurface*>(plane.get());
-				std::cout << std::left << std::setw(18) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
-				std::cout << std::endl;
-				break;
-			}
-			default:
-			{
-				std::cout << "Not a valid shape" << std::endl;
-				break;
-			}
+		case cube:
+		{
+			auto planePtr = dynamic_cast<RectPlane*>(plane.get());
+			std::cout << std::left << std::setw(26) << "Length:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneLength() << std::endl;
+			Utility::PrintChar(' ', 5);
+			std::cout << std::left << std::setw(26) << "Height:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneHeight() << std::endl;
+			std::cout << std::endl;
+			break;
+		}
+		case sphere:
+		{
+			auto spherePtr = dynamic_cast<CurvedSurface*>(plane.get());
+			std::cout << std::left << std::setw(18) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
+			std::cout << std::endl;
+			break;
+		}
+		default:
+		{
+			std::cout << "Not a valid shape" << std::endl;
+			break;
+		}
 		}
 	}
 }
@@ -730,6 +743,28 @@ void Menu::RetrieveInitialParams(int &solidBoxNameIDCntr, int &connChannelNmIDCn
 	vecSize = stoi(*itr);
 	itr++; std::cout << "in retrieve initial params. should be ':' " << (*itr) << std::endl;
 	itr++; // move past ":" delimiter
+}
+
+void Menu::PrintShapeDebugNames()
+{
+	int count = 0;
+
+	if (SolidBox::m_shapeVec.size() != 0)
+	{
+		for (auto cube : SolidBox::m_shapeVec)
+		{
+			std::cout << ++count << ") " << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+		}
+	}
+
+	if (Sphere::m_shapeVec.size() != 0)
+	{
+		for (auto sphere : Sphere::m_shapeVec)
+		{
+			std::cout << ++count << ") " << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
+		}
+	}
+	std::cout << std::endl;
 }
 
 Menu* Menu::m_instance = nullptr;
