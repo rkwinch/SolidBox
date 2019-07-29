@@ -356,3 +356,16 @@ std::string Utility::InputInVecVal(std::string strInput, std::regex acceptableIn
 
 	return strInput;
 }
+
+std::string Utility::GetShapeType(Shape* shape)
+{
+	int counter = 0;
+	std::string name = shape->GetName();
+	std::string namePrefix = "";
+	while (!isdigit(name[counter]))
+	{
+		namePrefix += name[counter];
+		++counter;
+	}
+	return namePrefix;
+}

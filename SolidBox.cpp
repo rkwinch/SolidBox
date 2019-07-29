@@ -10,6 +10,8 @@
 #include "Utility.h"
 
 const int SolidBox::m_nSurfaces = 1;
+int SolidBox::m_nNameIDCounter = 0;
+std::vector<std::shared_ptr<SolidBox>> SolidBox::m_shapeVec;
 
 // parameterized constructor
 SolidBox::SolidBox(double sideLength)
@@ -63,19 +65,19 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 
 void SolidBox::Delete()
 {
-	std::vector<std::shared_ptr<SolidBox>>::iterator shapeVecItr = SolidBox::m_shapeVec.begin();
+	std::vector<std::shared_ptr<SolidBox>>::iterator shapeVecItr = m_shapeVec.begin();
 	// [&] is take by reference, arg type is shared ptr of surface type (solidbox or sphere at this point), return type is bool, 
 	// predicate is check if the shapes are equivalent (same name by == operator)
-	shapeVecItr = std::find_if(SolidBox::m_shapeVec.begin(), SolidBox::m_shapeVec.end(), [&](std::shared_ptr<SolidBox> shape)->bool {return *shape == *this; });
+	shapeVecItr = std::find_if(m_shapeVec.begin(), m_shapeVec.end(), [&](std::shared_ptr<SolidBox> shape)->bool {return *shape == *this; });
 
-	if (shapeVecItr == SolidBox::m_shapeVec.end())
+	if (shapeVecItr == m_shapeVec.end())
 	{
 		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
 		return;
 	}
 
 	m_channel.Disconnect(); // setting surfaces in surfaceSet to null
-	SolidBox::m_shapeVec.erase(shapeVecItr); // removing item from vector
+	m_shapeVec.erase(shapeVecItr); // removing item from vector
 }
 
 double SolidBox::GetSideLength()
@@ -126,7 +128,7 @@ void SolidBox::Create()
 		dSideLength = std::stod(strInput);
 	}
 	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(dSideLength);
-	SolidBox::m_shapeVec.push_back(box);
+	m_shapeVec.push_back(box);
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 }
 
@@ -134,7 +136,7 @@ void SolidBox::PrintSolids()
 {
 	int count = 1;
 
-	for (auto cube : SolidBox::m_shapeVec)
+	for (auto cube : m_shapeVec)
 	{
 		std::cout << count << ") " << cube->GetName() << std::endl;
 		++count;

@@ -79,8 +79,3 @@ double CurvedSurface::CalcArea() const
 {
 	return (4 * PI * pow(m_dRadius, 2));
 }
-
-
-
-
-

@@ -22,7 +22,6 @@ protected:
 public:
 
 	int m_nNumOfSurfaces = 0;
-	static int m_nNameIDCounter; // used for naming unique cubes; initialized at the bottom of this header
 
 	virtual std::set<std::shared_ptr<Surface>> GetSurfacesCopy() = 0;
 	virtual void Save(std::ofstream &outFile) = 0;
@@ -73,5 +72,3 @@ public:
 		return &m_channel;
 	}	
 };
-
-int Shape::m_nNameIDCounter = 0;

@@ -10,6 +10,8 @@
 #include "Utility.h"
 
 const int Sphere::m_nSurfaces = 1;
+int Sphere::m_nNameIDCounter = 0;
+std::vector<std::shared_ptr<Sphere>> Sphere::m_shapeVec;
 
 // parameterized constructor
 Sphere::Sphere(double radius)
@@ -28,7 +30,7 @@ Sphere::Sphere(double radius)
 	m_channel.Connect(surfaceSet);
 
 	//if all planes inserted correctly, then a proper ConnectionChannel has been made
-	m_dRadius = m_dRadius;
+	m_dRadius = radius;
 	m_bHasConnection = true;
 }
 
@@ -60,19 +62,19 @@ Sphere& Sphere::operator=(Sphere &sphere)
 
 void Sphere::Delete()
 {
-	std::vector<std::shared_ptr<Sphere>>::iterator shapeVecItr = Sphere::m_shapeVec.begin();
+	std::vector<std::shared_ptr<Sphere>>::iterator shapeVecItr = m_shapeVec.begin();
 	// [&] is take by reference, arg type is shared ptr of surface type (solidbox or sphere at this point), return type is bool, 
 	// predicate is check if the shapes are equivalent (same name by == operator)
-	shapeVecItr = std::find_if(Sphere::m_shapeVec.begin(), Sphere::m_shapeVec.end(), [&](std::shared_ptr<Sphere> shape)->bool {return *shape == *this; });
+	shapeVecItr = std::find_if(m_shapeVec.begin(), m_shapeVec.end(), [&](std::shared_ptr<Sphere> shape)->bool {return *shape == *this; });
 
-	if (shapeVecItr == Sphere::m_shapeVec.end())
+	if (shapeVecItr == m_shapeVec.end())
 	{
 		std::cout << "Cannot delete solid.  Solid not found" << std::endl;
 		return;
 	}
 
 	m_channel.Disconnect(); // setting surfaces in surfaceSet to null
-	Sphere::m_shapeVec.erase(shapeVecItr); // removing item from vector
+	m_shapeVec.erase(shapeVecItr); // removing item from vector
 }
 
 double Sphere::GetRadius()
@@ -108,7 +110,7 @@ void Sphere::Create()
 {
 	std::string strInput = "";
 	double dRadius = 0.0;
-	std::regex acceptableInputExpr("^\\s*([0-9]*\\s?[0-9]*\\s*$"); // looking for a number (if present)
+	std::regex acceptableInputExpr("^\\s*([0-9]*\\.?[0-9]*)\\s*$"); // looking for a number (if present)
 																   // with 0-1 decimals followed by a number (if present) while allowing spaces
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 	std::cout << "What would you like the radius to be? (in mm)" << std::endl;
@@ -124,7 +126,7 @@ void Sphere::Create()
 	}
 
 	std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(dRadius);
-	Sphere::m_shapeVec.push_back(sphere);
+	m_shapeVec.push_back(sphere);
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 }
 
@@ -132,7 +134,7 @@ void Sphere::PrintSolids()
 {
 	int count = 1;
 
-	for (auto sphere : Sphere::m_shapeVec)
+	for (auto sphere : m_shapeVec)
 	{
 		std::cout << count << ") " << sphere->GetName() << std::endl;
 		++count;
@@ -200,6 +202,6 @@ void Sphere::Load(std::vector<std::string>::iterator &itr, const int &vecSize)
 			curvedSurfacePtr->SetRadius(dRadius);
 		}
 		itr++; // skipping ":" delimiter
-		Sphere::m_shapeVec.push_back(sphere); // solid box object is completed now.
+		m_shapeVec.push_back(sphere); // solid box object is completed now.
 	}
 }

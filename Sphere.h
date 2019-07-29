@@ -22,8 +22,8 @@ private:
 public:
 
 	static const int m_nSurfaces;
-	static std::set<std::shared_ptr<Surface>> m_surfaceSet;
 	static std::vector<std::shared_ptr<Sphere>> m_shapeVec;
+	static int m_nNameIDCounter;
 
 	Sphere(double radius);
 	~Sphere();

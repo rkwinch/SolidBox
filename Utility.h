@@ -4,6 +4,8 @@
 #include <vector>
 #include <regex>
 
+class Shape;
+
 class Utility {
 
 public:
@@ -26,4 +28,5 @@ public:
 	static int NumOfFilesAvail();
 	static std::string CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter);
 	static std::string InputInVecVal(std::string strInput, std::regex acceptableInputExpr, int shapeVecSize);
+	static std::string GetShapeType(Shape* shape);
 };

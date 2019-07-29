@@ -5,6 +5,8 @@
 #include <regex>
 #include <iomanip>
 #include <fstream>
+#include <ctype.h>
+#include <unordered_map>
 #include "Menu.h"
 #include "SolidBox.h"
 #include "Sphere.h"
@@ -384,8 +386,9 @@ void Menu::DebugSolidBox()
 			return;
 		}
 		auto shapeVecItr = SolidBox::m_shapeVec.begin() + (stoi(strInput) - 1); // advance iterator by the # given by user 
+		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
-		PrintCubeDebugInfo(shapeVecItr);
+		PrintShapeDebugInfo(shapePtr);
 	}
 	else if (nInput == 2)
 	{
@@ -397,8 +400,9 @@ void Menu::DebugSolidBox()
 			return;
 		}
 		auto shapeVecItr = Sphere::m_shapeVec.begin() + (stoi(strInput) - 1); // advance iterator by the # given by user
+		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
-		//PrintDebugInfo(shapeVecItr);     ADD LATER!!!!!!!!!!!!!!
+		PrintShapeDebugInfo(shapePtr);    
 	}
 
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
@@ -533,33 +537,64 @@ void Menu::WelcomeAndOptions()
 	std::cout << "8)  Load" << std::endl;
 }
 
-void Menu::PrintCubeInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
+void Menu::PrintShapeInfo(Shape* shapePtr)
 {
-	auto cubePtr = dynamic_cast<SolidBox*>((*cubeVecItr).get());
-	std::string strHeader = "Cube:";
+	enum ShapeType { cube, sphere };
+	std::string shapeType = Utility::GetShapeType(shapePtr);
+	std::unordered_map<std::string, ShapeType> stringToEnumMap = { {"cube", cube}, {"sphere", sphere} };
+	ShapeType shape = stringToEnumMap[shapeType];
+	std::string strHeader = shapeType + ":";
+
 	Utility::PrintHeader(strHeader);
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "SolidBox name:" << cubePtr->GetName() << std::endl;
+	std::cout << std::left << std::setw(18) << "Shape name:" << shapePtr->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "hasConnection:" << cubePtr->GetHasConnection() << std::endl;
+	std::cout << std::left << std::setw(18) << "hasConnection:" << shapePtr->GetHasConnection() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "Channel name:" << cubePtr->GetConnChannel()->GetName() << std::endl;
+	std::cout << std::left << std::setw(18) << "Channel name:" << shapePtr->GetConnChannel()->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "SideLength (mm):" << std::fixed << std::setprecision(3) << cubePtr->GetSideLength() << std::endl;
-	std::cout << std::endl;
+
+	switch (shape)
+	{
+		case cube:
+		{
+			auto cubePtr = dynamic_cast<SolidBox*>(shapePtr);
+			std::cout << std::left << std::setw(18) << "SideLength (mm):" << std::fixed << std::setprecision(3) << cubePtr->GetSideLength() << std::endl;
+			std::cout << std::endl;
+			break;
+		}
+		case sphere:
+		{
+			auto spherePtr = dynamic_cast<Sphere*>(shapePtr);
+			std::cout << std::left << std::setw(18) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
+			std::cout << std::endl;
+			break;
+		}
+		default:
+		{
+			std::cout << "Not a valid shape" << std::endl;
+			break;
+		}
+	}
 }
 
-void Menu::PrintChannelInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
+void Menu::PrintChannelInfo(Shape* shape)
 {
-	auto cubePtr = dynamic_cast<SolidBox*>((*cubeVecItr).get());
+	int counter = 0;
+	bool isCube = false;
+	bool isSphere = false;
+	std::string name = shape->GetConnChannel()->GetName();
+	std::string namePrefix = Utility::GetShapeType(shape);
+	auto cubePtr = dynamic_cast<SolidBox*>(shape);
 	std::string strHeader = "Channel:";
+
 	Utility::PrintHeader(strHeader);
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Channel name:" << cubePtr->GetConnChannel()->GetName() << std::endl;
+	//std::cout << std::left << std::setw(27) << "Channel name:" << cubePtr->GetConnChannel()->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Associated SolidBox name:" << cubePtr->GetConnChannel()->GetShape()->GetName() << std::endl;
+	std::cout << std::left << std::setw(27) << "Associated Shape name:" << cubePtr->GetConnChannel()->GetShape()->GetName() << std::endl;
 	Utility::PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Associated planes' names:" << std::endl;
+	std::cout << std::left << std::setw(27) << "Associated plane name(s):" << std::endl;
 
 	for (auto planePtr : cubePtr->GetConnChannel()->GetSurfaceSet())
 	{
@@ -570,34 +605,57 @@ void Menu::PrintChannelInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cub
 	std::cout << std::endl;
 }
 
-void Menu::PrintPlanesInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
+void Menu::PrintPlanesInfo(Shape* shapePtr)
 {
-	std::string strHeader = "Planes:";
-	Utility::PrintHeader(strHeader);
-	auto cubePtr = dynamic_cast<SolidBox*>((*cubeVecItr).get()); // std::shared_ptr<Shape> to SolidBox*
+	enum ShapeType { cube, sphere };
+	std::string shapeType = Utility::GetShapeType(shapePtr);
+	std::unordered_map<std::string, ShapeType> stringToEnumMap = { {"cube", cube}, {"sphere", sphere} };
+	ShapeType shape = stringToEnumMap[shapeType];
 
-	for (auto plane : cubePtr->GetConnChannel()->GetSurfaceSet())
+	Utility::PrintHeader("Surfaces");
+
+	for (auto plane : shapePtr->GetConnChannel()->GetSurfaceSet())
 	{
-		auto planePtr = dynamic_cast<RectPlane*>(plane.get()); // std::shared_ptr<Surface> to RectPlane*
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(26) << "Plane name:" << planePtr->GetName() << std::endl;
+		std::cout << std::left << std::setw(26) << "Plane name:" << plane->GetName() << std::endl;
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(26) << "Associated channel name:" << planePtr->GetConnChannel()->GetName() << std::endl;
+		std::cout << std::left << std::setw(26) << "Associated channel name:" << plane->GetConnChannel()->GetName() << std::endl;
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(26) << "Number of edges:" << planePtr->GetNumOfEdges() << std::endl;
+		std::cout << std::left << std::setw(26) << "Number of edges:" << plane->GetNumOfEdges() << std::endl;
 		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(26) << "Length:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneLength() << std::endl;
-		Utility::PrintChar(' ', 5);
-		std::cout << std::left << std::setw(26) << "Height:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneHeight() << std::endl;
-		std::cout << std::endl;
+
+		switch (shape)
+		{
+			case cube:
+			{
+				auto planePtr = dynamic_cast<RectPlane*>(plane.get()); 
+				std::cout << std::left << std::setw(26) << "Length:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneLength() << std::endl;
+				Utility::PrintChar(' ', 5);
+				std::cout << std::left << std::setw(26) << "Height:" << std::fixed << std::setprecision(3) << planePtr->GetSqPlaneHeight() << std::endl;
+				std::cout << std::endl;
+				break;
+			}
+			case sphere:
+			{
+				auto spherePtr = dynamic_cast<CurvedSurface*>(plane.get());
+				std::cout << std::left << std::setw(18) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
+				std::cout << std::endl;
+				break;
+			}
+			default:
+			{
+				std::cout << "Not a valid shape" << std::endl;
+				break;
+			}
+		}
 	}
 }
 
-void Menu::PrintCubeDebugInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr)
+void Menu::PrintShapeDebugInfo(Shape* shape)
 {
-	PrintCubeInfo(cubeVecItr);
-	PrintChannelInfo(cubeVecItr);
-	PrintPlanesInfo(cubeVecItr);
+	PrintShapeInfo(shape);
+	PrintChannelInfo(shape);
+	PrintPlanesInfo(shape);
 }
 
 void Menu::LoadASolidBox()

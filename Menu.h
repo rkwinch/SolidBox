@@ -5,10 +5,12 @@
 #include <vector>
 
 class SolidBox;
+class Sphere;
+class Shape;
 
 class Menu {
 
-	friend class Utility;
+	//friend class Utility;
 
 public:
 
@@ -30,12 +32,10 @@ private:
 	Menu(); // private because want to control when it is instantiated for Singleton purposes 
 	~Menu();
 	void WelcomeAndOptions();
-	void PrintCubeDebugInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr);
-	void PrintCubeInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr);
-	void PrintChannelInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr);
-	void PrintPlanesInfo(std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr);
+	void PrintShapeDebugInfo(Shape* shape);
+	void PrintShapeInfo(Shape* shape);
+	void PrintChannelInfo(Shape* shape);
+	void PrintPlanesInfo(Shape* shape);
 	void LoadASolidBox();
 	void RetrieveInitialParams(int &solidBoxNameIDCntr, int &connChannelNmIDCntr, int &sqPlnNmIDCntr, int &vecSize, std::vector<std::string>::iterator &itr);
 };
-
-
