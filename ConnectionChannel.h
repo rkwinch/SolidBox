@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Channel.h"
 #include <set>
 #include <afx.h>
 #include <memory>
+#include <vector>
+#include "Channel.h"
 
 class SquarePlane;
 class SolidBox;
@@ -18,8 +19,7 @@ private:
 	std::string name;
 	SolidBox* cube;
 	static int nameIDCounter;
-	static std::set<std::string> channelNames;
-
+	void SetName(std::string name);
 
 public:
 	DECLARE_SERIAL(ConnectionChannel)
@@ -36,9 +36,7 @@ public:
 	void Cleanup(SquarePlane* plane) /*override*/;
 	~ConnectionChannel();
 	std::set<std::shared_ptr<SquarePlane>> GetPlaneSet();
-	static std::set<std::string>* GetChannelNames();
 	ConnectionChannel(const ConnectionChannel& channel);
 	SolidBox* GetSolidBox();
-
 };
 

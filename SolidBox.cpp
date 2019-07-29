@@ -5,7 +5,6 @@
 #include <set>
 #include <iostream>
 #include <map>
-#include "SquarePlane.h"
 #include "Channel.h"
 #include "Utility.h"
 #include "afx.h"
@@ -17,7 +16,6 @@
 IMPLEMENT_SERIAL(SolidBox, CObject, 0)
 
 int SolidBox::nameIDCounter = 1;
-std::set<std::string> SolidBox::cubeNames;
 const int SolidBox::planesPerSolidBox = 6;
 std::vector<std::shared_ptr<SolidBox>> SolidBox::cubeVec;
 
@@ -30,7 +28,6 @@ void SolidBox::Serialize(CArchive& ar) {
 	//bool hasConnection; // flag for checking if the SolidBox has a connection
 	//std::string name;
 	//static int nameIDCounter; // used for naming unique cubes
-	//static std::set<std::string> cubeNames; // helps enforce uniqueness of cubes created
 	//static const int planesPerSolidBox;
 
 	if (ar.IsStoring())
@@ -67,8 +64,7 @@ SolidBox::SolidBox(double sideLength) : channel(this)
 
 							//giving the cube a unique name where it is guaranteed to be unique due to the nameIDCounter.
 							//will verify by putting the name into a set and check if it properly inserts.
-	name = Utility::CreateUniqueName("cube", cubeNames, nameIDCounter);
-	cubeNames.insert(name);
+	name = Utility::CreateUniqueName("cube", nameIDCounter);
 	std::set<std::shared_ptr<SquarePlane>> squarePlaneSet;
 
 	//making 6 planes to go with the cube
@@ -114,12 +110,6 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 	bHasConnection = cube.bHasConnection;
 
 	//**deleting items on right side of = operator**
-	//erasing string cube name
-	cubeNames.erase(cube.name);
-
-	//erasing string channel name
-	ConnectionChannel::channelNames.erase(cube.channel.name);
-
 	//erasing cube
 	std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr = cubeVec.begin();
 
@@ -130,11 +120,6 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 	//**end of deleting items from right of =**
 
 	return *this;
-}
-
-std::set<std::string>* SolidBox::GetCubeNames()
-{
-	return &cubeNames;
 }
 
 double SolidBox::GetSideLength()
@@ -155,5 +140,15 @@ ConnectionChannel* SolidBox::GetConnChannel()
 bool SolidBox::GetHasConnection()
 {
 	return bHasConnection;
+}
+
+int SolidBox::GetPlnsPerSolidBx()
+{
+	return planesPerSolidBox;
+}
+
+void SolidBox::SetName(std::string name)
+{
+	this->name = name;
 }
 

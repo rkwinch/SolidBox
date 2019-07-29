@@ -7,10 +7,10 @@
 #include "Utility.h"
 #include <afx.h>
 #include <memory>
+#include <vector>
 
 IMPLEMENT_SERIAL(ConnectionChannel, CObject, 0)
 int ConnectionChannel::nameIDCounter = 1;
-std::set<std::string> ConnectionChannel::channelNames;
 
 void ConnectionChannel::Serialize(CArchive& ar) {
 	CObject::Serialize(ar);
@@ -41,8 +41,7 @@ ConnectionChannel::~ConnectionChannel()
 // parameterized constructor
 ConnectionChannel::ConnectionChannel(SolidBox* cube)
 {
-	name = Utility::CreateUniqueName("connectionChannel", channelNames, nameIDCounter);
-	channelNames.insert(name);
+	name = Utility::CreateUniqueName("connectionChannel", nameIDCounter);
 	this->cube = cube; // want the cube member here to have same address of cube
 					   // it is constructed from 
 	// **will get planeSet as a SolidBox is being constructed**
@@ -53,8 +52,7 @@ ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
 {
 	// new name for copy constructor was requested (will not copy current name)
 	// (will probably not want to call copy constructor.  pass by reference instead)
-	std::string name = Utility::CreateUniqueName("cube", channelNames, nameIDCounter);
-	channelNames.insert(name);
+	std::string name = Utility::CreateUniqueName("cube", nameIDCounter);
 
 	// allocating new memory for the copy using the length (same as height for SquarePlane
 	// implementation) of a SquarePlane* in the set of channel
@@ -127,12 +125,12 @@ std::string ConnectionChannel::GetConnName()
 	return name;
 }
 
-std::set<std::string>* ConnectionChannel::GetChannelNames()
-{
-	return &channelNames;
-}
-
 SolidBox* ConnectionChannel::GetSolidBox()
 {
 	return cube;
+}
+
+void ConnectionChannel::SetName(std::string name)
+{
+	this->name = name;
 }

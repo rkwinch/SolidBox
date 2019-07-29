@@ -1,12 +1,13 @@
-#include "SquarePlane.h"
-#include "ConnectionChannel.h"
 #include <afx.h>
-#include "Utility.h"
 #include <iostream>
+#include <vector>
+#include "SquarePlane.h"
+#include "Utility.h"
+#include "ConnectionChannel.h"
+
 
 IMPLEMENT_SERIAL(SquarePlane, CObject, 0)
 
-std::set<std::string> SquarePlane::planeNames;
 int SquarePlane::nameIDCounter = 1;
 
 void SquarePlane::Serialize(CArchive& ar) {
@@ -34,8 +35,7 @@ SquarePlane::SquarePlane()
 SquarePlane::SquarePlane(double sideLength, ConnectionChannel* channel)
 {
 	name = "";
-	name = Utility::CreateUniqueName("plane", planeNames, nameIDCounter);
-	planeNames.insert(name);
+	name = Utility::CreateUniqueName("plane", nameIDCounter);
 	height = sideLength;
 	length = sideLength;
 	numOfEdges = 4;
@@ -87,4 +87,24 @@ int SquarePlane::GetNumOfEdges()
 std::string SquarePlane::GetSqPlaneName()
 {
 	return name;
+}
+
+void SquarePlane::SetName(std::string name)
+{
+	this->name = name;
+}
+
+void SquarePlane::SetLength(int length)
+{
+	this->length = length;
+}
+
+void SquarePlane::SetHeight(int height)
+{
+	this->height = height;
+}
+
+void SquarePlane::SetNumOfEdges(int numOfEdges)
+{
+	this->numOfEdges = numOfEdges;
 }
