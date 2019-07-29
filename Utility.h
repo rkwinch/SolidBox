@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <set>
 
 //solid is moved to other solid the previous solid should be removed from the memory.
 //
@@ -19,10 +20,14 @@ public:
 	static void Run();
 	static bool ValidateMenuInput(std::string input);
 	static void Utility::DebugSolidBox();
+	static std::string Utility::CreateUniqueName(std::string namePrefix, std::set<std::string> nameSet, int &nameIDCounter);
+	static void Utility::ShowSolidsInMemory();
+	static void Utility::PrintLineDelimiter(std::string delimiter, int numOfTimes);
+
 private:
 	static bool ValidateSideLengthInput(std::string input);
 	static void CreateSolidBox();
 	static void WelcomeAndOptions();
 	static char MenuInputToChar(std::string input);
-	
+
 };

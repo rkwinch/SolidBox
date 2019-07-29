@@ -4,12 +4,11 @@ class Channel {
 
 public:
 	//template <class T>
-	virtual void Connect() = 0;
+	virtual void Connect()=0;
 	//template <class T>
 	virtual void Disconnect() = 0;
 	//template <class T>
-	virtual void Cleanup() = 0; 
+	virtual void Cleanup() = 0;
 
 };
-
 

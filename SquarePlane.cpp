@@ -1,13 +1,15 @@
 #include "SquarePlane.h"
+#include "ConnectionChannel.h"
 
-SquarePlane::SquarePlane(double sideLength)
+SquarePlane::SquarePlane(double sideLength, ConnectionChannel* channel)
 {
 	this->height = sideLength;
 	this->length = sideLength;
 	numOfEdges = 4;
 	name = "";
-
+	this->channel = channel;
 }
+
 void SquarePlane::SetSqPlaneName(std::string name)
 {
 	this->name = name;
@@ -25,7 +27,7 @@ bool SquarePlane::operator==(const SquarePlane& plane) const
 }
 
 //defining the = operator for SquarePlane to deep copy plane
-SquarePlane& SquarePlane::operator=(const SquarePlane& plane) 
+SquarePlane& SquarePlane::operator=(const SquarePlane& plane)
 {
 	this->height = plane.height;
 	this->length = plane.length;

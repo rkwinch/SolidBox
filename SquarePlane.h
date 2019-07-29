@@ -2,6 +2,7 @@
 
 #include <string>
 #include "Shape.h"
+#include "ConnectionChannel.h"
 
 
 //A square plane is a plane that belongs to a solid square where a solid square
@@ -9,7 +10,7 @@
 //90' with a height and a length.  Additionally, the height = length for a square plane.
 class SquarePlane {
 public:
-	SquarePlane(double sideLength);
+	SquarePlane(double sideLength, ConnectionChannel* channel);
 	bool operator==(const SquarePlane& plane) const;
 	SquarePlane& operator=(const SquarePlane& plane);
 	bool operator<(const SquarePlane* plane) const;
@@ -24,6 +25,6 @@ private:
 	double length;
 	int numOfEdges;
 	std::string name;
-	
-};
+	ConnectionChannel* channel;
 
+};

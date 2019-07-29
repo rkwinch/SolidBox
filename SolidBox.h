@@ -7,20 +7,26 @@
 #include "ConnectionChannel.h"
 #include <map>
 
+//class ConnectionChannel;
+
 class SolidBox : public Shape {
-	
+
 public:
 	SolidBox(double sideLength);
 	~SolidBox();
 	std::string GetShapeName() override;
 	static void PrintCubeSet();
-	double SolidBox::GetSideLength();
-	ConnectionChannel GetConnChannel();
+	double GetSideLength();
+	ConnectionChannel* GetConnChannel();
 	bool operator<(const SolidBox &cube) const;
 	bool operator==(const SolidBox &cube) const;
 	SolidBox& operator=(const SolidBox &plane);
-	static std::map <const SolidBox&, const std::set<SquarePlane*>&> cubeAndPlanesMap;
-	static void SolidBox::AddCubeToMap(SolidBox &cube);
+	static std::map <SolidBox*, std::set<SquarePlane*>> cubeAndPlanesMap;
+	static std::set<std::string>* GetCubeNames();
+	static std::map<std::string, double> cubeAndSideLengthMap;
+	static std::map<std::string, SolidBox*> SolidBox::cubeNameAndCubeMap;
+	static void AddCubeAndPlanesToMap(SolidBox* cube);
+	static void SolidBox::AddCubeNameAndCubeToMap(SolidBox* cube);
 
 
 private:
@@ -32,6 +38,5 @@ private:
 	static std::set<std::string> cubeNames; // helps enforce uniqueness of cubes created
 	static const int planesPerSolidBox;
 	static std::set<SolidBox> cubes;
-	
-};
 
+};
