@@ -121,8 +121,8 @@ void Utility::ShowSolidsInMemory()
 	std::string strHeader = "SolidBox name (length of each side in cm)";
 	PrintHeader(strHeader);
 
-	
-	for(auto cubePtr : SolidBox::cubeVec)
+
+	for (auto cubePtr : SolidBox::cubeVec)
 	{
 		std::cout << cubePtr->name << " (" << std::fixed << std::setprecision(3) << cubePtr->sideLength << ")" << std::endl;
 	}
@@ -144,7 +144,7 @@ void Utility::CopyExistingSolid()
 	std::cout << "Enter the number corresponding to the cube you wish to copy." << std::endl;
 	std::string strInput = "";
 	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$"); // looking for the word "cube" followed by
-															  // at least one number allowing for leading and trailing spaces
+																// at least one number allowing for leading and trailing spaces
 	PrintSolidsInMemory();
 	std::cout << std::endl;
 	strInput = InputInMapVal(strInput, acceptableInputExpr);
@@ -157,7 +157,7 @@ void Utility::CopyExistingSolid()
 	auto cubeVecItr = SolidBox::cubeVec.begin();
 	cubeVecItr = std::next(cubeVecItr, (stoi(strInput) - 1)); // advance iterator by the # given by user 
 	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>((*cubeVecItr)->sideLength);
-	SolidBox::cubeVec.push_back(box); 
+	SolidBox::cubeVec.push_back(box);
 	PrintNwLnsAndLnDelimiter("-", 55);
 }
 
@@ -175,12 +175,12 @@ void Utility::MoveASolid()
 	std::cout << "Please enter two numbers corresponding to their cubes separated by the enter key" << std::endl;
 	std::cout << "to move one solid to another or press 'b' to go back to main menu." << std::endl;
 	std::cout << std::setw(11) << std::left << "(For ex:  1" << std::endl;
-	std::cout << std::setw(11) << std::right<< "2" << std::endl;
+	std::cout << std::setw(11) << std::right << "2" << std::endl;
 	std::cout << "moves 2 into 1)" << std::endl;
 	PrintSolidsInMemory();
 	std::cout << std::endl;
 	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want two numbers that can be separated by 
-															  // spaces
+																// spaces
 
 	//------Get cube selections from user----------------
 	//moveFrom cube:
@@ -212,14 +212,14 @@ void Utility::MoveASolid()
 	}
 
 	// It's OK to now move From into To
-	**cubeVecItr_To = **cubeVecItr_From; 
+	**cubeVecItr_To = **cubeVecItr_From;
 }
 
 void Utility::DebugSolidBox()
 {
 	std::string strInput = "";
 	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want one numbers that can be surrounded by 
-															  // whitespace.
+																// whitespace.
 	PrintNwLnsAndLnDelimiter("-", 55);
 	std::cout << "Type the number corresponding to the desired cube for detailed information" << std::endl;
 	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
@@ -242,15 +242,36 @@ void Utility::DebugSolidBox()
 void Utility::SaveAllObjects()
 {
 	int count = 0;
-
+	char cInput = 0;
+	std::string fileName = "";
 	if (!IsOkToSave())
 	{
 		std::cout << "There are no solid boxes to save." << std::endl;
 		return;
 	}
 	ViewFiles();
+	cInput = SaveOptions();
+	if (tolower(cInput) == 'b')
+	{
+		return;
+	}
+	else if (tolower(cInput) == 's')
+	{
+		fileName = PickFileToOverWrite();
+	}
+	else if (cInput == 'n')
+	{
+		std::cout << "Please type the name (no extension) of the new file" << std::endl;
+		std::cout << "For example, \"myFile\" would be acceptable (no quotes)" << std::endl;
+		std::regex acceptableInputExpr("^\\s*([a-zA-Z0-9_]*)\\s*$");
+		fileName = GetAndValidateInput(acceptableInputExpr);
+		std::cout << fileName << std::endl;
+		fileName += ".txt";
+	}
+	//check if there are files present;
+
 	CFile solidBoxFile;
-	solidBoxFile.Open(_T("Box.txt"), CFile::modeCreate | CFile::modeWrite);
+	solidBoxFile.Open(fileName.c_str(), CFile::modeCreate | CFile::modeWrite);
 	CArchive archive(&solidBoxFile, CArchive::store);
 	archive << SolidBox::nameIDCounter << ConnectionChannel::nameIDCounter << SquarePlane::nameIDCounter;
 	archive << static_cast<int>(SolidBox::cubeVec.size());
@@ -273,7 +294,7 @@ void Utility::SaveAllObjects()
 	}
 
 	archive.Close();
-	solidBoxFile.Close();	
+	solidBoxFile.Close();
 	PrintNwLnsAndLnDelimiter("-", 55);
 }
 
@@ -319,7 +340,7 @@ void Utility::SaveASquarePlane(std::shared_ptr<SquarePlane> planePtr, CArchive &
 	}
 }
 
-void Utility::LoadAllObjects() 
+void Utility::LoadAllObjects()
 {
 	LoadASolidBox();
 }
@@ -419,9 +440,9 @@ std::string Utility::CreateUniqueName(std::string strNamePrefix, int &nameIDCoun
 {
 	std::string strName = "";
 	strName = strNamePrefix + std::to_string(nameIDCounter++);
-	
+
 	auto cubeVecItr = std::find_if(SolidBox::cubeVec.begin(), SolidBox::cubeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return box->GetShapeName() == strName; });
-	
+
 	try //if in set, naming collision has occurred and don't want to construct object
 	{
 		if (cubeVecItr != SolidBox::cubeVec.end())
@@ -516,7 +537,7 @@ void Utility::PrintNwLnsAndLnDelimiter(std::string strDelimiter, size_t nNumOfTi
 {
 	std::cout << "\n";
 
-	for(size_t ii = 0; ii < nNumOfTimes; ++ii)
+	for (size_t ii = 0; ii < nNumOfTimes; ++ii)
 	{
 		std::cout << strDelimiter;
 	}
@@ -617,54 +638,97 @@ bool Utility::IsOkToSave() // if no solids have been made, return false
 	return (SolidBox::cubeVec.size() > 0);
 }
 
-void Utility::ViewFiles()
+int Utility::ViewFiles()
 {   // checking for txt files in current directory
 	WIN32_FIND_DATA file;
-	HANDLE searchHandle = FindFirstFile("*.txt", &file); 
-	if (searchHandle)
+	HANDLE searchHandle = FindFirstFile("*.txt", &file);
+	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
-		int count = 1;
-		std::string fileName = file.cFileName;
-		std::ifstream fileToOpen; // checking if file can be opened.
-		fileToOpen.open(fileName);
-		
-		if (!fileToOpen) // file already open and don't want to view it here
-		{
-			return;
-		}
-
-		fileToOpen.close();
+		int count = 0;
 		PrintNwLnsAndLnDelimiter("-", 55);
 		std::cout << "Available files:  ";
-		
+
 		do
 		{
+			++count;
 			if (count == 1)
 			{
-				std::cout <<  count << ") " << file.cFileName << std::endl;
+				std::cout << count << ") " << file.cFileName << std::endl;
 			}
 			else
 			{
 				std::cout << std::setw(18) << "" << count << ") " << file.cFileName << std::endl;
 			}
-			++count;
+			
 		} while (FindNextFile(searchHandle, &file));
 
 		FindClose(searchHandle);
+		return count; // return # of files
+	}
+	else
+	{
+		throw std::exception("Invalid handle in Utility::ViewFiles");
 	}
 }
 
 char Utility::SaveOptions()
 {
 	std::string strInput = "";
+	std::string fileName = "";
 	char cInput = 0;
+	PrintNwLnsAndLnDelimiter("-", 55);
 	std::cout << "Press 's' to save to an existing file (overwrite)," << std::endl;
 	std::cout << "press 'n' to save to a new file," << std::endl;
-	std::cout << " or press 'b' to go back to the main menu." << std::endl;
-	//get input (y, n, or b)
+	std::cout << " or press 'b' to go back to the main menu.\n" << std::endl;
 	std::regex acceptableInputExpr("^\\s*(s|S|n|N|b|B)\\s*$");
 	strInput = GetAndValidateInput(acceptableInputExpr);
 	cInput = strInput[0];
-
 	return cInput;
 }
+	
+std::string Utility::PickFileToOverWrite()
+{
+	std::string strInput = "";
+	int numOfFiles = 0;
+	int fileSelection = 0;
+	WIN32_FIND_DATA file;
+	HANDLE searchHandle = FindFirstFile("*.txt", &file);
+	std::regex acceptableInputExpr("^\\s*([1-9]*)\\s*$");
+
+	std::cout << "Please select a number that corresponds to the file" << std::endl;
+	std::cout << "you wish to overwrite" << std::endl;
+	strInput = GetAndValidateInput(acceptableInputExpr);
+	numOfFiles = ViewFiles();
+	fileSelection = stoi(strInput);
+
+	if ((fileSelection < 1) || (fileSelection > numOfFiles))
+	{
+		std::cout << "Invalid selection.  Please enter a valid selection" << std::endl;
+		strInput = GetAndValidateInput(acceptableInputExpr);
+		numOfFiles = ViewFiles();
+		fileSelection = stoi(strInput);
+	}
+
+	if (searchHandle != INVALID_HANDLE_VALUE)
+	{
+		for (int ii = 1; ii < fileSelection; ++ii) // starting at 1 so you don't go to next file with 
+		{                                          // FindNextFile if there's only one file or make rest
+			FindNextFile(searchHandle, &file);     // of the files off by one (even if more than 1 file)
+			std::cout << "files searching:  " << file.cFileName << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "A problem has occurred.  No such file in memory" << std::endl;
+		return nullptr;
+	}
+
+	std::string fileName(file.cFileName);
+	FindClose(searchHandle);
+	return fileName;
+}
+
+
+
+
+	

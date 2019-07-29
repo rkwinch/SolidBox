@@ -43,7 +43,8 @@ private:
 	static void SaveASquarePlane(std::shared_ptr<SquarePlane> plane, CArchive &archive, CFile &solidBoxFile);
 	static void LoadASolidBox();
 	static bool IsOkToSave();
-	static void ViewFiles();
-	static char Utility::SaveOptions();
+	static int ViewFiles();
+	static char SaveOptions();
+	static std::string PickFileToOverWrite();
 };
 

@@ -9,7 +9,7 @@
 #include "Shape.h"
 #include "ConnectionChannel.h"
 
-//class ConnectionChannel;
+
 class SolidBox : public CObject, public Shape {
 
 	friend class Utility;
