@@ -14,7 +14,8 @@ class ConnectionChannel : public CObject/*, public Channel*/ {
 	friend class Utility;
 	friend class SolidBox;
 
-private:
+//private:
+public:
 	std::set<std::shared_ptr<SquarePlane>> planeSet;
 	std::string name;
 	SolidBox* cube;
@@ -39,4 +40,3 @@ public:
 	ConnectionChannel(const ConnectionChannel& channel);
 	SolidBox* GetSolidBox();
 };
-

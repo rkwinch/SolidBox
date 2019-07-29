@@ -14,12 +14,12 @@ class Utility
 
 public:
 	static void Run();
-	static std::string CreateUniqueName(std::string namePrefix,  int &nameIDCounter);
+	static std::string CreateUniqueName(std::string namePrefix, int &nameIDCounter);
 	static int SaveAllObjects();
 	static void LoadAllObjects();
-	static std::vector<std::string> Utility::TokenizeStringToVec(std::string);
+	static std::vector<std::string> TokenizeStringToVec(std::string);
 
-private:
+//private:
 	static void CreateSolidBox();
 	static void WelcomeAndOptions();
 	static void PrintNwLnsAndLnDelimiter(std::string delimiter, size_t numOfTimes);

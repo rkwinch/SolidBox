@@ -330,7 +330,7 @@ void Utility::LoadAllObjects()
 		{
 			//do nothing here since deleting and loading data will occur below
 		}
-	
+
 		// deleting old data
 		for (auto element : SolidBox::cubeVec)
 		{
@@ -585,7 +585,7 @@ void Utility::ViewFiles()
 			{
 				std::cout << std::setw(18) << "" << count << ") " << file.cFileName << std::endl;
 			}
-			
+
 		} while (FindNextFile(searchHandle, &file));
 
 		FindClose(searchHandle);
@@ -669,7 +669,7 @@ char Utility::SaveOptions()
 	cInput = strInput[0];
 	return cInput;
 }
-	
+
 std::string Utility::PickFile()
 {
 	char cInput = 0;
@@ -862,6 +862,3 @@ std::vector<std::string> Utility::TokenizeStringToVec(std::string str)
 	std::vector<std::string> x;
 	return x;
 }
-
-
-	

@@ -20,7 +20,7 @@ public:
 
 	SolidBox();
 	~SolidBox();
-	SolidBox(SolidBox&); 
+	SolidBox(SolidBox&);
 	SolidBox(double sideLength);
 	double GetSideLength();
 	bool GetHasConnection();
@@ -33,7 +33,7 @@ public:
 	static int GetPlnsPerSolidBx();
 	void Delete();
 
-private:
+//private:
 	void SetName(std::string name);
 	double sideLength;
 	ConnectionChannel channel;
@@ -42,4 +42,3 @@ private:
 	static int nameIDCounter; // used for naming unique cubes
 	static const int planesPerSolidBox;
 };
-

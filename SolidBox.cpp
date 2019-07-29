@@ -88,7 +88,7 @@ SolidBox::SolidBox(SolidBox& other)
 	sideLength = other.sideLength;
 	ConnectionChannel channel = other.channel;
 	bHasConnection = other.bHasConnection; // flag for checking if the SolidBox has a connection
-	
+
 }
 
 bool SolidBox::operator<(const SolidBox &cube) const
@@ -107,7 +107,7 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 {
 	sideLength = cube.sideLength;
 	channel = cube.channel;
-	bHasConnection = cube.bHasConnection;                                                      
+	bHasConnection = cube.bHasConnection;
 	cube.Delete(); //**deleting items on right side of = operator**
 	return *this;
 }
@@ -145,8 +145,8 @@ void SolidBox::SetName(std::string name)
 void SolidBox::Delete()
 {
 	std::vector<std::shared_ptr<SolidBox>>::iterator cubeVecItr = cubeVec.begin();
-	                                                      // [&] is take by reference, arg type is shared ptr of solidbox (box), return type is bool, 
-														  // predicate is check if the SolidBoxes are equivalent (same name by == operator)
+	// [&] is take by reference, arg type is shared ptr of solidbox (box), return type is bool, 
+	// predicate is check if the SolidBoxes are equivalent (same name by == operator)
 	cubeVecItr = std::find_if(cubeVec.begin(), cubeVec.end(), [&](std::shared_ptr<SolidBox> box)->bool {return *box == *this; });
 	if (cubeVecItr == cubeVec.end())
 	{

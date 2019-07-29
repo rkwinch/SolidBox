@@ -30,7 +30,7 @@ public:
 	ConnectionChannel* GetConnChannel();
 	int GetNumOfEdges();
 
-private:
+//private:
 	double height;
 	double length;
 	int numOfEdges;
@@ -41,4 +41,3 @@ private:
 	void SetHeight(double height);
 	void SetNumOfEdges(int numOfEdges);
 };
-
