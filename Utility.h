@@ -5,6 +5,7 @@
 #include <map>
 #include "SolidBox.h"
 #include "SquarePlane.h"
+#include <memory>
 
 //solid is moved to other solid the previous solid should be removed from the memory.
 //
@@ -35,9 +36,10 @@ private:
 	static std::string GetAndValidateInput(std::regex acceptableInputExpr);
 	static void PrintHeader(std::string header);
 	static void PrintChar(char symbol, int numOfTimes);
-	static void PrintDebugInfo(std::map<std::string, SolidBox*>::iterator cubeNameAndCubeItr, std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr);
-	static void PrintCubeInfo(std::map<std::string, SolidBox*>::iterator cubeNameAndCubeItr, std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr);
-	static void PrintChannelInfo(std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr);
-	static void PrintPlanesInfo(std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr);
+	static void PrintDebugInfo(std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr, std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr);
+	static void PrintCubeInfo(std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr, std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr);
+	static void PrintChannelInfo(std::map <std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>> > ::iterator cubeAndPlanesItr);
+	static void PrintPlanesInfo(std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr);
 	static void CopyExistingSolid();
+	static void DeleteExistingSolid();
 };

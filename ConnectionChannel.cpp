@@ -6,13 +6,42 @@
 //#include <utility>
 #include "SolidBox.h"
 #include "Utility.h"
+#include <afx.h>
+#include <memory>
 
-
+IMPLEMENT_SERIAL(ConnectionChannel, CObject, 0)
 int ConnectionChannel::nameIDCounter = 1;
 std::set<std::string> ConnectionChannel::channelNames;
 
+void ConnectionChannel::Serialize(CArchive& ar) {
+	CObject::Serialize(ar);
+
+	if (ar.IsStoring())
+	{
+		//ar << empID << empName << age;
+	}
+
+	else
+	{
+		//ar >> empID >> empName >> age;
+	}
+
+}
+ConnectionChannel::ConnectionChannel()
+{
+
+}
+ConnectionChannel& ConnectionChannel::operator=(const ConnectionChannel &channel)
+{
+	//don't change name
+	this->planeSet = channel.planeSet;
+	*(this->cube) = *(channel.cube);
+	//code to delete old channel
+	return *this;
+}
+
 // parameterized constructor
-ConnectionChannel::ConnectionChannel(SolidBox* cube)
+ConnectionChannel::ConnectionChannel(std::shared_ptr<SolidBox> cube)
 {
     name = Utility::CreateUniqueName("connectionChannel", channelNames, nameIDCounter);
 	channelNames.insert(name);
@@ -34,17 +63,17 @@ ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
 	// implementation) of a SquarePlane* in the set of channel
 	for (auto planePtr : planeSet)
 	{
-		SquarePlane* copyPlanePtr = new SquarePlane(planePtr->GetSqPlaneHeight(), this);
+		std::shared_ptr<SquarePlane> copyPlanePtr = std::make_shared<SquarePlane>(planePtr->GetSqPlaneHeight(), std::shared_ptr<ConnectionChannel>(this));
 		this->planeSet.insert(copyPlanePtr);
 	}	
 
 	//allocating new memory for a copy of the cube constructed with the same sideLength
-	SolidBox* copyCube = new SolidBox(this->cube->GetSideLength());
+	std::shared_ptr<SolidBox> copyCube = std::make_shared<SolidBox>(this->cube->GetSideLength());
 	this->cube = copyCube;
 }
 
 //adding a plane to the connection
-void ConnectionChannel::Connect(SquarePlane* plane)
+void ConnectionChannel::Connect(std::shared_ptr<SquarePlane> plane)
 {
 	planeSet.insert(plane);
 }
@@ -66,7 +95,7 @@ ConnectionChannel::~ConnectionChannel()
 {
 }
 
-std::set<SquarePlane*> ConnectionChannel::GetPlaneSet()
+std::set<std::shared_ptr<SquarePlane>> ConnectionChannel::GetPlaneSet()
 {
 	return planeSet;
 }
@@ -91,7 +120,7 @@ std::set<std::string>* ConnectionChannel::GetChannelNames()
 	return &ConnectionChannel::channelNames;
 }
 
-SolidBox* ConnectionChannel::GetSolidBox()
+std::shared_ptr<SolidBox> ConnectionChannel::GetSolidBox()
 {
 	return cube;
 }

@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <set>
 #include <iomanip>
+#include <memory>
 
 //solid is moved to other solid the previous solid should be removed from the memory.
 //
@@ -18,7 +19,50 @@
 //
 //h)	Read an existing disk file into memory - reverse of(g).
 //
-//The implementation should be such that the planes are not directly accessed after construction.They should be accessed only through the solid object via the channel.
+
+void Utility::DeleteExistingSolid()
+{
+	std::string input = "";
+	std::cout << "Type the name of the cube you wish to delete" << std::endl;
+	std::cout << "or press 'b' to go back to the menu." << std::endl;
+	std::regex acceptableInputExpr("^\\s*((cube[0-9]+)|b|B)\\s*$");
+	input = GetAndValidateInput(acceptableInputExpr);
+	if ((input == "b") || (input == "B"))
+	{
+		return;
+	}
+	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr;
+	cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input);
+	while (cubeNameAndCubeItr == SolidBox::cubeNameAndCubeMap.end())
+	{
+		std::cout << "Solid not found.  Please try again or press 'b' to go" << std::endl;
+		std::cout << "back to the menu." << std::endl;
+		input = GetAndValidateInput(acceptableInputExpr);
+		if ((input == "b") || (input == "B"))
+		{
+			return;
+		}
+		cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input);
+	}
+	SolidBox::cubeNames.erase(input);
+	ConnectionChannel::channelNames.erase(cubeNameAndCubeItr->second->channel->name);
+	SolidBox::cubeAndSideLengthMap.erase(cubeNameAndCubeItr->first);
+	std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr;
+	cubeAndPlanesItr = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr->second);
+	for (auto plane : cubeAndPlanesItr->second)
+	{
+		SquarePlane::planeNames.erase(plane->name);
+	}
+	SolidBox::cubeAndPlanesMap.erase(cubeAndPlanesItr->first);
+	SolidBox::cubeNameAndCubeMap.erase(input);
+
+	             //std::set<std::string> SquarePlane::planeNames;
+	            //std::set<std::string> SolidBox::cubeNames;
+	            /*std::map <std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>> SolidBox::cubeAndPlanesMap;
+	            std::map<std::string, double> SolidBox::cubeAndSideLengthMap;
+	            std::map<std::string, std::shared_ptr<SolidBox>> SolidBox::cubeNameAndCubeMap;*/
+	            //std::set<std::string> ConnectionChannel::channelNames;
+}
 
 void Utility::CreateSolidBox()
 {
@@ -35,7 +79,7 @@ void Utility::CreateSolidBox()
 		input = GetAndValidateInput(acceptableInputExpr);
 		sideLength = std::stod(input);
 	}
-	SolidBox* box = new SolidBox(sideLength);
+	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(sideLength);
 	SolidBox::AddCubeAndPlanesToMap(box); 
 	SolidBox::AddCubeNameAndCubeToMap(box); 
 }
@@ -54,7 +98,7 @@ void Utility::DebugSolidBox()
 		return;
 	}
 	// get cube belonging to cubeName
-	std::map<std::string, SolidBox*>::iterator cubeNameAndCubeItr;
+	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr;
 	cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input); // find if name given is the name of a cube made
 	while (cubeNameAndCubeItr == SolidBox::cubeNameAndCubeMap.end())
 	{
@@ -67,7 +111,7 @@ void Utility::DebugSolidBox()
 		}
 		cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input);
 	}
-	std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr;
+	std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr;
 	cubeAndPlanesItr = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr->second); // now has iterator to 
 	                                                // SolidBox object and its planes
 	PrintLineDelimiter("-", 55);
@@ -139,6 +183,10 @@ void Utility::Run()
 		if (cInput == '1')
 		{
 			CreateSolidBox();
+		}
+		else if (cInput == '2')
+		{
+			DeleteExistingSolid();
 		}
 		else if (cInput == '3')
 		{
@@ -230,14 +278,14 @@ void Utility::PrintHeader(std::string header)
 	PrintLineDelimiter("_", header.length());
 }
 
-void Utility::PrintDebugInfo(std::map<std::string, SolidBox*>::iterator cubeNameAndCubeItr, std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr)
+void Utility::PrintDebugInfo(std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr, std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr)
 {
 	PrintCubeInfo(cubeNameAndCubeItr, cubeAndPlanesItr);
 	PrintChannelInfo(cubeAndPlanesItr);
 	PrintPlanesInfo(cubeAndPlanesItr);	
 }
 
-void Utility::PrintCubeInfo(std::map<std::string, SolidBox*>::iterator cubeNameAndCubeItr, std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr)
+void Utility::PrintCubeInfo(std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr, std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr)
 {
 	std::string header = "Cube:";
 	PrintHeader(header);
@@ -252,7 +300,7 @@ void Utility::PrintCubeInfo(std::map<std::string, SolidBox*>::iterator cubeNameA
 	std::cout << std::endl;
 }
 
-void Utility::PrintChannelInfo(std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr)
+void Utility::PrintChannelInfo(std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr)
 {
 	std::string header = "Channel:";
 	PrintHeader(header);
@@ -270,7 +318,7 @@ void Utility::PrintChannelInfo(std::map<SolidBox*, std::set<SquarePlane*>>::iter
 	std::cout << std::endl;
 }
 
-void Utility::PrintPlanesInfo(std::map<SolidBox*, std::set<SquarePlane*>>::iterator cubeAndPlanesItr)
+void Utility::PrintPlanesInfo(std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr)
 {
 	std::string header = "Planes:";
 	PrintHeader(header);
@@ -309,7 +357,7 @@ void Utility::CopyExistingSolid()
 		return;
 	}
 	// get cube belonging to cubeName
-	std::map<std::string, SolidBox*>::iterator cubeNameAndCubeItr;
+	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr;
 	cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input); // find if name given is the name of a cube made
 	while (cubeNameAndCubeItr == SolidBox::cubeNameAndCubeMap.end())
 	{
@@ -322,7 +370,7 @@ void Utility::CopyExistingSolid()
 		}
 		cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input);
 	}
-	SolidBox* box = new SolidBox(cubeNameAndCubeItr->second->GetSideLength());
+	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(cubeNameAndCubeItr->second->GetSideLength());
 	SolidBox::AddCubeAndPlanesToMap(box);
 	SolidBox::AddCubeNameAndCubeToMap(box);
 	PrintLineDelimiter("-", 55);

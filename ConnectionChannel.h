@@ -4,33 +4,43 @@
 #include <set>
 //#include "SquarePlane.h"
 //#include "SolidBox.h"
+#include <afx.h>
+#include <memory>
 
 class SquarePlane;
 class SolidBox;
 
-class ConnectionChannel /*: public Channel*/ {
+class ConnectionChannel : public CObject/*, public Channel*/ {
+
+	friend class Utility;
 private:
-	std::set<SquarePlane*> planeSet;
+	std::set<std::shared_ptr<SquarePlane>> planeSet;
 	std::string name;
-	SolidBox* cube;
+	std::shared_ptr<SolidBox> cube;
 	static int nameIDCounter;
 	static std::set<std::string> channelNames;
+	
 
 public:
+	DECLARE_SERIAL(ConnectionChannel)
+	void Serialize(CArchive& ar);
+	ConnectionChannel();
+
 	std::string GetConnName();
 	bool operator==(const ConnectionChannel& channel) const;
 	bool operator<(const ConnectionChannel& channel) const;
-	ConnectionChannel(SolidBox* cube);
+	ConnectionChannel& operator=(const ConnectionChannel &channel);
+	ConnectionChannel(std::shared_ptr<SolidBox> cube);
 	//template <class T>
-	void Connect(SquarePlane* plane) /*override*/;
+	void Connect(std::shared_ptr<SquarePlane> plane) /*override*/;
 	//template <class T>
 	void Disconnect(SquarePlane* plane) /*override*/;
 	//template <class T>
 	void Cleanup(SquarePlane* plane) /*override*/;
 	~ConnectionChannel();
-	std::set<SquarePlane*> GetPlaneSet();
+	std::set<std::shared_ptr<SquarePlane>> GetPlaneSet();
 	static std::set<std::string>* GetChannelNames();
 	ConnectionChannel(const ConnectionChannel& channel);
-	SolidBox* GetSolidBox();
+	std::shared_ptr<SolidBox> GetSolidBox();
 
 };

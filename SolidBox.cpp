@@ -8,26 +8,37 @@
 #include "SquarePlane.h"
 #include "Channel.h"
 #include "Utility.h"
-//#include "afx.h"
+#include "afx.h"
+#include <memory>
+
+
+IMPLEMENT_SERIAL(SolidBox, CObject, 0)
 
 int SolidBox::nameIDCounter = 1;
-std::set<SolidBox> cubeSet; // will change for mapping option later
 std::set<std::string> SolidBox::cubeNames;
 const int SolidBox::planesPerSolidBox = 6;
-std::map <SolidBox*, std::set<SquarePlane*>> SolidBox::cubeAndPlanesMap;
+std::map <std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>> SolidBox::cubeAndPlanesMap;
 std::map<std::string, double> SolidBox::cubeAndSideLengthMap;
-std::map<std::string, SolidBox*> SolidBox::cubeNameAndCubeMap;
+std::map<std::string, std::shared_ptr<SolidBox>> SolidBox::cubeNameAndCubeMap;
 
-//IMPLEMENT_SERIAL(SolidBox, CObject, 1)
+SolidBox::SolidBox() : channel(std::make_shared<ConnectionChannel>(std::shared_ptr<SolidBox>(this)))
+{
 
-//void SolidBox::Serialize(CArchive& ar) {
-//	CObject::Serialize(ar);
-//
-//	//if (ar.IsStoring())
-//		//ar << empID << empName << age;
-//	//else
-//		//ar >> empID >> empName >> age;
-//}
+}
+void SolidBox::Serialize(CArchive& ar) {
+	CObject::Serialize(ar);
+
+	if (ar.IsStoring())
+	{
+		//ar << empID << empName << age;
+	}
+		
+	else
+	{
+		//ar >> empID >> empName >> age;
+	}
+		
+}
 
 
 bool SolidBox::operator<(const SolidBox &cube) const
@@ -42,10 +53,11 @@ bool SolidBox::operator==(const SolidBox &cube) const
 
 SolidBox& SolidBox::operator=(const SolidBox &cube)
 {
-	//dont want to change the name
+	
 	this->sideLength = cube.sideLength;
 	this->channel = cube.channel;
 	this->hasConnection = cube.hasConnection;
+	//write code to delete old one.
 	return *this;
 }
 
@@ -54,16 +66,16 @@ SolidBox::~SolidBox()
 
 }
 
-void SolidBox::AddCubeNameAndCubeToMap(SolidBox* cube)
+void SolidBox::AddCubeNameAndCubeToMap(std::shared_ptr<SolidBox> cube)
 {
-	cubeNameAndCubeMap.insert(std::pair<std::string, SolidBox*>(cube->GetShapeName(), cube));
+	cubeNameAndCubeMap.insert(std::pair<std::string, std::shared_ptr<SolidBox>>(cube->GetShapeName(), cube));
 }
-void SolidBox::AddCubeAndPlanesToMap(SolidBox* cube)
+void SolidBox::AddCubeAndPlanesToMap(std::shared_ptr<SolidBox> cube)
 {
-	cubeAndPlanesMap.insert(std::pair<SolidBox*, std::set<SquarePlane*>>(cube, cube->GetConnChannel()->GetPlaneSet()));
+	cubeAndPlanesMap.insert(std::pair<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>(cube, cube->GetConnChannel()->GetPlaneSet()));
 }
 
-SolidBox::SolidBox(double sideLength) : channel(this)
+SolidBox::SolidBox(double sideLength) : channel(std::make_shared<ConnectionChannel>(std::shared_ptr<SolidBox>(this)))
 {
 	hasConnection = false; // no channel connection yet
 
@@ -72,19 +84,25 @@ SolidBox::SolidBox(double sideLength) : channel(this)
 	name = Utility::CreateUniqueName("cube", cubeNames, nameIDCounter);
 	cubeAndSideLengthMap.insert(std::pair<std::string, double>(name, sideLength));
 	cubeNames.insert(name);
-	std::string planeName = "";
 
 	//making 6 planes to go with the cube
 	for (int i = 0; i < SolidBox::planesPerSolidBox; i++)
 	{
-		SquarePlane* plane = new SquarePlane(sideLength, &channel);
-		planeName = "plane" + std::to_string(i + 1);
-		plane->SetSqPlaneName(planeName);
-		channel.Connect(plane);
+		//std::shared_ptr<int> p1 = std::make_shared<int>();
+		std::shared_ptr<SquarePlane> plane = std::make_shared<SquarePlane>(sideLength, channel);
+		channel->Connect(plane);
 	}
-
+	for (auto planeName : SquarePlane::planeNames)
+	{
+		std::cout << "planeNames in planeName set so far:  " << planeName << std::endl;
+	}
+	for (auto plane : channel->GetPlaneSet())
+	{
+		std::cout << "plane name in set from channel:  " << plane->GetSqPlaneName() << std::endl;
+	}
+	//std::set<std::string> SquarePlane::planeNames;
 	//if all planes inserted correctly, then a proper ChannelConnection has been made
-	if ((channel.GetPlaneSet()).size() == 6)
+	if ((channel->GetPlaneSet()).size() == 6)
 	{
 		this->sideLength = sideLength;
 		hasConnection = true;
@@ -106,9 +124,9 @@ std::string SolidBox::GetShapeName()
 	return name;
 }
 
-ConnectionChannel* SolidBox::GetConnChannel()
+std::shared_ptr<ConnectionChannel> SolidBox::GetConnChannel()
 {
-	return &channel;
+	return channel;
 }
 
 bool SolidBox::GetHasConnection()

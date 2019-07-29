@@ -1,18 +1,41 @@
 #include "SquarePlane.h"
 #include "ConnectionChannel.h"
+#include <afx.h>
+#include "Utility.h"
 
-SquarePlane::SquarePlane(double sideLength, ConnectionChannel* channel)
+IMPLEMENT_SERIAL(SquarePlane, CObject, 0)
+
+std::set<std::string> SquarePlane::planeNames;
+int SquarePlane::nameIDCounter = 1;
+
+SquarePlane::SquarePlane()
 {
+
+}
+void SquarePlane::Serialize(CArchive& ar) {
+	CObject::Serialize(ar);
+
+	if (ar.IsStoring())
+	{
+		//ar << empID << empName << age;
+	}
+
+	else
+	{
+		//ar >> empID >> empName >> age;
+	}
+
+}
+
+SquarePlane::SquarePlane(double sideLength, std::shared_ptr<ConnectionChannel> channel)
+{
+	name = "";
+	name = Utility::CreateUniqueName("plane", planeNames, nameIDCounter);
+	planeNames.insert(name);
 	this->height = sideLength;
 	this->length = sideLength;
 	numOfEdges = 4;
-	name = "";
 	this->channel = channel;
-}
-
-void SquarePlane::SetSqPlaneName(std::string name)
-{
-	this->name = name;
 }
 
 std::string SquarePlane::GetSqPlaneName()
@@ -32,12 +55,13 @@ SquarePlane& SquarePlane::operator=(const SquarePlane& plane)
 	this->height = plane.height;
 	this->length = plane.length;
 	this->numOfEdges = plane.numOfEdges;
-	this->name = plane.name;
+	*(this->channel) = *(plane.channel);
+	//code to delete old one
 	return *this;
 }
 
 //defining < operator for SquarePlane to be based on comparisons of the name of the plane
-bool SquarePlane::operator<(const SquarePlane* plane) const
+bool SquarePlane::operator<(const std::shared_ptr<SquarePlane> plane) const
 {
 	return (this->name < plane->name);
 }
@@ -52,7 +76,7 @@ double SquarePlane::GetSqPlaneHeight()
 	return height;
 }
 
-ConnectionChannel* SquarePlane::GetConnChannel()
+std::shared_ptr<ConnectionChannel> SquarePlane::GetConnChannel()
 {
 	return channel;
 }
