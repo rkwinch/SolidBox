@@ -38,7 +38,7 @@ public:
 	// parameterized constructor
 	RectPlane(double length, double height, ConnectionChannel<T, RectPlane>* channel)
 	{
-			this->m_stName = Utility::CreateUniqueName("plane", this->m_nNameIDCounter);
+			this->m_stName = Surface<T, RectPlane<T>>::CreateUniqueName("plane", this->m_nNameIDCounter);
 			this->m_dLength = length;
 			this->m_dHeight = height;
 			this->m_nNumOfEdges = 4;
@@ -68,11 +68,6 @@ public:
 	bool operator<(const RectPlane &plane) const
 	{
 		return (this->m_stName < plane.m_stName);
-	}
-
-	std::string GetSqPlaneName()
-	{
-		return this->m_stName;
 	}
 
 	double GetSqPlaneLength()
@@ -120,12 +115,12 @@ public:
 		this->m_nNumOfEdges = numOfEdges;
 	}
 
-	double CalcArea() override
+	double CalcArea() const override
 	{
 		return (this->m_dHeight * this->m_dLength);
 	}
 
-	void Save(std::ofstream &outFile)
+	void Save(std::ofstream &outFile) override
 	{
 		outFile << this->m_stName << ";";
 		outFile << this->m_dHeight << ";" << this->m_dLength << ";" << this->m_nNumOfEdges << ";";

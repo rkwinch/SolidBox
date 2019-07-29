@@ -8,6 +8,7 @@
 #include <fstream>
 #include <algorithm>
 #include "Shape.h"
+#include "Surface.h"
 #include "CurvedSurface.h"
 #include "ConnectionChannel.h"
 #include "Utility.h"
@@ -25,8 +26,7 @@ private:
 public:
 
 	static const int m_nNumOfSurfaces = 1;
-	static std::set<std::shared_ptr<Sphere>> m_surfaceSet;
-	static std::vector<std::shared_ptr<Sphere>> m_shapeVec;
+	static std::set<std::shared_ptr<Surface<Sphere, CurvedSurface<Sphere>>>> m_surfaceSet;
 
 	ConnectionChannel<Sphere, CurvedSurface<Sphere>>* GetConnChannel()
 	{
@@ -36,6 +36,17 @@ public:
 	std::string GetConnName()
 	{
 		return m_channel.GetName();
+	}
+
+	std::set<std::shared_ptr<CurvedSurface<Sphere>>> GetSurfacesCopy() override
+	{
+		std::set<std::shared_ptr<CurvedSurface<Sphere>>> surfaceSet;
+		for (auto surface : m_channel.GetSurfaceSet()) // should just be one surface
+		{
+			std::shared_ptr<CurvedSurface<Sphere>> copy = std::make_shared<CurvedSurface<Sphere>>(m_dRadius, &m_channel);
+			surfaceSet.insert(copy);
+		}
+		return surfaceSet;
 	}
 
 	static void Create()
@@ -61,12 +72,12 @@ public:
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 	}
 
-	void Delete()
+	void Delete() override
 	{
-		std::vector<std::shared_ptr<Sphere>>::iterator shapeVecItr = m_shapeVec.begin();
+		std::vector<std::shared_ptr<Shape<Sphere, CurvedSurface<Sphere>>>>::iterator shapeVecItr = m_shapeVec.begin();
 		// [&] is take by reference, arg type is shared ptr of surface type (solidbox or sphere at this point), return type is bool, 
 		// predicate is check if the shapes are equivalent (same name by == operator)
-		shapeVecItr = std::find_if(m_shapeVec.begin(), m_shapeVec.end(), [&](std::shared_ptr<Sphere> shape)->bool {return *shape == *this; });
+		shapeVecItr = std::find_if(m_shapeVec.begin(), m_shapeVec.end(), [&](std::shared_ptr<Shape<Sphere, CurvedSurface<Sphere>>> shape)->bool {return *shape == *this; });
 
 		if (shapeVecItr == m_shapeVec.end())
 		{
@@ -89,7 +100,7 @@ public:
 
 		for (auto sphere : Sphere::m_shapeVec)
 		{
-			std::cout << count << ") " << sphere->m_stName << std::endl;
+			std::cout << count << ") " << sphere->GetShapeName() << std::endl;
 			++count;
 		}
 	}
@@ -119,7 +130,7 @@ public:
 	Sphere(double radius) : m_channel(this)
 	{
 		m_stName = CreateUniqueName("sphere", m_nNameIDCounter);
-		std::set<std::shared_ptr<CurvedSurface<Sphere>>> surfaceSet;
+		std::set<std::shared_ptr<Surface<Sphere, CurvedSurface<Sphere>>>> surfaceSet;
 
 		//making 1 surface to go with the sphere
 		for (int i = 0; i < Sphere::m_nSurfaces; ++i)
@@ -199,10 +210,26 @@ public:
 				itr++;
 				nNumOfEdges = stoi(*itr);
 				itr++; std::cout << "in loadsphere plane. last should be a ':' " << (*itr) << std::endl;
-				surface->SetName(stName);
+
+				// making cast to CurvedSurface* since it is currently Surface* (and doesn't know about radius, etc)
+				// do this by casting the smart pointer to the CurvedSurface and using get() to get the raw ptr
+				// using dynamic casting because want to make sure the pointer can be converted properly to its derived 
+				// class from the base (base should actually be a child in the first place, but need set to work with 
+				// all types of surfaces, so have set of surfaces where the surfaces are actually curvedSurfaces or rectPlanes
+				// (shouldn't be able to insert a surface anyway since it is a base abstract class)
+				//
+				// example of when to use and not to use:
+				//(1) 
+				//MyBase *base = static_cast<MyBase*>(child);
+				//MyChild *child = dynamic_cast<MyChild*>(base); // good
+				//(2)
+				//MyBase  *base = new MyBase();
+				//MyChild *child = dynamic_cast<MyChild*>(base); // bad
+				auto curvedSurfacePtr = dynamic_cast<CurvedSurface<Sphere>*>(surface.get());
+				curvedSurfacePtr->SetName(stName);
 				stName = ""; // resetting name
-				surface->SetRadius(dRadius);
-				surface->SetNumOfEdges(nNumOfEdges);
+				curvedSurfacePtr->SetRadius(dRadius);
+				curvedSurfacePtr->SetNumOfEdges(nNumOfEdges);
 			}
 			itr++; // skipping ":" delimiter
 			Sphere::m_shapeVec.push_back(sphere); // solid box object is completed now.

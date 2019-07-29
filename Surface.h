@@ -18,9 +18,14 @@ protected:
 public:
 	
 	double m_dArea = 0;
-	virtual double CalcArea() = 0;
-	
+	virtual double CalcArea() const = 0;
+	virtual void Save(std::ofstream &outFile) = 0;
 	virtual std::shared_ptr<M> GetCopy() = 0;
+	
+	std::string GetName()
+	{
+		return m_stName;
+	}
 
 	static std::string CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter)
 	{
@@ -29,9 +34,9 @@ public:
 
 		auto shapeVecItr = std::find_if(T::m_shapeVec.begin(), T::m_shapeVec.end(), [&](std::shared_ptr<T> shape)->bool
 				{
-					for (auto element : shape->m_channel.GetSurfaceSet)
+					for (auto element : shape->GetConnChannel()->GetSurfaceSet())
 					{
-						if (element->GetSurfaceName() == strName)
+						if (element->GetName() == strName)
 						{
 							return true;
 						}

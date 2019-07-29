@@ -10,9 +10,6 @@
 #include "ConnectionChannel.h"
 #include "Utility.h"
 
-
-std::vector<std::shared_ptr<SolidBox>> SolidBox::m_shapeVec;
-
 // default constructor 
 SolidBox::SolidBox() : m_channel(this)
 {
@@ -37,7 +34,7 @@ SolidBox::SolidBox(double sideLength) : m_channel(this)
 	for (int i = 0; i < SolidBox::m_nNumOfSurfaces; ++i)
 	{
 		std::cout << "about to make a plane with sidelength of: " << sideLength << std::endl;
-		std::shared_ptr<RectPlane<SolidBox>> plane = std::make_shared<RectPlane<SolidBox>>(sideLength, &m_channel);
+		std::shared_ptr<RectPlane<SolidBox>> plane = std::make_shared<RectPlane<SolidBox>>(sideLength, sideLength, &m_channel);
 		RectPlaneSet.insert(plane);
 	}
 
@@ -177,11 +174,13 @@ void SolidBox::Load(std::vector<std::string>::iterator &itr, const int &vecSize)
 			itr++;
 			nNumOfEdges = stoi(*itr);
 			itr++; std::cout << "in loadsolidbox plane. last should be a ':' " << (*itr) << std::endl;
-			planePtr->SetName(stName);
+			// for notes on why using dynamic cast here, refer to load fxn in Sphere
+			auto rectPlanePtr = dynamic_cast<RectPlane<SolidBox>*>(planePtr.get());
+			rectPlanePtr->SetName(stName);
 			stName = ""; // resetting name
-			planePtr->SetHeight(dHeight);
-			planePtr->SetLength(dLength);
-			planePtr->SetNumOfEdges(nNumOfEdges);
+			rectPlanePtr->SetHeight(dHeight);
+			rectPlanePtr->SetLength(dLength);
+			rectPlanePtr->SetNumOfEdges(nNumOfEdges);
 		}
 		itr++; // skipping ":" delimiter
 		SolidBox::m_shapeVec.push_back(box); // solid box object is completed now.
@@ -196,7 +195,7 @@ void SolidBox::Save(std::ofstream &outFile)
 	outFile << "\n";
 }
 
-std::set<std::shared_ptr<RectPlane<SolidBox>>> SolidBox::GetSurfacesCopy()
+std::set<std::shared_ptr<RectPlane<SolidBox>>> SolidBox::GetSurfacesCopy() override 
 {
 	std::set<std::shared_ptr<RectPlane<SolidBox>>> surfaceSet;
 	for (auto surface : m_channel.GetSurfaceSet())

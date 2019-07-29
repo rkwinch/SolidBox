@@ -20,11 +20,12 @@ public:
 
 	static int m_nNameIDCounter; // used for naming unique cubes; initialized at the bottom of this header
 	static const int m_nNumOfSurfaces = 0;
-	static std::vector<std::shared_ptr<T>> m_shapeVec;
+	static std::vector<std::shared_ptr<Shape<T, M>>> m_shapeVec;
 	virtual T& operator=(T &cube) = 0;
 	virtual int GetSurfaceCount() = 0;
 	virtual std::set<std::shared_ptr<M>> GetSurfacesCopy() = 0;
 	virtual void Save(std::ofstream &outFile) = 0; 
+	virtual void Delete() = 0;
 
 	bool operator<(const T &shape) const
 	{
@@ -68,7 +69,7 @@ public:
 		return strName;
 	}
 
-	static std::string InputInVecVal(std::string strInput, std::regex acceptableInputExpr, std::vector<std::shared_ptr<T>> shapeVec)
+	static std::string InputInVecVal(std::string strInput, std::regex acceptableInputExpr, std::vector<std::shared_ptr<Shape<T,M>>> shapeVec)
 	{
 		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
 

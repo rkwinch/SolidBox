@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include "Menu.h"
+#include "Surface.h"
 
 template<class T, class M>
 class Channel {
@@ -16,7 +17,7 @@ protected:
 
 public:
 	
-	virtual void Connect(std::set<std::shared_ptr<M>> surfaceSet) = 0;
+	virtual void Connect(std::set<std::shared_ptr<Surface<T,M>>> surfaceSet) = 0;
 	virtual void Disconnect() = 0;
 	virtual void Cleanup() = 0;
 	virtual void Save(std::ofstream &outFile) = 0;

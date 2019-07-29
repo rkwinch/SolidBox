@@ -28,7 +28,7 @@ public:
 	static void Create();
 	static void PrintSolids();
 	ConnectionChannel<SolidBox, RectPlane<SolidBox>>* GetConnChannel();
-	void Delete();
+	void Delete() override;
 	std::string GetConnName();
 
 private:

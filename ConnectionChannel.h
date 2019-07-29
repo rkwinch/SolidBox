@@ -2,6 +2,7 @@
 
 #include <set>
 #include "Channel.h"
+#include "Shape.h"
 
 template<class T, class M>
 class ConnectionChannel : public Channel<T, M> {
@@ -9,7 +10,7 @@ class ConnectionChannel : public Channel<T, M> {
 	friend class Utility;
 
 private:
-	std::set<std::shared_ptr<M>> m_surfaceSet;
+	std::set<std::shared_ptr<Surface<T,M>>> m_surfaceSet;
 	
 
 public:
@@ -79,7 +80,7 @@ public:
 	}
 
 	//adding a plane to the connection
-	void Connect(std::set<std::shared_ptr<M>> surfaceSet) override
+	void Connect(std::set<std::shared_ptr<Surface<T,M>>> surfaceSet) override
 	{
 		for (auto surface : surfaceSet)
 		{
@@ -102,7 +103,7 @@ public:
 		//not really needed since using shared_ptr for surfaces
 	}
 
-	std::set<std::shared_ptr<M>> GetSurfaceSet()
+	std::set<std::shared_ptr<Surface<T,M>>> GetSurfaceSet()
 	{
 		return this->m_surfaceSet;
 	}

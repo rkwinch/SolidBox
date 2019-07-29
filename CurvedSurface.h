@@ -22,7 +22,7 @@ class CurvedSurface : public Surface<T, CurvedSurface<T>> {
 		friend class SolidBox;
 
 	public:
-		static const int PI;
+		static const double PI;
 		static int m_nNameIDCounter;
 
 		CurvedSurface()
@@ -33,7 +33,7 @@ class CurvedSurface : public Surface<T, CurvedSurface<T>> {
 		// parameterized constructor
 		CurvedSurface(double radius, ConnectionChannel<T, CurvedSurface>* channel)
 		{
-			this->m_stName = Utility::CreateUniqueName("curvedSurf", m_nNameIDCounter);
+			this->m_stName = Surface<T, CurvedSurface<T>>::CreateUniqueName("curvedSurf", m_nNameIDCounter);
 			this->m_dRadius = radius;
 			this->m_dArea = CalcArea();
 			this->m_channel = channel;
@@ -67,11 +67,6 @@ class CurvedSurface : public Surface<T, CurvedSurface<T>> {
 			this->m_stName = name;
 		}
 
-		std::string GetName()
-		{
-			return this->m_stName;
-		}
-
 		ConnectionChannel<T, CurvedSurface>* GetConnChannel()
 		{
 			return this->m_channel;
@@ -97,7 +92,7 @@ class CurvedSurface : public Surface<T, CurvedSurface<T>> {
 			return this->m_dRadius;
 		}
 
-		void Save(std::ofstream &outFile)
+		void Save(std::ofstream &outFile) override
 		{
 			outFile << this->m_stName << ";";
 			outFile << this->m_dRadius << ";" << this->m_nNumOfEdges << ";";
@@ -111,13 +106,13 @@ class CurvedSurface : public Surface<T, CurvedSurface<T>> {
 	private:
 		double m_dRadius;
 
-		double CalcArea() override
+		double CalcArea() const override
 		{
 			return (4 * PI * pow(m_dRadius, 2));
 		}
 };
 
 template<class T>
-const int CurvedSurface<T>::PI = 3.14159;
+const double CurvedSurface<T>::PI = 3.14159;
 template<class T>
 int CurvedSurface<T>::m_nNameIDCounter = 0;
