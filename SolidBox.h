@@ -1,17 +1,25 @@
 #pragma once
-#include "stdafx.h"
+
 #include "SquarePlane.h"
 #include "Shape.h"
 #include "Channel.h"
+#include <string>
+#include <set>
 
 class SolidBox : public Shape {
-	//abstract parent class defines fxns for setting and getting name
+	
 public:
-	SolidBox(std::vector<SquarePlane*> groupOfPlanes)
-	{   
-		name = "";
-	}
+	SolidBox(int sideLength);
+	std::string GetShapeName() override;
+	static void PrintCubeSet();
+
+
 private:
-	std::vector<SquarePlane*> groupOfPlanes;
+	
+	std::string name;
+	static int nameIDCounter; // used for naming unique cubes
+	static std::set<std::string> cubeNames; // helps enforce uniqueness of cubes created
+	static const int planesPerSolidBox;
+	std::vector<SquarePlane> groupOfPlanes;
 };
 
