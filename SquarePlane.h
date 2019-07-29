@@ -22,14 +22,14 @@ public:
 	static std::set<std::string> planeNames;
 	static int nameIDCounter;
 	SquarePlane();
-	SquarePlane(double sideLength, std::shared_ptr<ConnectionChannel> channel);
+	SquarePlane(double sideLength, ConnectionChannel* channel);
 	bool operator==(const SquarePlane& plane) const;
 	SquarePlane& operator=(const SquarePlane& plane);
 	bool operator<(const std::shared_ptr<SquarePlane> plane) const;
 	std::string GetSqPlaneName();
 	double GetSqPlaneLength();
 	double GetSqPlaneHeight();
-	std::shared_ptr<ConnectionChannel> GetConnChannel();
+	ConnectionChannel* GetConnChannel();
 	int GetNumOfEdges();
 
 private:
@@ -37,7 +37,7 @@ private:
 	double length;
 	int numOfEdges;
 	std::string name;
-	std::shared_ptr<ConnectionChannel> channel;
+	ConnectionChannel* channel;
 
 };
 

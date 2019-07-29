@@ -29,13 +29,13 @@ void SquarePlane::Serialize(CArchive& ar) {
 
 }
 
-SquarePlane::SquarePlane(double sideLength, std::shared_ptr<ConnectionChannel> channel)
+SquarePlane::SquarePlane(double sideLength, ConnectionChannel* channel)
 {
 	name = "";
 	name = Utility::CreateUniqueName("plane", planeNames, nameIDCounter);
 	planeNames.insert(name);
-	this->height = sideLength;
-	this->length = sideLength;
+	height = sideLength;
+	length = sideLength;
 	numOfEdges = 4;
 	this->channel = channel;
 }
@@ -54,9 +54,9 @@ bool SquarePlane::operator==(const SquarePlane& plane) const
 //defining the = operator for SquarePlane to deep copy plane
 SquarePlane& SquarePlane::operator=(const SquarePlane& plane)
 {
-	this->height = plane.height;
-	this->length = plane.length;
-	this->numOfEdges = plane.numOfEdges;
+	height = plane.height;
+	length = plane.length;
+	numOfEdges = plane.numOfEdges;
 	return *this;
 }
 
@@ -76,7 +76,7 @@ double SquarePlane::GetSqPlaneHeight()
 	return height;
 }
 
-std::shared_ptr<ConnectionChannel> SquarePlane::GetConnChannel()
+ConnectionChannel* SquarePlane::GetConnChannel()
 {
 	return channel;
 }

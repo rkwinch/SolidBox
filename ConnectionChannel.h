@@ -16,7 +16,7 @@ class ConnectionChannel : public CObject/*, public Channel*/ {
 private:
 	std::set<std::shared_ptr<SquarePlane>> planeSet;
 	std::string name;
-	std::shared_ptr<SolidBox> cube;
+	SolidBox* cube;
 	static int nameIDCounter;
 	static std::set<std::string> channelNames;
 
@@ -30,7 +30,7 @@ public:
 	bool operator==(const ConnectionChannel& channel) const;
 	bool operator<(const ConnectionChannel& channel) const;
 	ConnectionChannel& operator=(ConnectionChannel &channel);
-	ConnectionChannel(std::shared_ptr<SolidBox> cube);
+	ConnectionChannel(SolidBox* cube);
 	void Connect(std::set<std::shared_ptr<SquarePlane>> planeSet) /*override*/;
 	void Disconnect(std::set<std::shared_ptr<SquarePlane>> planeSet) /*override*/;
 	void Cleanup(SquarePlane* plane) /*override*/;
@@ -38,7 +38,7 @@ public:
 	std::set<std::shared_ptr<SquarePlane>> GetPlaneSet();
 	static std::set<std::string>* GetChannelNames();
 	ConnectionChannel(const ConnectionChannel& channel);
-	std::shared_ptr<SolidBox> GetSolidBox();
+	SolidBox* GetSolidBox();
 
 };
 

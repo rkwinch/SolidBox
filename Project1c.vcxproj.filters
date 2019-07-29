@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\Downloads\project\Utility.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Channel.h">
       <Filter>Source Files</Filter>
     </ClInclude>

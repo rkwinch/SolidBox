@@ -13,11 +13,10 @@
 
 void Utility::MoveASolid()
 {
-	int count = 0;
 	std::string moveFrom = "";
 	std::string moveTo = "";
 
-	if (SolidBox::cubeNames.size() < 2)
+	if (SolidBox::cubeVec.size() < 2)
 	{
 		std::cout << "There are not enough cubes in memory to make a move." << std::endl;
 		return;
@@ -26,51 +25,33 @@ void Utility::MoveASolid()
 	std::cout << "Please enter two numbers corresponding to their cubes separated by the enter key" << std::endl;
 	std::cout << "to move one solid to another." << std::endl;
 	std::cout << "(For ex:  1 = 2 moves 2 into 1)" << std::endl;
-
-	for (auto cubeName : SolidBox::cubeNames)
-	{
-		count++;
-		std::cout << count << ") " << cubeName << std::endl;
-	}
-
+	PrintSolidsInMemory();
 	std::cout << std::endl;
 	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want two numbers that can be separated by 
 															  // spaces
 
-															  //------Get cube selections from user----------------
-															  //moveFrom cube:
-	moveFrom = MoveInputVal(moveFrom, acceptableInputExpr);
+	//------Get cube selections from user----------------
+	//moveFrom cube:
+	moveFrom = InputInMapVal(moveFrom, acceptableInputExpr);
 
 	if ((moveFrom == "b") | (moveFrom == "B")) // user elected to go back to main menu
 	{
 		return;
 	}
 
-	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr_From = SolidBox::cubeNameAndCubeMap.begin();
-	cubeNameAndCubeItr_From = std::next(cubeNameAndCubeItr_From, (stoi(moveFrom) - 1)); // find if name given is the name of a cube made 
-	cubeNameAndCubeItr_From = ValAndGetCubeNmItr(cubeNameAndCubeItr_From->first, acceptableInputExpr);
-
-	if (cubeNameAndCubeItr_From == SolidBox::cubeNameAndCubeMap.end()) // user elected to go back to main menu
-	{
-		return;
-	}
+	auto cubeVecItr_From = SolidBox::cubeVec.begin();
+	cubeVecItr_From = std::next(cubeVecItr_From, (stoi(moveFrom) - 1)); // find if name given is the name of a cube made 
 
 	//moveTo cube:
-	moveTo = MoveInputVal(moveTo, acceptableInputExpr);
+	moveTo = InputInMapVal(moveTo, acceptableInputExpr);
 
 	if ((moveTo == "b") | (moveTo == "B")) // user elected to go back to main menu
 	{
 		return;
 	}
 
-	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr_To = SolidBox::cubeNameAndCubeMap.begin();
-	cubeNameAndCubeItr_To = std::next(cubeNameAndCubeItr_To, (stoi(moveTo) - 1)); // find if name given is the name of a cube made 
-	cubeNameAndCubeItr_To = ValAndGetCubeNmItr(cubeNameAndCubeItr_To->first, acceptableInputExpr);
-
-	if (cubeNameAndCubeItr_To == SolidBox::cubeNameAndCubeMap.end()) // user elected to go back to main menu
-	{
-		return;
-	}
+	auto cubeVecItr_To = SolidBox::cubeVec.begin();
+	cubeVecItr_To = std::next(cubeVecItr_To, (stoi(moveTo) - 1)); // find if name given is the name of a cube made 
 
 	if (moveFrom == moveTo)
 	{
@@ -79,58 +60,38 @@ void Utility::MoveASolid()
 	}
 
 	// It's OK to now move From into To
-	std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr_To;
-	cubeAndPlanesItr_To = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr_To->second); // now has iterator to 
-																						  // SolidBox object and its planes
-
-	std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr_From;
-	cubeAndPlanesItr_From = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr_From->second); // now has iterator to 
-																							  // SolidBox object and its planes
-
-	*(cubeNameAndCubeItr_To->second) = *(cubeNameAndCubeItr_From->second);
+	*cubeVecItr_To = *cubeVecItr_From; // to call copy constructor of SolidBox
 }
 
 void Utility::DeleteExistingSolid()
 {
 	std::string input = "";
-	std::cout << "Type the name of the cube you wish to delete" << std::endl;
+	PrintNwLnsAndLnDelimiter("-", 55);
+	std::cout << "Type the number corresponding to the cube you wish to delete" << std::endl;
 	std::cout << "or press 'b' to go back to the menu." << std::endl;
 	std::regex acceptableInputExpr("^\\s*((cube[0-9]+)|b|B)\\s*$");
-	input = GetAndValidateInput(acceptableInputExpr);
+	PrintSolidsInMemory();
+	std::cout << std::endl;
+	input = InputInMapVal(input, acceptableInputExpr);
 
 	if ((input == "b") || (input == "B"))
 	{
 		return;
 	}
 
-	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr;
-	cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input);
+	auto cubeVecItr = SolidBox::cubeVec.begin();
+	cubeVecItr = std::next(cubeVecItr, (stoi(input) - 1)); // advance iterator by the # given by user 
+	
+																	   //erase everything stored associated with cube for deletion
+	SolidBox::cubeNames.erase(cubeVecItr->name);
+	ConnectionChannel::channelNames.erase(cubeVecItr->channel.name);
 
-	while (cubeNameAndCubeItr == SolidBox::cubeNameAndCubeMap.end())
-	{
-		std::cout << "Solid not found.  Please try again or press 'b' to go" << std::endl;
-		std::cout << "back to the menu." << std::endl;
-		input = GetAndValidateInput(acceptableInputExpr);
-		if ((input == "b") || (input == "B"))
-		{
-			return;
-		}
-		cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input);
-	}
-
-	SolidBox::cubeNames.erase(input);
-	ConnectionChannel::channelNames.erase(cubeNameAndCubeItr->second->channel->name);
-	std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr;
-	cubeAndPlanesItr = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr->second);
-
-	for (auto plane : cubeAndPlanesItr->second)
+	for (auto plane : cubeVecItr->channel.planeSet)
 	{
 		SquarePlane::planeNames.erase(plane->name);
 	}
 
-	SolidBox::cubeAndPlanesMap.erase(cubeAndPlanesItr->first);
-	SolidBox::cubeNameAndCubeMap.erase(input);
-
+	SolidBox::cubeVec.erase(cubeVecItr);
 }
 
 void Utility::CreateSolidBox()
@@ -139,6 +100,7 @@ void Utility::CreateSolidBox()
 	double sideLength = 0.0;
 	std::regex acceptableInputExpr("^\\s*([0-9]*\\.?[0-9]*)\\s*$"); // looking for a number (if present)
 																	// with 0-1 decimals followed by a number (if present) while allowing spaces
+	PrintNwLnsAndLnDelimiter("-", 55);
 	std::cout << "What would you like the length, width, and height to be? (in cm)" << std::endl;
 	std::cout << "ex: 4.5" << std::endl;
 	input = GetAndValidateInput(acceptableInputExpr);
@@ -150,47 +112,33 @@ void Utility::CreateSolidBox()
 		sideLength = std::stod(input);
 	}
 
-	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(sideLength);
-	SolidBox::AddCubeAndPlanesToMap(box);
-	SolidBox::AddCubeNameAndCubeToMap(box);
+	SolidBox::cubeVec.emplace_back(SolidBox(sideLength)); // making the object directly into the vector
+	PrintNwLnsAndLnDelimiter("-", 55);
 }
 
 void Utility::DebugSolidBox()
 {
 	std::string input = "";
-	std::regex acceptableInputExpr("^\\s*((cube[0-9]+)|b|B)\\s*$"); // looking for the word "cube" followed by
-																	// at least one number allowing for leading and trailing spaces
-	std::cout << "Type the name of the cube for detailed information" << std::endl;
-	std::cout << "or press 'b' to go back to the menu." << std::endl;
-	input = GetAndValidateInput(acceptableInputExpr);
+	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want one numbers that can be surrounded by 
+															  // whitespace.
+	PrintNwLnsAndLnDelimiter("-", 55);
+	std::cout << "Type the number corresponding to the desired cube for detailed information" << std::endl;
+	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+	PrintSolidsInMemory();
+	std::cout << std::endl;
+	input = InputInMapVal(input, acceptableInputExpr);
 
 	if ((input == "b") || (input == "B"))
 	{
 		return;
 	}
 
-	// get cube belonging to cubeName
-	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr;
-	cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input); // find if name given is the name of a cube made
+	auto cubeVecItr = SolidBox::cubeVec.begin();
+	cubeVecItr = std::next(cubeVecItr, (stoi(input) - 1)); // advance iterator by the # given by user 
 
-	while (cubeNameAndCubeItr == SolidBox::cubeNameAndCubeMap.end())
-	{
-		std::cout << input << " not found" << std::endl;
-		std::cout << "Please try again or press 'b' to go to main menu." << std::endl;
-		input = GetAndValidateInput(acceptableInputExpr);
-		if ((input == "b") || (input == "B"))
-		{
-			return;
-		}
-		cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input);
-	}
-
-	std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr;
-	cubeAndPlanesItr = SolidBox::cubeAndPlanesMap.find(cubeNameAndCubeItr->second); // now has iterator to 
-																					// SolidBox object and its planes
-	PrintLineDelimiter("-", 55);
-	PrintDebugInfo(cubeNameAndCubeItr, cubeAndPlanesItr);
-	PrintLineDelimiter("-", 55);
+	PrintNwLnsAndLnDelimiter("-", 55);
+	PrintDebugInfo(cubeVecItr);
+	PrintNwLnsAndLnDelimiter("-", 55);
 }
 
 std::string Utility::CreateUniqueName(std::string namePrefix, std::set<std::string> nameSet, int &nameIDCounter)
@@ -291,41 +239,27 @@ void Utility::Run()
 	}
 }
 
-void Utility::LoadAllObjects()
+void Utility::LoadAllObjects() //not fleshed out.  probably won't implement
 {
-	int x; char c;
+	int x; 
+	char c;
 	CFile theFile;
 	theFile.Open(_T("SolidBox.txt"), CFile::modeRead | CFile::typeBinary);
 	CArchive archive(&theFile, CArchive::load);
 	archive >> x >> c;
 	std::cout << "the values retrieved were:  " << x << " " << c << std::endl;
-	//try
-	//{
-	//	archive.Read(theFile);
-	//	//std::cout << "x after reading in:  " << x << std::endl;
-	//}
-	//catch (CException* e)
-	//{
-	//	TCHAR   szCause[255];
-	//	CString strFormatted;
-	//	std::cout << "in catch block" << std::endl;
-
-	//	e->GetErrorMessage(szCause, 255);
-	//	strFormatted += szCause;
-	//	AfxMessageBox(strFormatted);
-	//}
-
 	archive.Close();
 	theFile.Close();
 }
 
-void Utility::SaveAllObjects()
+void Utility::SaveAllObjects() // not fleshed out.  probably won't implement
 {
-	for (auto element : SolidBox::cubeAndPlanesMap)
+	auto cubeVecItr = SolidBox::cubeVec.begin(); // USE AUTO HERE??? WHY CANT I MAKE IT WORK THE FIRST TIME???
+	for (cubeVecItr; cubeVecItr != SolidBox::cubeVec.end(); ++cubeVecItr)
 	{
-		std::cout << element.first->name << std::endl;
+		std::cout << cubeVecItr->name << " (" << std::fixed << std::setprecision(3) << cubeVecItr->sideLength << ")" << std::endl;
 	}
-
+	
 	int x = 6;
 	char c = 'a';
 	CFile theFile;
@@ -338,28 +272,28 @@ void Utility::SaveAllObjects()
 
 std::string Utility::GetAndValidateInput(std::regex acceptableInputExpr)
 {
-	bool isValid = false;
+	bool bIsValid = false;
 	std::string input = "";
 
 	do
 	{
 		getline(std::cin, input);
-		isValid = ValidateInput(input, acceptableInputExpr);
-		if (isValid)
+		bIsValid = ValidateInput(input, acceptableInputExpr);
+		if (bIsValid)
 		{
 			input = RemoveSpaces(input, acceptableInputExpr);
 		}
 
 		if (input.length() == 0)
 		{
-			isValid = false;
+			bIsValid = false;
 		}
 
-		if (!isValid)
+		if (!bIsValid)
 		{
 			std::cout << "Please enter valid input  ";
 		}
-	} while (!isValid);
+	} while (!bIsValid);
 
 	return input;
 }
@@ -372,28 +306,28 @@ std::string Utility::RemoveSpaces(std::string input, std::regex acceptableInputE
 
 void Utility::ShowSolidsInMemory()
 {
-	PrintLineDelimiter("-", 55);
+	PrintNwLnsAndLnDelimiter("-", 55);
 
 	if (SolidBox::GetCubeNames()->size() == 0)
 	{
 		std::cout << "No solids currently in memory" << std::endl;
-		PrintLineDelimiter("-", 55);
+		PrintNwLnsAndLnDelimiter("-", 55);
 		return;
 	}
 
 	std::string header = "SolidBox name (length of each side in cm)";
 	PrintHeader(header);
-	auto cubeAndPlanesItr = SolidBox::cubeAndPlanesMap.begin();
-
-	for (cubeAndPlanesItr; cubeAndPlanesItr != SolidBox::cubeAndPlanesMap.end(); ++cubeAndPlanesItr)
+	
+	auto cubeVecItr = SolidBox::cubeVec.begin(); // USE AUTO HERE??? WHY CANT I MAKE IT WORK THE FIRST TIME???
+	for (cubeVecItr; cubeVecItr != SolidBox::cubeVec.end(); ++cubeVecItr)
 	{
-		std::cout << cubeAndPlanesItr->first->GetShapeName() << " (" << std::fixed << std::setprecision(3) << cubeAndPlanesItr->first->GetSideLength() << ")" << std::endl;
+		std::cout << cubeVecItr->name << " (" << std::fixed << std::setprecision(3) << cubeVecItr->sideLength << ")" << std::endl;
 	}
 
-	PrintLineDelimiter("-", 55);
+	PrintNwLnsAndLnDelimiter("-", 55);
 }
 
-void Utility::PrintLineDelimiter(std::string delimiter, int numOfTimes)
+void Utility::PrintNwLnsAndLnDelimiter(std::string delimiter, int numOfTimes)
 {
 	std::cout << "\n";
 
@@ -416,43 +350,43 @@ void Utility::PrintChar(char symbol, int numOfTimes)
 void Utility::PrintHeader(std::string header)
 {
 	std::cout << header;
-	PrintLineDelimiter("_", header.length());
+	PrintNwLnsAndLnDelimiter("_", header.length());
 }
 
-void Utility::PrintDebugInfo(std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr, std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr)
+void Utility::PrintDebugInfo(std::vector<SolidBox>::iterator cubeVecItr)
 {
-	PrintCubeInfo(cubeNameAndCubeItr, cubeAndPlanesItr);
-	PrintChannelInfo(cubeAndPlanesItr);
-	PrintPlanesInfo(cubeAndPlanesItr);
+	PrintCubeInfo(cubeVecItr);
+	PrintChannelInfo(cubeVecItr);
+	PrintPlanesInfo(cubeVecItr);
 }
 
-void Utility::PrintCubeInfo(std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr, std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr)
+void Utility::PrintCubeInfo(std::vector<SolidBox>::iterator cubeVecItr)
 {
 	std::string header = "Cube:";
 	PrintHeader(header);
 	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "SolidBox name:" << cubeNameAndCubeItr->first << std::endl;
+	std::cout << std::left << std::setw(18) << "SolidBox name:" << cubeVecItr->name << std::endl;
 	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "hasConnection:" << cubeAndPlanesItr->first->GetHasConnection() << std::endl;
+	std::cout << std::left << std::setw(18) << "hasConnection:" << cubeVecItr->GetHasConnection() << std::endl;
 	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "Channel name:" << cubeAndPlanesItr->first->GetConnChannel()->GetConnName() << std::endl;
+	std::cout << std::left << std::setw(18) << "Channel name:" << cubeVecItr->GetConnChannel()->GetConnName() << std::endl;
 	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(18) << "SideLength (cm):" << std::fixed << std::setprecision(3) << cubeAndPlanesItr->first->GetSideLength() << std::endl;
+	std::cout << std::left << std::setw(18) << "SideLength (cm):" << std::fixed << std::setprecision(3) << cubeVecItr->GetSideLength() << std::endl;
 	std::cout << std::endl;
 }
 
-void Utility::PrintChannelInfo(std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr)
+void Utility::PrintChannelInfo(std::vector<SolidBox>::iterator cubeVecItr)
 {
 	std::string header = "Channel:";
 	PrintHeader(header);
 	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Channel name:" << cubeAndPlanesItr->first->GetConnChannel()->GetConnName() << std::endl;
+	std::cout << std::left << std::setw(27) << "Channel name:" << cubeVecItr->channel.name << std::endl;
 	PrintChar(' ', 5);
-	std::cout << std::left << std::setw(27) << "Associated SolidBox name:" << cubeAndPlanesItr->first->GetConnChannel()->GetSolidBox()->GetShapeName() << std::endl;
+	std::cout << std::left << std::setw(27) << "Associated SolidBox name:" << cubeVecItr->channel.GetSolidBox()->GetShapeName() << std::endl;
 	PrintChar(' ', 5);
 	std::cout << std::left << std::setw(27) << "Associated planes' names:" << std::endl;
 
-	for (auto planePtr : cubeAndPlanesItr->second)
+	for (auto planePtr : cubeVecItr->channel.planeSet)
 	{
 		PrintChar(' ', 32);
 		std::cout << std::left << planePtr->GetSqPlaneName() << std::endl;
@@ -461,12 +395,12 @@ void Utility::PrintChannelInfo(std::map<std::shared_ptr<SolidBox>, std::set<std:
 	std::cout << std::endl;
 }
 
-void Utility::PrintPlanesInfo(std::map<std::shared_ptr<SolidBox>, std::set<std::shared_ptr<SquarePlane>>>::iterator cubeAndPlanesItr)
+void Utility::PrintPlanesInfo(std::vector<SolidBox>::iterator cubeVecItr)
 {
 	std::string header = "Planes:";
 	PrintHeader(header);
 
-	for (auto planePtr : cubeAndPlanesItr->second)
+	for (auto planePtr : cubeVecItr->channel.planeSet)
 	{
 		PrintChar(' ', 5);
 		std::cout << std::left << std::setw(26) << "Plane name:" << planePtr->GetSqPlaneName() << std::endl;
@@ -485,12 +419,12 @@ void Utility::PrintPlanesInfo(std::map<std::shared_ptr<SolidBox>, std::set<std::
 
 void Utility::CopyExistingSolid()
 {
-	PrintLineDelimiter("-", 55);
+	PrintNwLnsAndLnDelimiter("-", 55);
 
 	if (SolidBox::GetCubeNames()->size() == 0)
 	{
 		std::cout << "No solids currently in memory" << std::endl;
-		PrintLineDelimiter("-", 55);
+		PrintNwLnsAndLnDelimiter("-", 55);
 		return;
 	}
 
@@ -498,51 +432,23 @@ void Utility::CopyExistingSolid()
 	std::string input = "";
 	std::regex acceptableInputExpr("^\\s*((cube[0-9]+)|b|B)\\s*$"); // looking for the word "cube" followed by
 																	// at least one number allowing for leading and trailing spaces
-	input = GetAndValidateInput(acceptableInputExpr);
+	PrintSolidsInMemory();
+	std::cout << std::endl;
+	input = InputInMapVal(input, acceptableInputExpr);
 
 	if ((input == "b") || (input == "B"))
 	{
 		return;
 	}
 
-	// get cube belonging to cubeName
-	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr;
-	cubeNameAndCubeItr = ValAndGetCubeNmItr(input, acceptableInputExpr);
+	auto cubeVecItr = SolidBox::cubeVec.begin();
+	cubeVecItr = std::next(cubeVecItr, (stoi(input) - 1)); // advance iterator by the # given by user 
 
-	if (cubeNameAndCubeItr == SolidBox::cubeNameAndCubeMap.end()) // user elected to go back to main menu
-	{
-		return;
-	}
-
-	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(cubeNameAndCubeItr->second->GetSideLength());
-	SolidBox::AddCubeAndPlanesToMap(box);
-	SolidBox::AddCubeNameAndCubeToMap(box);
-	PrintLineDelimiter("-", 55);
+	SolidBox::cubeVec.emplace_back(SolidBox(cubeVecItr->sideLength)); // make the copy inside the vector
+	PrintNwLnsAndLnDelimiter("-", 55);
 }
 
-std::map<std::string, std::shared_ptr<SolidBox>>::iterator Utility::ValAndGetCubeNmItr(std::string input, std::regex acceptableInputExpr)
-{
-	std::cout << "in valandgetcubenmitr" << std::endl;
-
-	std::map<std::string, std::shared_ptr<SolidBox>>::iterator cubeNameAndCubeItr;
-	cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input); // find if name given is the name of a cube made
-
-	while (cubeNameAndCubeItr == SolidBox::cubeNameAndCubeMap.end())
-	{
-		std::cout << input << " not found" << std::endl;
-		std::cout << "Please try again or press 'b' to go to main menu." << std::endl;
-		input = GetAndValidateInput(acceptableInputExpr);
-		if ((input == "b") || (input == "B"))
-		{
-			return SolidBox::cubeNameAndCubeMap.end();
-		}
-		cubeNameAndCubeItr = SolidBox::cubeNameAndCubeMap.find(input);
-	}
-
-	return cubeNameAndCubeItr;
-}
-
-std::string Utility::MoveInputVal(std::string input, std::regex acceptableInputExpr)
+std::string Utility::InputInMapVal(std::string input, std::regex acceptableInputExpr)
 {
 	input = GetAndValidateInput(acceptableInputExpr);
 
@@ -551,8 +457,8 @@ std::string Utility::MoveInputVal(std::string input, std::regex acceptableInputE
 		return "b";
 	}
 
-	// check if moveFrom cube exists
-	while ((unsigned int(stoi(input)) > SolidBox::cubeNameAndCubeMap.size()) | (stoi(input) < 1))
+	// check if cube exists
+	while ((size_t(stoi(input)) > SolidBox::cubeVec.size()) || (stoi(input) < 1))
 	{
 		std::cout << "Selection out of bounds.  Please try again or press 'b' to go" << std::endl;
 		std::cout << "to the main menu." << std::endl;
@@ -565,4 +471,14 @@ std::string Utility::MoveInputVal(std::string input, std::regex acceptableInputE
 
 	}
 	return input;
+}
+
+void Utility::PrintSolidsInMemory()
+{
+	int count = 1;
+	for (auto cubeName : SolidBox::cubeNames)
+	{
+		std::cout << count << ") " << cubeName << std::endl;
+		++count;
+	}
 }

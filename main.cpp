@@ -3,7 +3,6 @@
 #include "SquarePlane.h"
 #include "Utility.h"
 #include <iomanip>
-#include <vld.h>
 
 int main()
 {

@@ -39,20 +39,20 @@ ConnectionChannel& ConnectionChannel::operator=(ConnectionChannel &channel)
 	for (auto plane : planeSet)
 	{
 		*plane = **(channelPlaneSetItr);
-		channelPlaneSetItr++;
+		++channelPlaneSetItr;
 	}
 
 	return *this;
 }
 
 // parameterized constructor
-ConnectionChannel::ConnectionChannel(std::shared_ptr<SolidBox> cube)
+ConnectionChannel::ConnectionChannel(SolidBox* cube)
 {
 	name = Utility::CreateUniqueName("connectionChannel", channelNames, nameIDCounter);
 	channelNames.insert(name);
 	this->cube = cube; // want the cube member here to have same address of cube
 					   // it is constructed from
-					   // **will get planeSet as a SolidBox is being constructed**
+	// **will get planeSet as a SolidBox is being constructed**
 }
 
 //copy constructor
@@ -66,13 +66,13 @@ ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
 	// implementation) of a SquarePlane* in the set of channel
 	for (auto planePtr : planeSet)
 	{
-		std::shared_ptr<SquarePlane> copyPlanePtr = std::make_shared<SquarePlane>(planePtr->GetSqPlaneHeight(), std::shared_ptr<ConnectionChannel>(this));
+		std::shared_ptr<SquarePlane> copyPlanePtr = std::make_shared<SquarePlane>(planePtr->GetSqPlaneHeight(), this);
 		this->planeSet.insert(copyPlanePtr);
 	}
 
 	//allocating new memory for a copy of the cube constructed with the same sideLength
-	std::shared_ptr<SolidBox> copyCube = std::make_shared<SolidBox>(this->cube->GetSideLength());
-	this->cube = copyCube;
+	SolidBox* copyCube = cube;
+	this->cube = copyCube;//????????????????????????
 }
 
 //adding a plane to the connection
@@ -95,7 +95,7 @@ void ConnectionChannel::Disconnect(std::set<std::shared_ptr<SquarePlane>> planeS
 //cleans up memory when disconnecting a channel
 void ConnectionChannel::Cleanup(SquarePlane* plane)
 {
-	//implement later!
+	//not really needed since using shared_ptr for SquarePlanes
 }
 
 //destructor
@@ -116,20 +116,20 @@ std::string ConnectionChannel::GetConnName()
 
 bool ConnectionChannel::operator==(const ConnectionChannel& channel) const
 {
-	return (this->name == channel.name);
+	return (name == channel.name);
 }
 
 bool ConnectionChannel::operator<(const ConnectionChannel& channel) const
 {
-	return (this->name < channel.name);
+	return (name < channel.name);
 }
 
 std::set<std::string>* ConnectionChannel::GetChannelNames()
 {
-	return &ConnectionChannel::channelNames;
+	return &channelNames;
 }
 
-std::shared_ptr<SolidBox> ConnectionChannel::GetSolidBox()
+SolidBox* ConnectionChannel::GetSolidBox()
 {
 	return cube;
 }
