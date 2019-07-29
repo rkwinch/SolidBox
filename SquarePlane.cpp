@@ -32,7 +32,7 @@ SquarePlane::SquarePlane()
 }
 
 // parameterized constructor
-SquarePlane::SquarePlane(double sideLength, ConnectionChannel* channel)
+SquarePlane::SquarePlane(double sideLength, ConnectionChannel<SquarePlane>* channel)
 {
 	name = "";
 	name = Utility::CreateUniqueName("plane", nameIDCounter);
@@ -74,7 +74,7 @@ double SquarePlane::GetSqPlaneHeight()
 	return height;
 }
 
-ConnectionChannel* SquarePlane::GetConnChannel()
+ConnectionChannel<SquarePlane>* SquarePlane::GetConnChannel()
 {
 	return channel;
 }

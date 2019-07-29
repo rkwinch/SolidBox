@@ -8,7 +8,8 @@
 //A square plane is a plane that belongs to a solid square where a solid square
 //contains 6 faces (planes).  Each plane is a 2D square that has 4 edges that are
 //90' with a height and a length.  Additionally, the height = length for a square plane.
-class ConnectionChannel;
+//class ConnectionChannel;
+
 class SquarePlane : public CObject {
 
 	friend class Utility;
@@ -20,24 +21,25 @@ public:
 
 	static int nameIDCounter;
 	SquarePlane();
-	SquarePlane(double sideLength, ConnectionChannel* channel);
+	SquarePlane(double sideLength, ConnectionChannel<SquarePlane>* channel);
 	bool operator==(const SquarePlane& plane) const;
 	SquarePlane& operator=(const SquarePlane& plane);
 	bool operator<(const SquarePlane &plane) const;
 	std::string GetSqPlaneName();
 	double GetSqPlaneLength();
 	double GetSqPlaneHeight();
-	ConnectionChannel* GetConnChannel();
+	ConnectionChannel<SquarePlane>* GetConnChannel();
 	int GetNumOfEdges();
 
-//private:
+private:
 	double height;
 	double length;
 	int numOfEdges;
 	std::string name;
-	ConnectionChannel* channel;
+	ConnectionChannel<SquarePlane>* channel;
 	void SetName(std::string name);
 	void SetLength(double length);
 	void SetHeight(double height);
 	void SetNumOfEdges(int numOfEdges);
 };
+

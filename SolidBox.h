@@ -20,12 +20,12 @@ public:
 
 	SolidBox();
 	~SolidBox();
-	SolidBox(SolidBox&);
+	SolidBox(SolidBox&); 
 	SolidBox(double sideLength);
 	double GetSideLength();
 	bool GetHasConnection();
 	std::string GetShapeName() override;
-	ConnectionChannel* GetConnChannel();
+	ConnectionChannel<SolidBox>* GetConnChannel();
 	SolidBox& operator=(SolidBox &cube);
 	bool operator<(const SolidBox &cube) const;
 	bool operator==(const SolidBox &cube) const;
@@ -33,12 +33,12 @@ public:
 	static int GetPlnsPerSolidBx();
 	void Delete();
 
-//private:
+private:
 	void SetName(std::string name);
 	double sideLength;
-	ConnectionChannel channel;
+	ConnectionChannel<SolidBox> channel;
 	bool bHasConnection; // flag for checking if the SolidBox has a connection
-	std::string name;
 	static int nameIDCounter; // used for naming unique cubes
 	static const int planesPerSolidBox;
 };
+

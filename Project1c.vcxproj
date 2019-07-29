@@ -129,13 +129,14 @@
     <ClInclude Include="ConnectionChannel.h" />
     <ClInclude Include="Shape.h" />
     <ClInclude Include="SolidBox.h" />
+    <ClInclude Include="Sphere.h" />
     <ClInclude Include="SquarePlane.h" />
     <ClInclude Include="Utility.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ConnectionChannel.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SolidBox.cpp" />
+    <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="SquarePlane.cpp" />
     <ClCompile Include="Utility.cpp" />
   </ItemGroup>

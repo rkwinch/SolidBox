@@ -1,11 +1,15 @@
 #pragma once
 
-class Channel {
-	// make a templated class later 
-public:
+#include <set>
 
-	virtual void Connect() = 0;
-	virtual void Disconnect() = 0;
-	virtual void Cleanup() = 0;
+class SquarePlane;
+
+template<class T>
+class Channel {
+	
+public:
+	virtual void Connect(std::set<std::shared_ptr<T>>) =0;
+	virtual void Disconnect(std::set<std::shared_ptr<T>>) =0;
+	virtual void Cleanup(T*) =0;
 
 };
