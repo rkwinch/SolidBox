@@ -343,6 +343,21 @@ std::vector<std::string> Utility::TokenizeStringToVec(std::string str, char deli
 	return vec;
 }
 
+std::string Utility::FilterNonChars(std::string input)
+{
+	std::string retString = input;
+
+	for (size_t i = 0; i < retString.length(); ++i)
+	{
+		if (!isalpha(retString[i]))
+		{
+			retString[i] = ' ';
+		}
+	}
+
+	return retString;
+}
+
 std::string Utility::CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter)
 {
 	std::string strName = "";

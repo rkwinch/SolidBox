@@ -14,7 +14,8 @@
 #include "RectPlane.h"
 #include "CurvedSurface.h"
 #include "Utility.h"
-//#include "ConnectionChannel.h" // figure out what to do since need to have nameidcounter
+
+
 
 class Shape;
 

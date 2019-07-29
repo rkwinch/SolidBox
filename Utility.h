@@ -11,6 +11,7 @@ namespace Utility {
 	 void PrintAllSolids();
 	 std::string SelectShapeType();
 	 std::vector<std::string> TokenizeStringToVec(std::string, char delimiter);
+	 std::string FilterNonChars(std::string input);
 	 void PrintNwLnsAndLnDelimiter(std::string delimiter, size_t numOfTimes);
 	 std::string RemoveSpaces(std::string input, std::regex acceptableInputExpr);
 	 bool ValidateInput(std::string input, std::regex acceptableInputExpr);
@@ -29,4 +30,5 @@ namespace Utility {
 	 std::string GetShapeType(Shape* shape);
 	 int AvailableSolids();
 	 void PrintSolidsWithConseqCntr();
+	
 }

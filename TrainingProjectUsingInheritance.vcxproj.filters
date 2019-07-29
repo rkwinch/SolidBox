@@ -42,6 +42,9 @@
     <ClCompile Include="RectPrism.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Speech.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConnectionChannel.h">
@@ -72,6 +75,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="RectPrism.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Speech.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
