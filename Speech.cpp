@@ -10,6 +10,7 @@
 #include <cmath>
 #include <sstream>
 #include <stdexcept>
+#include <regex>
 #include "Speech.h"
 #include "Utility.h"
 
@@ -55,7 +56,7 @@ double Speech::RetrieveDouble()
 	return (dNum = ConvertPhraseToDouble(input));
 }
 
-int Speech::RetrieveInteger()
+int Speech::RetrievePosInteger()
 {
 	int nNum = 0;
 	std::string input = "";
@@ -64,13 +65,13 @@ int Speech::RetrieveInteger()
 	{
 		input = StartListening();
 
-		if (input == "quit")
-		{
-			return -1;
-		}
+		if (input == "back") return -1;
 
 		nNum = ConvertPhraseToInteger(input);
-	} while (nNum < 1 || nNum > 8); // numbers to options on Run fxn of Menu
+
+		if (nNum == -1) return -1; // user elected to quit
+
+	} while (nNum < 0);
 
 	return nNum;
 }
@@ -141,16 +142,21 @@ int Speech::ConvertPhraseToInteger(std::string input)
 	}
 
 	for (size_t i = 0; i < input.size(); ++i) // removing all other characters that aren't letters, such as
-	{                                         // nyphens, commas, periods, etc
+	{                                         // hyphens, commas, periods, etc
 		if (!isalpha(input[i]))
 		{
 			input[i] = ' ';
 		}
 	}
 
-	strVec = Utility::TokenizeStringToVec(input, ' ');
+	if (input.find("back") != std::string::npos)
+	{
+		return -1; // user elected return to main menu
+	}
 
-	for (auto element : strVec) // only keeping words of interest (in units, scales, tens, or is "point")
+	strVec = Utility::TokenizeStringToVec(input, ' '); // tokenize into vec by a single whitespace
+
+	for (auto element : strVec) // only keeping words of interest (in units, scales, or tens)
 	{
 		auto unitsItr = find(units.begin(), units.end(), element);
 		auto scalesItr = find(scales.begin(), scales.end(), element);
@@ -162,7 +168,12 @@ int Speech::ConvertPhraseToInteger(std::string input)
 		}
 	}
 
-	for (auto element : trimmedVec)
+	if (strVec.size() == 0)
+	{              //will use this as a return flag that input was invalid     
+		return -2; // user perhaps mumbled or said something else
+	}
+
+	for (auto element : trimmedVec) // putting back into string form
 	{
 		trimmedInput += (element + ' ');
 	}

@@ -28,6 +28,7 @@ public:
 	void LoadAllObjects();
 
 private:
+
 	bool isSpeech = false;
 
 	Menu(bool isSpeech = false); // private because want to control when it is instantiated for Singleton purposes 

@@ -35,6 +35,7 @@ Menu* Menu::GetInstance(const bool &speechFlag)
 
 void Menu::Run()
 {
+	bool bValidInput = false;
 	int nInput = 0;
 	bool bIsSpeech = false;
 	bool bQuit = false;
@@ -51,14 +52,21 @@ void Menu::Run()
 
 		if (bIsSpeech) // for speech input
 		{ 
-			nInput = Speech::RetrieveInteger();
-
-			if (nInput == -1)
+			nInput = Speech::RetrievePosInteger(); // will be -1 if user elected to quit
+			
+			while (nInput < 1 || nInput > 8)
 			{
-				bQuit = true;
+				nInput = Speech::RetrievePosInteger();
+				
+				if (nInput == -1)
+				{
+					bQuit == true;
+					break;
+				}
 			}
 			
-		}
+			cInput = cInput + '0'; // to make the number into a character of the same number
+		}                          // since the number is guaranteed at this point to be between 1-8  
 		else // for keyboard input
 		{
 			acceptableInputExpr = ("^\\s*([1-8|q|Q])\\s*$"); // looking for 1-8 or q or Q    
@@ -115,15 +123,12 @@ Menu::~Menu()
 void Menu::CreateShape()
 {
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
-	std::string strInput = Utility::SelectShapeType();
-	int nInput = 0;
+	int nInput = Utility::SelectShapeType();
 
-	if ((strInput == "b") || (strInput == "B"))
+	if (nInput == -1) // user elected to go back to main menu
 	{
 		return;
 	}
-
-	nInput = stoi(strInput);
 
 	if (nInput == 1)
 	{
@@ -144,31 +149,37 @@ void Menu::DeleteExistingSolid()
 	std::string strInput = "";
 	int nInput = 0;
 	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$");
+	Menu* menu = Menu::GetInstance();
+	bool bSpeechEnabled = menu->GetIsSpeechFlag();
 
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 
 	if (!Utility::AvailableSolids())
 	{
+		std::cout << "No solids currently in memory" << std::endl;
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		return;
 	}
-
-	std::cout << "Type the number corresponding to the shape you wish to delete" << std::endl;
-	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
-	Utility::PrintSolidsWithConseqCntr();
-	std::cout << std::endl;
-	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-
-	if ((strInput == "b") || (strInput == "B"))
+	
+	if (bSpeechEnabled)
 	{
-		return;
+		std::cout << "Say the number corresponding to the shape you wish to delete" << std::endl;
+		std::cout << "or say \"back\" to go back to the menu.\n" << std::endl;
+		Utility::PrintSolidsWithConseqCntr();
+		std::cout << std::endl;
+		nInput = Speech::RetrievePosInteger();
+		
+		if (nInput == -1)
+		{
+			return;
+		}
 	}
-
-	nInput = stoi(strInput);
-
-	while ((static_cast<size_t>(nInput < 1)) || 
-		(static_cast<size_t>(nInput) > (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size() + RectPrism::m_shapeVec.size())))
+	else
 	{
-		std::cout << "Selection out of bounds.  Please try again." << std::endl;
+		std::cout << "Type the number corresponding to the shape you wish to delete" << std::endl;
+		std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+		Utility::PrintSolidsWithConseqCntr();
+		std::cout << std::endl;
 		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
 
 		if ((strInput == "b") || (strInput == "B"))
@@ -179,13 +190,39 @@ void Menu::DeleteExistingSolid()
 		nInput = stoi(strInput);
 	}
 
+	while ((static_cast<size_t>(nInput < 1)) || 
+		(static_cast<size_t>(nInput) > (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size() + RectPrism::m_shapeVec.size())))
+	{
+		std::cout << "Selection out of bounds.  Please try again." << std::endl;
+
+		if (bSpeechEnabled)
+		{
+			nInput = Speech::RetrievePosInteger();
+
+			if (nInput == -1)
+			{
+				return;
+			}
+		}
+		else
+		{
+			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+
+			if ((strInput == "b") || (strInput == "B"))
+			{
+				return;
+			}
+
+			nInput = stoi(strInput);
+		}
+	}
+
 	// in RectPrism m_shapeVec
 	if (static_cast<size_t>(nInput) > (SolidBox::m_shapeVec.size() + Sphere::m_shapeVec.size()))
 	{
 		int index = nInput;
 		index -= (SolidBox::m_shapeVec.size() + Sphere::m_shapeVec.size()); // get index for RectPrism vector
 		auto shapeVecItr = RectPrism::m_shapeVec.begin() + index - 1; // make and advance iterator to correct index
-		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		(*shapeVecItr)->Delete();
 	}
 	// in Sphere m_shapeVec
@@ -194,13 +231,12 @@ void Menu::DeleteExistingSolid()
 		int index = nInput;
 		index -= Sphere::m_shapeVec.size();
 		auto shapeVecItr = Sphere::m_shapeVec.begin() + index - 1; // make and advance iterator to correct index
-		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		(*shapeVecItr)->Delete();
 	}
+	// in SolidBox m_shapeVec
 	else
 	{
 		auto shapeVecItr = SolidBox::m_shapeVec.begin() + nInput - 1;
-		auto shapePtr = dynamic_cast<Shape*>((*shapeVecItr).get());
 		(*shapeVecItr)->Delete();
 	}
 
@@ -213,6 +249,8 @@ void Menu::ShowSolidsInMemory()
 
 	if (!Utility::AvailableSolids())
 	{
+		std::cout << "No solids currently in memory" << std::endl;
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		return;
 	}
 
@@ -226,26 +264,50 @@ void Menu::CopyExistingSolid()
 	std::string strInput = "";
 	int nInput = 0;
 	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$");
+
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 
-	if (!(numOfSolids = Utility::AvailableSolids()))
+	if (!(numOfSolids = Utility::AvailableSolids())) // no solids in memory so can't copy
 	{
+		std::cout << "Not enough solids in memory to copy.  Need at least 1 solid." << std::endl;
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		return;
 	}
 
-	std::cout << "Enter the number corresponding to the shape you wish to copy.\n" << std::endl;
+	if (isSpeech)
+	{
+		std::cout << "Say the number corresponding to the shape you wish to copy.\n" << std::endl;
+	}
+	else
+	{
+		std::cout << "Enter the number corresponding to the shape you wish to copy.\n" << std::endl;
+	}
+	
 	Utility::PrintSolidsWithConseqCntr();
 
 	do
 	{
-		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-
-		if ((strInput == "b") || (strInput == "B"))
+		if (isSpeech)
 		{
-			return;
+			nInput = Speech::RetrievePosInteger();
+			
+			if (nInput == -1)
+			{
+				return;
+			}
 		}
+		else
+		{
+			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
 
-		nInput = stoi(strInput);
+			if ((strInput == "b") || (strInput == "B"))
+			{
+				return;
+			}
+
+			nInput = stoi(strInput);
+		}
+		
 
 		if ((nInput < 1) || (nInput > numOfSolids))
 		{
@@ -255,205 +317,70 @@ void Menu::CopyExistingSolid()
 	} while (nInput < 1 || nInput > numOfSolids);
 
 	if (static_cast<size_t>(nInput) <= SolidBox::m_shapeVec.size()) // user chose a SolidBox
-	{
-		auto shapeVecItr = SolidBox::m_shapeVec.begin();
-		shapeVecItr = std::next(shapeVecItr, (nInput - 1)); // advance iterator by the # given by user
-		                                                    // (subtract 1 since user sees values starting at 1 and our index starts at 0)
+	{                                                                 // advance iterator by the # given by user
+		auto shapeVecItr = SolidBox::m_shapeVec.begin() + nInput - 1; // (subtract 1 since user sees values starting at 1 and our index starts at 0)                                               
 		// make a new SolidBox with same sidelength as selection
-		std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>((dynamic_cast<SolidBox*>((*shapeVecItr).get()))->GetSideLength());
+		std::shared_ptr<SolidBox> box = *shapeVecItr;
 		SolidBox::m_shapeVec.push_back(box);
 	}
 	else if (static_cast<size_t>(nInput) <= (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size())) // user chose a Sphere. 
 	{                                                         // wrote it this way so that more shapes can be easily added after spheres
-		auto shapeVecItr = Sphere::m_shapeVec.begin();
-		shapeVecItr = std::next(shapeVecItr, (nInput - 1 - SolidBox::m_shapeVec.size())); // advance iterator to spot for Sphere
+		auto shapeVecItr = Sphere::m_shapeVec.begin() + nInput - 1 - SolidBox::m_shapeVec.size(); // advance iterator to spot for Sphere
 		// make a new Sphere with same radius as selection
-		std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>((dynamic_cast<Sphere*>((*shapeVecItr).get()))->GetRadius());
+		std::shared_ptr<Sphere> sphere = *shapeVecItr;
 		Sphere::m_shapeVec.push_back(sphere);
 	}
 	else if (static_cast<size_t>(nInput) <= (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size() + RectPrism::m_shapeVec.size()))
 	{ // user chose a RectPrism
-		auto shapeVecItr = RectPrism::m_shapeVec.begin();
-		shapeVecItr = std::next(shapeVecItr, (nInput - 1 - Sphere::m_shapeVec.size() - SolidBox::m_shapeVec.size()));
-		// ????????????????????BETTER WAY TO DO THIS????????????????????????
-		std::shared_ptr<RectPrism> rectPrism = std::make_shared<RectPrism>((dynamic_cast<RectPrism*>((*shapeVecItr).get()))->GetLength(),
-			dynamic_cast<RectPrism*>((*shapeVecItr).get())->GetWidth(), dynamic_cast<RectPrism*>((*shapeVecItr).get())->GetHeight());
+		auto shapeVecItr = RectPrism::m_shapeVec.begin() + nInput - 1 - Sphere::m_shapeVec.size() - SolidBox::m_shapeVec.size();
+		std::shared_ptr<RectPrism> rectPrism = *shapeVecItr;
 		RectPrism::m_shapeVec.push_back(rectPrism);
 	}
+
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 }
 
 void Menu::MoveASolid()
 {
 	std::string strInput = "";
+	std::string strShapeType = "";
 	int nInput = 0;
 	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$");
-	std::string strMoveFrom = "";
-	std::string strMoveTo = "";
+	int strMoveFrom = 0;
+	int strMoveTo = 0;
 
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 
-	if ((SolidBox::m_shapeVec.size() < 2) && (Sphere::m_shapeVec.size() < 2))
+	if ((SolidBox::m_shapeVec.size() < 2) && (Sphere::m_shapeVec.size() < 2) && (RectPrism::m_shapeVec.size() < 2))
 	{
 		std::cout << "There are not enough solids in memory to make a move." << std::endl;
 		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		return;
 	}
 
-	std::cout << "Number of available cubes:       " << SolidBox::m_shapeVec.size() << " (2 required)" << std::endl;
-	std::cout << "Number of available spheres:     " << Sphere::m_shapeVec.size() << " (2 required)" << std::endl;
-	std::cout << "Number of available rectPrisms:  " << RectPrism::m_shapeVec.size() << " (2 required)" << std::endl;
-	strInput = Utility::SelectShapeType();
+	strShapeType = Utility::SelectAvailableShapeType(2);
 
-	if ((strInput == "b") || (strInput == "B"))
+	if (strShapeType.size() == 0) return;
+
+	if (isSpeech)
 	{
-		return;
+		std::cout << "\nPlease say the number corresponding to the shape you are moving to." << std::endl;
+		std::cout << "or say \"back\" to go to the main menu." << std::endl;
+		
 	}
-
-	nInput = stoi(strInput);
-	std::cout << "\nPlease enter two numbers corresponding to their shapes separated by the enter key" << std::endl;
-	std::cout << "to move one solid to another or press 'b' to go back to main menu." << std::endl;
-	std::cout << std::setw(11) << std::left << "(For ex:  1" << std::endl;
-	std::cout << std::setw(11) << std::right << "2" << std::endl;
-	std::cout << "moves 2 into 1)" << std::endl;
-
-	if (nInput == 1) // user chose SolidBox
+	else
 	{
-		if (SolidBox::m_shapeVec.size() < 2)
-		{
-			Utility::PrintNwLnsAndLnDelimiter("-", 55);
-			std::cout << "There are not enough cubes in memory to make a move." << std::endl;
-			Utility::PrintNwLnsAndLnDelimiter("-", 55);
-			return;
-		}
-
-		SolidBox::PrintSolids();
-		std::cout << std::endl;
-		std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' allowing for whitespace
-
-		//------Get cube selections from user----------------
-		//moveFrom cube:
-		strMoveFrom = Utility::InputInVecVal(strMoveFrom, acceptableInputExpr, SolidBox::m_shapeVec.size());
-
-		if ((strMoveFrom == "b") | (strMoveFrom == "B")) // user elected to go back to main menu
-		{
-			return;
-		}
-
-		auto shapeVecItr_From = SolidBox::m_shapeVec.begin();
-		shapeVecItr_From = std::next(shapeVecItr_From, (stoi(strMoveFrom) - 1)); // find if name given is the name of a cube made 
-		//moveTo cube:
-		strMoveTo = Utility::InputInVecVal(strMoveTo, acceptableInputExpr, SolidBox::m_shapeVec.size());
-
-		if ((strMoveTo == "b") | (strMoveTo == "B")) // user elected to go back to main menu
-		{
-			return;
-		}
-
-		auto shapeVecItr_To = SolidBox::m_shapeVec.begin();
-		shapeVecItr_To = std::next(shapeVecItr_To, (stoi(strMoveTo) - 1)); // find if name given is the name of a shape made 
-		//check if trying to move to the same shape
-		if (strMoveFrom == strMoveTo)
-		{
-			std::cout << "You cannot move from and to the same cube.  Please try again." << std::endl;
-			Menu* menu = Menu::GetInstance(isSpeech);
-			menu->MoveASolid();
-		}
-
-		// It's OK to now move From into To
-		**shapeVecItr_To = **shapeVecItr_From;
+		std::cout << "\nPlease enter the number corresponding to the shape you are moving to." << std::endl;
+		std::cout << "or press 'b' to go back to main menu." << std::endl;
 	}
-	else if (nInput == 2)
-	{
-		if (Sphere::m_shapeVec.size() < 2)
-		{
-			Utility::PrintNwLnsAndLnDelimiter("-", 55);
-			std::cout << "There are not enough spheres in memory to make a move." << std::endl;
-			Utility::PrintNwLnsAndLnDelimiter("-", 55);
-			return;
-		}
+	
+	std::cout << "(for example, A = B means A now contains what B contained and A is the" << std::endl;
+	std::cout << " shape you are moving to.  B is the shape you are moving from)" << std::endl;
 
-		Sphere::PrintSolids();
-		std::cout << std::endl;
-		std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' allowing for whitespace
 
-		//------Get sphere selections from user----------------
-		//moveFrom sphere:
-		strMoveFrom = Utility::InputInVecVal(strMoveFrom, acceptableInputExpr, Sphere::m_shapeVec.size());
-
-		if ((strMoveFrom == "b") | (strMoveFrom == "B")) // user elected to go back to main menu
-		{
-			return;
-		}
-
-		auto shapeVecItr_From = Sphere::m_shapeVec.begin();
-		shapeVecItr_From = std::next(shapeVecItr_From, (stoi(strMoveFrom) - 1)); // find if name given is the name of a shape made 
-		//moveTo sphere:
-		strMoveTo = Utility::InputInVecVal(strMoveTo, acceptableInputExpr, Sphere::m_shapeVec.size());
-
-		if ((strMoveTo == "b") | (strMoveTo == "B")) // user elected to go back to main menu
-		{
-			return;
-		}
-
-		auto shapeVecItr_To = Sphere::m_shapeVec.begin();
-		shapeVecItr_To = std::next(shapeVecItr_To, (stoi(strMoveTo) - 1)); // find if name given is the name of a cube made 
-		//check if trying to move to the same shape
-		if (strMoveFrom == strMoveTo)
-		{
-			std::cout << "You cannot move from and to the same sphere.  Please try again." << std::endl;
-			Menu* menu = Menu::GetInstance(isSpeech);
-			menu->MoveASolid();
-		}
-		// It's OK to now move From into To
-		**shapeVecItr_To = **shapeVecItr_From;
-	}
-	else if (nInput == 3)
-	{
-		if (RectPrism::m_shapeVec.size() < 2)
-		{
-			Utility::PrintNwLnsAndLnDelimiter("-", 55);
-			std::cout << "There are not enough rectPrisms in memory to make a move." << std::endl;
-			Utility::PrintNwLnsAndLnDelimiter("-", 55);
-			return;
-		}
-
-		RectPrism::PrintSolids();
-		std::cout << std::endl;
-		std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' allowing for whitespace
-
-		//------Get RectPrism selections from user----------------
-		//moveFrom rectPrism:
-		strMoveFrom = Utility::InputInVecVal(strMoveFrom, acceptableInputExpr, RectPrism::m_shapeVec.size());
-
-		if ((strMoveFrom == "b") | (strMoveFrom == "B")) // user elected to go back to main menu
-		{
-			return;
-		}
-
-		auto shapeVecItr_From = RectPrism::m_shapeVec.begin();
-		shapeVecItr_From = std::next(shapeVecItr_From, (stoi(strMoveFrom) - 1)); // find if name given is the name of a shape made 
-		//moveTo rectPrism:
-		strMoveTo = Utility::InputInVecVal(strMoveTo, acceptableInputExpr, RectPrism::m_shapeVec.size());
-
-		if ((strMoveTo == "b") | (strMoveTo == "B")) // user elected to go back to main menu
-		{
-			return;
-		}
-
-		auto shapeVecItr_To = RectPrism::m_shapeVec.begin();
-		shapeVecItr_To = std::next(shapeVecItr_To, (stoi(strMoveTo) - 1)); // find if name given is the name of a shape made 
-		//check if trying to move to the same shape
-		if (strMoveFrom == strMoveTo)
-		{
-			std::cout << "You cannot move from and to the same cube.  Please try again." << std::endl;
-			Menu* menu = Menu::GetInstance(isSpeech);
-			menu->MoveASolid();
-		}
-
-		// It's OK to now move From into To
-		**shapeVecItr_To = **shapeVecItr_From;
-	}
+	if (strShapeType == "cube") SolidBox::Move(); // user chose SolidBox 
+	else if (strShapeType == "sphere") Sphere::Move(); // user chose Sphere
+	else if (strShapeType == "rectPrism") RectPrism::Move(); // user chose RectPrism
 }
 
 void Menu::DebugSolidBox()
@@ -461,39 +388,54 @@ void Menu::DebugSolidBox()
 	std::string strInput = "";
 	int nInput = 0;
 	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$"); // want one number or 'b' or 'B' allowing for whitespace
+	int totalShapes = static_cast<int>(SolidBox::m_shapeVec.size() + Sphere::m_shapeVec.size() + RectPrism::m_shapeVec.size());
 
 	Utility::PrintNwLnsAndLnDelimiter("-", 55);
 
 	if (!Utility::AvailableSolids())
 	{
+		std::cout << "No solids currently in memory" << std::endl;
+		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		return;
 	}
 
-	std::cout << "Type the number corresponding to the desired shape for detailed information" << std::endl;
-	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
-	Utility::PrintSolidsWithConseqCntr();
-	std::cout << std::endl;
-	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-
-	if ((strInput == "b") || (strInput == "B"))
+	if (isSpeech)
 	{
-		return;
-	}
-
-	nInput = stoi(strInput);
-
-	while ((static_cast<size_t>(nInput) < 1) || (static_cast<size_t>(nInput) > 
-		(Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size() + RectPrism::m_shapeVec.size())))
-	{
-		std::cout << "Selection out of bounds.  Please try again." << std::endl;
-		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-
-		if ((strInput == "b") || (strInput == "B"))
+		do
 		{
-			return;
-		}
+			std::cout << "Say the number corresponding to the desired shape for detailed information" << std::endl;
+			std::cout << "or say \"back\" to go back to the menu.\n" << std::endl;
+			nInput = Speech::RetrievePosInteger();
 
-		nInput = stoi(strInput);
+			if (nInput == -1) return; // user elected to go back to menu
+
+			if ((nInput < 1) || (nInput > totalShapes))
+			{
+				std::cout << "Selection out of bounds.  Please try again or say \"back\" to go to the menu." << std::endl;
+			}
+
+		} while ((nInput < 1) || (nInput > totalShapes));
+	}
+	else
+	{
+		do
+		{
+			std::cout << "Type the number corresponding to the desired shape for detailed information" << std::endl;
+			std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+			Utility::PrintSolidsWithConseqCntr();
+			std::cout << std::endl;
+			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+
+			if ((strInput == "b") || (strInput == "B")) return; // user elected to go back to menu
+
+			nInput = stoi(strInput);
+
+			if ((nInput < 1) || (nInput > totalShapes))
+			{
+				std::cout << "Selection out of bounds.  Please try again." << std::endl;
+			}
+
+		} while ((nInput < 1) || (nInput > totalShapes));
 	}
 
 	if (static_cast<size_t>(nInput) > (SolidBox::m_shapeVec.size() + Sphere::m_shapeVec.size()))
@@ -560,7 +502,8 @@ int Menu::SaveAllObjects()
 		std::cout << "Please select the number for the file you wish to overwrite." << std::endl;
 		Utility::ViewFiles();
 		fileName = Utility::PickFile();
-		if (fileName.length() == 0) // user elected to go back to the main menu
+		
+		if (fileName == "b") // user elected to go back to the main menu
 		{
 			return 0;
 		}

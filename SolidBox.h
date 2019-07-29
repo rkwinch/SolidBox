@@ -34,4 +34,5 @@ public:
 	static void Create();
 	static void PrintSolids();
 	static void Load(std::vector<std::string>::iterator &itr);
+	static bool Move();
 };

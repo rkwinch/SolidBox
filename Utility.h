@@ -9,7 +9,8 @@ class Shape;
 namespace Utility {
 
 	 void PrintAllSolids();
-	 std::string SelectShapeType();
+	 int SelectShapeType();
+	 std::string SelectAvailableShapeType(int minAvailableShapes);
 	 std::vector<std::string> TokenizeStringToVec(std::string, char delimiter);
 	 std::string FilterNonChars(std::string input);
 	 void PrintNwLnsAndLnDelimiter(std::string delimiter, size_t numOfTimes);
@@ -26,7 +27,7 @@ namespace Utility {
 	 std::string PickNewFile();
 	 int NumOfFilesAvail();
 	 std::string CreateUniqueName(std::string strNamePrefix, int &nNameIDCounter);
-	 std::string InputInVecVal(std::string strInput, std::regex acceptableInputExpr, int shapeVecSize);
+	 int RetrieveVecInput(std::regex acceptableInputExpr, int shapeVecSize);
 	 std::string GetShapeType(Shape* shape);
 	 int AvailableSolids();
 	 void PrintSolidsWithConseqCntr();

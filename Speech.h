@@ -4,6 +4,7 @@
 #include <sapi.h>
 #include <map>
 #include <vector>
+#include <regex>
 
 
 namespace Speech {
@@ -21,9 +22,8 @@ namespace Speech {
 	static std::map<std::string, int> strToIntMap;
 	static std::vector<std::string> keywordVec;
 
-	int GetAndValidateInteger();
 	double RetrieveDouble();
-	int RetrieveInteger();
+	int RetrievePosInteger();
 	ISpRecoGrammar* InitGrammar(ISpRecoContext* recoContext);
 	std::string GetText(ISpRecoContext* reco_context);
 	std::string ToNarrow(const wchar_t *s, char dfault = '?',

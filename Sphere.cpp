@@ -211,3 +211,61 @@ void Sphere::Load(std::vector<std::string>::iterator &itr)
 		
 	m_shapeVec.push_back(sphere); // solid box object is completed now.
 }
+
+bool Sphere::Move()
+{
+	int strMoveFrom = 0;
+	int strMoveTo = 0;
+	auto shapeVecItr_To = Sphere::m_shapeVec.begin();
+	auto shapeVecItr_From = Sphere::m_shapeVec.begin();
+	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' while allowing for whitespace
+
+	Sphere::PrintSolids();
+	std::cout << std::endl;
+
+	//------Get Sphere selections from user----------------
+	do
+	{
+		//moveFrom Sphere:
+		do
+		{
+			strMoveFrom = Utility::RetrieveVecInput(acceptableInputExpr, Sphere::m_shapeVec.size());
+
+			if (strMoveFrom == -1) return false; // user elected to go back to main menu
+
+			if (strMoveFrom < Sphere::m_shapeVec.size() || strMoveFrom > Sphere::m_shapeVec.size())
+			{
+				std::cout << "Invalid entry.  Please try again." << std::endl;
+			}
+
+		} while (strMoveFrom < Sphere::m_shapeVec.size() || strMoveFrom > Sphere::m_shapeVec.size());
+
+		shapeVecItr_From = std::next(shapeVecItr_From, (strMoveFrom - 1));
+
+		//moveTo Sphere:
+		do
+		{
+			strMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, Sphere::m_shapeVec.size());
+
+			if (strMoveTo == -1) return false; // user elected to go back to main menu
+
+			if (strMoveTo < Sphere::m_shapeVec.size() || strMoveTo > Sphere::m_shapeVec.size())
+			{
+				std::cout << "Invalid entry.  Please try again." << std::endl;
+			}
+
+		} while (strMoveTo < Sphere::m_shapeVec.size() || strMoveTo > Sphere::m_shapeVec.size());
+
+		shapeVecItr_To = std::next(shapeVecItr_To, (strMoveTo - 1));
+
+		if (strMoveFrom == strMoveTo) //check if trying to move to the same shape
+		{
+			std::cout << "You cannot move from and to the same Sphere.  Please try again." << std::endl;
+		}
+
+	} while (strMoveFrom == strMoveTo);
+
+	// It's OK to now move From into To
+	**shapeVecItr_To = **shapeVecItr_From;
+	return true;
+}

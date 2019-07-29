@@ -207,3 +207,61 @@ void SolidBox::Load(std::vector<std::string>::iterator &itr)
 		box->Delete();
 	}
 }
+
+bool SolidBox::Move()
+{
+	int strMoveFrom = 0;
+	int strMoveTo = 0;
+	auto shapeVecItr_To = SolidBox::m_shapeVec.begin();
+	auto shapeVecItr_From = SolidBox::m_shapeVec.begin();
+	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' while allowing for whitespace
+
+	SolidBox::PrintSolids();
+	std::cout << std::endl;
+
+	//------Get cube selections from user----------------
+	do
+	{  
+		//moveFrom cube:
+		do
+		{
+			strMoveFrom = Utility::RetrieveVecInput(acceptableInputExpr, SolidBox::m_shapeVec.size());
+
+			if (strMoveFrom == -1) return false; // user elected to go back to main menu
+			
+			if (strMoveFrom < SolidBox::m_shapeVec.size() || strMoveFrom > SolidBox::m_shapeVec.size())
+			{
+				std::cout << "Invalid entry.  Please try again." << std::endl;
+			}
+
+		} while (strMoveFrom < SolidBox::m_shapeVec.size() || strMoveFrom > SolidBox::m_shapeVec.size());
+		
+		shapeVecItr_From = std::next(shapeVecItr_From, (strMoveFrom - 1));
+
+		//moveTo cube:
+		do
+		{
+			strMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, SolidBox::m_shapeVec.size());
+
+			if (strMoveTo == -1) return false; // user elected to go back to main menu
+
+			if (strMoveTo < SolidBox::m_shapeVec.size() || strMoveTo > SolidBox::m_shapeVec.size())
+			{
+				std::cout << "Invalid entry.  Please try again." << std::endl;
+			}
+
+		} while (strMoveTo < SolidBox::m_shapeVec.size() || strMoveTo > SolidBox::m_shapeVec.size());
+		
+		shapeVecItr_To = std::next(shapeVecItr_To, (strMoveTo - 1));
+
+		if (strMoveFrom == strMoveTo) //check if trying to move to the same shape
+		{
+			std::cout << "You cannot move from and to the same cube.  Please try again." << std::endl;
+		}
+
+	} while (strMoveFrom == strMoveTo);
+
+	// It's OK to now move From into To
+	**shapeVecItr_To = **shapeVecItr_From;
+	return true;
+}

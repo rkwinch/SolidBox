@@ -13,6 +13,7 @@
 #include "SolidBox.h"
 #include "Sphere.h"
 #include "RectPrism.h"
+#include "Speech.h"
 
 class ConnectionChannel;
 
@@ -69,16 +70,26 @@ std::string Utility::GetAndValidateInput(std::regex acceptableInputExpr)
 	return strInput;
 }
 
-std::string Utility::SelectShapeType()
+int Utility::SelectShapeType()
 {
 	std::string strInput = "";
 	int nInput = 0;
 	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$"); // any number or 'b' or 'B". 0 will be checked further down
 	std::vector<std::string> strShapeTypes{ "Cube", "Sphere", "RectPrism" };
 	int nCounter = 0;
+	Menu* menu = Menu::GetInstance();
+	bool bSpeechEnabled = menu->GetIsSpeechFlag();
 
-	std::cout << "\nType the number corresponding to your desired shape" << std::endl;
-	std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+	if (bSpeechEnabled)
+	{
+		std::cout << "\nSay the number corresponding to your desired shape" << std::endl;
+		std::cout << "or say \"back\" to go back to the menu.\n" << std::endl;
+	}
+	else
+	{
+		std::cout << "\nType the number corresponding to your desired shape" << std::endl;
+		std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+	}
 
 	for (auto shape : strShapeTypes)
 	{
@@ -86,22 +97,101 @@ std::string Utility::SelectShapeType()
 	}
 
 	std::cout << std::endl;
-	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-	
-	if ((strInput == "b") || (strInput == "B"))
-	{
-		return strInput;
-	}
 
-	nInput = stoi(strInput);
+	if (bSpeechEnabled)
+	{
+		nInput = Speech::RetrievePosInteger();
+		
+		if (nInput == -1) // user elected to go back to the main menu
+		{
+			return -1;
+		}
+	}
+	else
+	{
+		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+		
+		if ((strInput == "b") || (strInput == "B"))
+		{
+			return -1;
+		}
+
+		nInput = stoi(strInput);
+	}
 	
 	if ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()))
 	{
 		std::cout << "\nSelection out of bounds.  Please try again." << std::endl;
-		strInput = SelectShapeType();
+		nInput = SelectShapeType();
 	}
 	
-	return strInput;
+	return nInput;
+}
+
+std::string Utility::SelectAvailableShapeType(int minAvailShapes)
+{
+	std::string strInput = "";
+	int nInput = 0;
+	std::regex acceptableInputExpr("^\\s*([0-9]+|b|B)\\s*$"); // any number or 'b' or 'B". 0 will be checked further down
+	std::vector<std::string> strShapeTypes;
+	int nCounter = 0;
+	Menu* menu = Menu::GetInstance();
+	bool bSpeechEnabled = menu->GetIsSpeechFlag();
+
+	if ((SolidBox::m_shapeVec.size() < minAvailShapes) && (Sphere::m_shapeVec.size() < minAvailShapes)
+		&& (RectPrism::m_shapeVec.size() < minAvailShapes))
+	{
+		return ""; // not enough shapes
+	}
+
+	if (bSpeechEnabled)
+	{
+		std::cout << "\nSay the number corresponding to your desired shape" << std::endl;
+		std::cout << "or say \"back\" to go back to the menu.\n" << std::endl;
+	}
+	else
+	{
+		std::cout << "\nType the number corresponding to your desired shape" << std::endl;
+		std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+	}
+
+	if (SolidBox::m_shapeVec.size() >= minAvailShapes) strShapeTypes.push_back("cube");
+
+	if (Sphere::m_shapeVec.size() >= minAvailShapes) strShapeTypes.push_back("sphere");
+
+	if (RectPrism::m_shapeVec.size() >= minAvailShapes) strShapeTypes.push_back("rectPrism");
+
+	for (auto shape : strShapeTypes)
+	{
+		std::cout << ++nCounter << ") " << shape << std::endl;
+	}
+
+	std::cout << std::endl;
+
+	do {
+		if (bSpeechEnabled)
+		{
+			nInput = Speech::RetrievePosInteger();
+
+			if (nInput == -1) return ""; // user elected to go back to the main menu
+		}
+		else
+		{
+			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+
+			if ((strInput == "b") || (strInput == "B")) return 0;
+
+			nInput = stoi(strInput);
+		}
+
+		if (nInput < 1 || static_cast<size_t>(nInput) > strShapeTypes.size())
+		{
+			std::cout << "\nSelection out of bounds.  Please try again." << std::endl;
+		}
+
+	}while ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()));
+	
+	return strShapeTypes[nInput - 1];
 }
 
 void Utility::PrintAllSolids()
@@ -117,6 +207,7 @@ void Utility::PrintAllSolids()
 		{
 			std::cout << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
 		}
+
 		std::cout << "\n" << std::endl;
 	}
 
@@ -131,6 +222,7 @@ void Utility::PrintAllSolids()
 		{
 			std::cout << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
 		}
+
 		std::cout << "\n" << std::endl;
 	}
 
@@ -146,6 +238,7 @@ void Utility::PrintAllSolids()
 			std::cout << rectPrism->GetName() << " (" << std::fixed << std::setprecision(3) << rectPrism->GetLength();
 			std::cout << " x " << rectPrism->GetWidth() << " x " << rectPrism->GetHeight() << ")" << std::endl;
 		}
+
 		std::cout << "\n" << std::endl;
 	}
 }
@@ -239,13 +332,41 @@ char Utility::SaveOptions()
 	std::string strInput = "";
 	std::string fileName = "";
 	char cInput = 0;
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
+
 	PrintNwLnsAndLnDelimiter("-", 55);
-	std::cout << "Press 's' to save to an existing file (overwrite)," << std::endl;
-	std::cout << "press 'n' to save to a new file," << std::endl;
-	std::cout << " or press 'b' to go back to the main menu.\n" << std::endl;
-	std::regex acceptableInputExpr("^\\s*([sSnNbB])\\s*$");
-	strInput = GetAndValidateInput(acceptableInputExpr);
-	cInput = strInput[0];
+
+	if (isSpeech)
+	{
+		std::cout << "Say \"save\" to save an existing file (overwrite)," << std::endl;
+		std::cout << "say \"new\" to save to a new file," << std::endl;
+		std::cout << "or say \"back\" to go back to the main menu.\n" << std::endl;
+
+		while ((strInput != "save") || (strInput != "new") || (strInput != "back"))
+		{
+			strInput = Speech::StartListening();
+
+			for (auto character : strInput)
+			{
+				character = tolower(character);
+			}
+		}
+
+		if (strInput == "save") return 's';
+		else if (strInput == "new") return 'n';
+		else return 'b';
+	}
+	else
+	{
+		std::cout << "Press 's' to save to an existing file (overwrite)," << std::endl;
+		std::cout << "press 'n' to save to a new file," << std::endl;
+		std::cout << "or press 'b' to go back to the main menu.\n" << std::endl;
+		std::regex acceptableInputExpr("^\\s*([sSnNbB])\\s*$");
+		strInput = GetAndValidateInput(acceptableInputExpr);
+		cInput = strInput[0];
+	}
+	
 	return cInput;
 }
 
@@ -258,26 +379,35 @@ std::string Utility::PickFile()
 	WIN32_FIND_DATA file;
 	HANDLE searchHandle = FindFirstFile("*.txt", &file);
 	std::regex acceptableInputExpr("^\\s*([1-9]*|b|B)\\s*$");
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
 
-	strInput = GetAndValidateInput(acceptableInputExpr);
-	cInput = strInput[0];
-
-	if (tolower(cInput) == 'b')
+	do
 	{
-		return strInput;
-	}
+		if (isSpeech)
+		{
+			fileSelection = Speech::RetrievePosInteger();
+			
+			if (fileSelection == -1) return "b";
+		}
+		else
+		{
+			strInput = GetAndValidateInput(acceptableInputExpr);
+			cInput = strInput[0];
 
-	numOfFiles = NumOfFilesAvail();
-	fileSelection = stoi(strInput);
+			if (tolower(cInput) == 'b') return "b";
 
-	if ((fileSelection < 1) || (fileSelection > numOfFiles))
-	{
-		std::cout << "Invalid selection.  Please enter a valid selection" << std::endl;
-		strInput = GetAndValidateInput(acceptableInputExpr);
-		ViewFiles();
+			fileSelection = stoi(strInput);
+		}
+
 		numOfFiles = NumOfFilesAvail();
-		fileSelection = stoi(strInput);
-	}
+
+		if ((fileSelection < 1) || (fileSelection > numOfFiles))
+		{
+			std::cout << "Selection out of bounds.  Please enter a valid selection." << std::endl;
+		}
+
+	} while ((fileSelection < 1) || (fileSelection > numOfFiles));
 
 	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
@@ -313,16 +443,19 @@ bool Utility::FileExists(std::string fileName)
 std::string Utility::PickNewFile()
 {
 	std::string fileName = "";
+	std::regex acceptableInputExpr("^\\s*([a-zA-Z0-9_]*)\\s*$");
+
 	std::cout << "Please type the name (no extension) of the new file" << std::endl;
 	std::cout << "For example, \"myFile\" would be acceptable (no quotes)" << std::endl;
-	std::regex acceptableInputExpr("^\\s*([a-zA-Z0-9_]*)\\s*$");
 	fileName = GetAndValidateInput(acceptableInputExpr);
 	fileName += ".txt";
+
 	if (FileExists(fileName))
 	{
 		std::cout << fileName << " already exists.  Please make another selection." << std::endl;
 		PickNewFile();
 	}
+
 	return fileName;
 }
 
@@ -366,30 +499,46 @@ std::string Utility::CreateUniqueName(std::string strNamePrefix, int &nNameIDCou
 }
 
 // getting user input and validating input based on if the shape exists...helper fxn
-std::string Utility::InputInVecVal(std::string strInput, std::regex acceptableInputExpr, int shapeVecSize)
+int Utility::RetrieveVecInput(std::regex acceptableInputExpr, int shapeVecSize)
 {
-	strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
+	std::string strInput = "";
+	int nInput = 0;
 
-	if ((strInput == "b") | (strInput == "B")) // user elected to go back to main menu
+	do
 	{
-		return "b";
-	}
-
-	// check if shape exists
-	while ((size_t(stoi(strInput)) > static_cast<size_t>(shapeVecSize)) || (stoi(strInput) < 1))
-	{
-		std::cout << "Selection out of bounds.  Please try again or press 'b' to go" << std::endl;
-		std::cout << "to the main menu." << std::endl;
-		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
-
-		if ((strInput == "b") | (strInput == "B")) // user elected to go back to main menu
+		if (isSpeech)
 		{
-			return "b";
+			nInput = Speech::RetrievePosInteger();
+			
+			if (nInput == -1) return -1; // user elected to go back to main menu
+		}
+		else
+		{
+			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
+			
+			if ((strInput == "b") | (strInput == "B")) return -1; // user elected to go back to main menu
+
+			nInput = stoi(strInput);
 		}
 
-	}
+		if ((nInput > shapeVecSize) || (nInput < 1))
+		{
+			if (isSpeech)
+			{
+				std::cout << "Selection out of bounds.  Please try again or say \"back\" to go" << std::endl;
+			}
+			else
+			{
+				std::cout << "Selection out of bounds.  Please try again or press 'b' to go" << std::endl;
+			}
 
-	return strInput;
+			std::cout << "to the main menu." << std::endl;
+		}
+	} while ((nInput > shapeVecSize) || (nInput < 1)); // check if shape exists
+
+	return nInput;
 }
 
 std::string Utility::GetShapeType(Shape* shape)
@@ -409,8 +558,6 @@ int Utility::AvailableSolids()
 {
 	if ((Sphere::m_shapeVec.size() == 0) && (SolidBox::m_shapeVec.size() == 0) && (RectPrism::m_shapeVec.size() == 0))
 	{
-		std::cout << "No solids currently in memory" << std::endl;
-		Utility::PrintNwLnsAndLnDelimiter("-", 55);
 		return 0;
 	}
 	else
