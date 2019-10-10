@@ -5,9 +5,11 @@
 #include <set>
 #include <iomanip>
 #include <algorithm>
+#include <unordered_map>
 #include <vector>
 #include <fstream>
 #include <Windows.h>
+#include <sstream>
 #include "Utility.h"
 #include "Menu.h"
 #include "SolidBox.h"
@@ -58,14 +60,14 @@ std::string Utility::GetAndValidateInput(std::regex acceptableInputExpr)
 			strInput = RemoveSpaces(strInput, acceptableInputExpr);
 		}
 
-		if (strInput.length() == 0)
+		if (strInput.length() == 0 || strInput == ".")
 		{
 			bIsValid = false;
 		}
 
 		if (!bIsValid)
 		{
-			std::cout << "Please enter valid input  ";
+			Display("Please enter valid input  ");
 		}
 	} while (!bIsValid);
 
@@ -84,21 +86,23 @@ int Utility::SelectShapeType()
 
 	if (bSpeechEnabled)
 	{
-		std::cout << "\nSay the number corresponding to your desired shape" << std::endl;
-		std::cout << "or say \"back\" to go back to the menu.\n" << std::endl;
+		Display("\nSay the number corresponding to your desired shape\n");
+		Display("or say \"back\" to go back to the menu.\n\n");
 	}
 	else
 	{
-		std::cout << "\nType the number corresponding to your desired shape" << std::endl;
-		std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+		Display("\nType the number corresponding to your desired shape\n");
+		Display("or press 'b' to go back to the menu.\n\n");
 	}
 
 	for (auto shape : strShapeTypes)
 	{
-		std::cout << ++nCounter << ") " << shape << std::endl;
+		std::ostringstream stream;
+		stream << ++nCounter << ") " << shape << std::endl;
+		Display(stream.str());
 	}
 
-	std::cout << std::endl;
+	Display("\n");
 
 	if (bSpeechEnabled)
 	{
@@ -123,17 +127,21 @@ int Utility::SelectShapeType()
 
 	if ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()))
 	{
-		std::cout << "\nSelection out of bounds.  Please try again." << std::endl;
+		Display("\nSelection out of bounds.  Please try again.\n");
 		nInput = SelectShapeType();
 	}
 
 	return nInput;
 }
 
-std::string Utility::SelectAvailableShapeType(int minAvailShapes)
+std::pair<std::string, int> Utility::SelectAvailableShape(int minAvailShapes)
 {
 	std::string strInput = "";
+	std::pair<std::string, int> pair;
 	int nInput = 0;
+	int counter = 1;
+	std::ostringstream stream;
+	std::unordered_map<int, std::string> umap;
 	int solidBoxVecSize = static_cast<int>(SolidBox::m_shapeVec.size());
 	int sphereVecSize = static_cast<int>(Sphere::m_shapeVec.size());
 	int rectPrismVecSize = static_cast<int>(RectPrism::m_shapeVec.size());
@@ -146,89 +154,166 @@ std::string Utility::SelectAvailableShapeType(int minAvailShapes)
 	if ((solidBoxVecSize < minAvailShapes) && (sphereVecSize < minAvailShapes)
 		&& (rectPrismVecSize < minAvailShapes))
 	{
-		return ""; // not enough shapes
+		pair.first = "";
+		pair.second = 0;
+		return pair; // not enough shapes
 	}
 
 	if (bSpeechEnabled)
 	{
-		std::cout << "\nSay the number corresponding to your desired shape" << std::endl;
-		std::cout << "or say \"back\" to go back to the menu.\n" << std::endl;
+		Display("\nSay the number corresponding to the shape you want to move\n");
+		Display("or say \"back\" to go back to the menu.\n\n");
 	}
 	else
 	{
-		std::cout << "\nType the number corresponding to your desired shape" << std::endl;
-		std::cout << "or press 'b' to go back to the menu.\n" << std::endl;
+		Display("\nType the number corresponding to the shape you want to move\n");
+		Display("or press 'b' to go back to the menu.\n\n");
 	}
 
-	if (solidBoxVecSize >= minAvailShapes) strShapeTypes.push_back("cube");
+	Utility::Display("Ex. A = B means A now contains what B contained and A is the\n");
+	Utility::Display("shape you are moving TO.  B is the shape you are moving FROM.\n\n");
 
-	if (sphereVecSize >= minAvailShapes) strShapeTypes.push_back("sphere");
-
-	if (rectPrismVecSize >= minAvailShapes) strShapeTypes.push_back("rectPrism");
-
-	for (auto shape : strShapeTypes)
+	if (solidBoxVecSize >= minAvailShapes)
 	{
-		std::cout << ++nCounter << ") " << shape << std::endl;
+		Utility::Display(SolidBox::PrintSolids(counter));
 	}
 
-	std::cout << std::endl;
+	if (sphereVecSize >= minAvailShapes)
+	{
+		Utility::Display(Sphere::PrintSolids(counter));
+	}
+
+	if (rectPrismVecSize >= minAvailShapes)
+	{
+		Utility::Display(RectPrism::PrintSolids(counter));
+	}
+
+	Display("\n");
 
 	do {
 		if (bSpeechEnabled)
 		{
 			nInput = Speech::RetrievePosInteger();
 
-			if (nInput == -1) return ""; // user elected to go back to the main menu
+			if (nInput == -1)
+			{
+				pair.first = "";
+				pair.second = 0;
+				return pair; // user elected to go back to the main menu
+			}
 		}
 		else
 		{
 			strInput = Utility::GetAndValidateInput(acceptableInputExpr);
 
-			if ((strInput == "b") || (strInput == "B")) return 0;
+			if ((strInput == "b") || (strInput == "B"))
+			{
+				pair.first = "";
+				pair.second = 0;
+				return pair;
+			}
 
 			nInput = stoi(strInput);
 		}
 
-		if ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()))
+		if ((nInput < 1) || (nInput > counter))
 		{
-			std::cout << "\nSelection out of bounds.  Please try again." << std::endl;
+			Display("\nSelection out of bounds.  Please try again.\n");
 		}
 
-	} while ((nInput < 1) || (static_cast<size_t>(nInput) > strShapeTypes.size()));
+	} while ((nInput < 1) || (nInput > counter));
 
-	return strShapeTypes[nInput - 1];
+	counter = 0;
+
+	if (solidBoxVecSize >= minAvailShapes)
+	{
+		for (int i = 0; i < solidBoxVecSize; ++i)
+		{
+			umap[++counter] = "cube";
+		}
+	}
+
+	if (sphereVecSize >= minAvailShapes)
+	{
+		for (int i = 0; i < sphereVecSize; ++i)
+		{
+			umap[++counter] = "sphere";
+		}
+	}
+
+	if (rectPrismVecSize >= minAvailShapes)
+	{
+		for (int i = 0; i < rectPrismVecSize; ++i)
+		{
+			umap[++counter] = "rectPrism";
+		}
+	}
+
+	pair.first = umap[nInput];
+
+	if (pair.first == "cube")
+	{
+		pair.second = nInput - 1;
+	}
+	else if (pair.first == "sphere")
+	{
+		if (solidBoxVecSize >= minAvailShapes)
+		{
+			pair.second = nInput - solidBoxVecSize - 1;
+		}
+		else
+		{
+			pair.second = nInput - 1;
+		}
+	}
+	else // is a rectPrism
+	{
+		if (solidBoxVecSize >= minAvailShapes)
+		{
+			nInput -= solidBoxVecSize;
+		}
+		if (sphereVecSize >= minAvailShapes)
+		{
+			nInput -= sphereVecSize;
+		}
+		pair.second = nInput - 1;
+	}
+	
+	return pair;
 }
 
-void Utility::PrintAllSolids()
+std::string Utility::PrintAllSolids()
 {
 	int count = 1;
+	std::string output = "";
+	std::ostringstream stream;
 
 	if (SolidBox::m_shapeVec.size() != 0)
 	{
 		std::string strHeader = "SolidBox name (length of each side in mm)";
-		Utility::PrintHeader(strHeader);
+		stream << Utility::PrintHeader(strHeader);
 
 		for (auto cube : SolidBox::m_shapeVec)
 		{
-			std::cout << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+			stream << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
 		}
 
-		std::cout << "\n" << std::endl;
+		stream << "\n" << std::endl;
 	}
 
 	count = 1;
 
 	if (Sphere::m_shapeVec.size() != 0)
 	{
-		std::string strHeader = "Sphere name (length of each side in mm)";
-		Utility::PrintHeader(strHeader);
+		std::string strHeader = "Sphere name (length of radius in mm)";
+		stream << Utility::PrintHeader(strHeader);
 
 		for (auto sphere : Sphere::m_shapeVec)
 		{
-			std::cout << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
+			stream << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
 		}
 
-		std::cout << "\n" << std::endl;
+		stream << "\n" << std::endl;
 	}
 
 	count = 1;
@@ -236,42 +321,55 @@ void Utility::PrintAllSolids()
 	if (RectPrism::m_shapeVec.size() != 0)
 	{
 		std::string strHeader = "RectPrism name (length of each side in mm)";
-		Utility::PrintHeader(strHeader);
+		stream << Utility::PrintHeader(strHeader);
 
 		for (auto rectPrism : RectPrism::m_shapeVec)
 		{
-			std::cout << rectPrism->GetName() << " (" << std::fixed << std::setprecision(3) << rectPrism->GetLength();
-			std::cout << " x " << rectPrism->GetWidth() << " x " << rectPrism->GetHeight() << ")" << std::endl;
+			stream << rectPrism->GetName() << " (" << std::fixed << std::setprecision(3) << rectPrism->GetLength();
+			stream << " x " << rectPrism->GetWidth() << " x " << rectPrism->GetHeight() << ")" << std::endl;
 		}
 
-		std::cout << "\n" << std::endl;
+		stream << "\n" << std::endl;
 	}
+
+	return output = stream.str();
 }
 
-void Utility::PrintNwLnsAndLnDelimiter(std::string strDelimiter, size_t nNumOfTimes)
+std::string Utility::PrintNwLnsAndLnDelimiter(std::string strDelimiter, size_t nNumOfTimes)
 {
-	std::cout << "\n";
+	std::string output = "";
+	std::ostringstream stream(std::ostringstream::ate);
+	stream << "\n";
 
 	for (size_t ii = 0; ii < nNumOfTimes; ++ii)
 	{
-		std::cout << strDelimiter;
+		stream << strDelimiter;
 	}
 
-	std::cout << "\n" << std::endl;
+	stream << "\n\n";
+	return output = stream.str();
 }
 
-void Utility::PrintChar(char cSymbol, int nNumOfTimes)
+std::string Utility::PrintChar(char cSymbol, int nNumOfTimes)
 {
+	std::string output = "";
+	std::ostringstream stream;
+	
 	for (int ii = 0; ii < nNumOfTimes; ++ii)
 	{
-		std::cout << cSymbol;
+		stream << cSymbol;
 	}
+
+	return output = stream.str();
 }
 
-void Utility::PrintHeader(std::string strHeader)
+std::string Utility::PrintHeader(std::string strHeader)
 {
-	std::cout << strHeader;
-	PrintNwLnsAndLnDelimiter("_", strHeader.length());
+	std::string output = "";
+	std::ostringstream stream;
+	stream << strHeader;
+	stream << PrintNwLnsAndLnDelimiter("_", strHeader.length());
+	return output = stream.str();
 }
 
 bool Utility::IsOkToSave() // if no shapes have been made, return false
@@ -279,28 +377,31 @@ bool Utility::IsOkToSave() // if no shapes have been made, return false
 	return ((SolidBox::m_shapeVec.size() > 0) || (Sphere::m_shapeVec.size() > 0));
 }
 
-void Utility::ViewFiles()
-{   // checking for txt files in current directory
+std::string Utility::ViewFiles()
+{   
+	std::stringstream stream;
+	std::string output = "";
+	// checking for txt files in current directory
 	WIN32_FIND_DATA file;
 	HANDLE searchHandle = FindFirstFile("*.txt", &file);
 
-	std::cout << std::endl;
+	stream << std::endl;
 
 	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
 		int count = 0;
-		std::cout << "Available files:  ";
+		stream << "Available files:  ";
 
 		do
 		{
 			++count;
 			if (count == 1)
 			{
-				std::cout << count << ") " << file.cFileName << std::endl;
+				stream << count << ") " << file.cFileName << std::endl;
 			}
 			else
 			{
-				std::cout << std::setw(18) << "" << count << ") " << file.cFileName << std::endl;
+				stream << std::setw(18) << "" << count << ") " << file.cFileName << std::endl;
 			}
 
 		} while (FindNextFile(searchHandle, &file));
@@ -309,9 +410,11 @@ void Utility::ViewFiles()
 	}
 	else
 	{
-		PrintNwLnsAndLnDelimiter("-", 55);
-		std::cout << "No files in memory" << std::endl;
+		stream << PrintNwLnsAndLnDelimiter("-", 55);
+		stream << "No files in memory" << std::endl;
 	}
+
+	return output = stream.str();
 }
 
 int Utility::NumOfFilesAvail()
@@ -434,7 +537,7 @@ std::string Utility::PickFile()
 
 		if ((fileSelection < 1) || (fileSelection > numOfFiles))
 		{
-			std::cout << "Selection out of bounds.  Please enter a valid selection." << std::endl;
+			Display("Selection out of bounds.  Please enter a valid selection.\n");
 		}
 
 	} while ((fileSelection < 1) || (fileSelection > numOfFiles));
@@ -448,7 +551,7 @@ std::string Utility::PickFile()
 	}
 	else
 	{
-		std::cout << "A problem has occurred.  No such file in memory" << std::endl;
+		Display("A problem has occurred.  No such file in memory\n");
 		return (strInput = "");
 	}
 
@@ -462,10 +565,12 @@ bool Utility::FileExists(std::string fileName)
 	bool isFound = false;
 	WIN32_FIND_DATA file;
 	HANDLE searchHandle = FindFirstFile(fileName.c_str(), &file);
+	
 	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
 		isFound = true; // matching file found
 	}
+
 	FindClose(searchHandle);
 	return isFound;
 }
@@ -480,8 +585,8 @@ std::string Utility::PickNewFile()
 
 	if (isSpeech)
 	{
-		std::cout << "Please say the name (no extension) of the new file." << std::endl;
-		std::cout << "For example, \"my document\" would be acceptable (no quotes)" << std::endl;
+		Display("Please say the name (no extension) of the new file.\n");
+		Display("For example, \"my document\" would be acceptable (no quotes)\n");
 
 		while (fileName == "")
 		{
@@ -492,15 +597,17 @@ std::string Utility::PickNewFile()
 	}
 	else
 	{
-		std::cout << "Please type the name (no extension) of the new file" << std::endl;
-		std::cout << "For example, \"myFile\" would be acceptable (no quotes)" << std::endl;
+		Display("Please type the name (no extension) of the new file\n");
+		Display("For example, \"myFile\" would be acceptable (no quotes)\n");
 		fileName = GetAndValidateInput(acceptableInputExpr);
 		fileName += ".txt";
 	}
 
 	if (FileExists(fileName))
 	{
-		std::cout << fileName << " already exists.  Please make another selection." << std::endl;
+		std::ostringstream stream;
+		stream << fileName << " already exists.  Please make another selection." << std::endl;
+		Display(stream.str());
 		PickNewFile();
 	}
 
@@ -560,14 +667,14 @@ int Utility::RetrieveVecInput(std::regex acceptableInputExpr, int shapeVecSize)
 		{
 			if (isSpeech)
 			{
-				std::cout << "Selection out of bounds.  Please try again or say \"back\" to go" << std::endl;
+				Display("Selection out of bounds.  Please try again or say \"back\" to go\n");
 			}
 			else
 			{
-				std::cout << "Selection out of bounds.  Please try again or press 'b' to go" << std::endl;
+				Display("Selection out of bounds.  Please try again or press 'b' to go\n");
 			}
 
-			std::cout << "to the main menu." << std::endl;
+			Display("to the main menu.\n");
 		}
 	} while ((nInput > shapeVecSize) || (nInput < 1)); // check if shape exists
 
@@ -579,11 +686,13 @@ std::string Utility::GetShapeType(Shape* shape)
 	int counter = 0;
 	std::string name = shape->GetName();
 	std::string namePrefix = "";
+	
 	while (!isdigit(name[counter]))
 	{
 		namePrefix += name[counter];
 		++counter;
 	}
+
 	return namePrefix;
 }
 
@@ -595,21 +704,23 @@ int Utility::AvailableSolids()
 	}
 	else
 	{
-		return (Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size() + RectPrism::m_shapeVec.size());
+		return static_cast<int>(Sphere::m_shapeVec.size() + SolidBox::m_shapeVec.size() + RectPrism::m_shapeVec.size());
 	}
 }
 
-void Utility::PrintSolidsWithConseqCntr()
+std::string Utility::PrintSolidsWithConseqCntr()
 {
 	int count = 1;
+	std::string output = "";
+	std::ostringstream stream;
 
 	if (SolidBox::m_shapeVec.size() != 0)
 	{
 		for (auto cube : SolidBox::m_shapeVec)
 		{
-			Utility::PrintChar(' ', 5);
-			std::cout << count++ << ") " << std::left << std::setw(10) << cube->GetName();
-			std::cout << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+			stream << Utility::PrintChar(' ', 5);
+			stream << count++ << ") " << std::left << std::setw(10) << cube->GetName();
+			stream << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
 		}
 	}
 
@@ -617,9 +728,9 @@ void Utility::PrintSolidsWithConseqCntr()
 	{
 		for (auto sphere : Sphere::m_shapeVec)
 		{
-			Utility::PrintChar(' ', 5);
-			std::cout << count++ << ") " << std::left << std::setw(10) << sphere->GetName();
-			std::cout << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
+			stream << Utility::PrintChar(' ', 5);
+			stream << count++ << ") " << std::left << std::setw(10) << sphere->GetName();
+			stream << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
 		}
 	}
 
@@ -627,49 +738,59 @@ void Utility::PrintSolidsWithConseqCntr()
 	{
 		for (auto rectPrism : RectPrism::m_shapeVec)
 		{
-			Utility::PrintChar(' ', 5);
-			std::cout << count++ << ") " << std::left << std::setw(10) << rectPrism->GetName();
-			std::cout << " (" << std::fixed << std::setprecision(3) << rectPrism->GetLength() << " x " << rectPrism->GetWidth();
-			std::cout << " x " << rectPrism->GetHeight() << ")" << std::endl;
+			stream << Utility::PrintChar(' ', 5);
+			stream << count++ << ") " << std::left << std::setw(10) << rectPrism->GetName();
+			stream << " (" << std::fixed << std::setprecision(3) << rectPrism->GetLength() << " x " << rectPrism->GetWidth();
+			stream << " x " << rectPrism->GetHeight() << ")" << std::endl;
 		}
-		std::cout << std::endl;
+		stream << std::endl;
 	}
+
+	return output = stream.str();
 }
 
-void Utility::PrintSaveOptions()
+std::string Utility::PrintSaveOptions()
 {
+	std::string output = "";
+	std::ostringstream stream;
 	Menu* menu = Menu::GetInstance();
 	bool isSpeech = menu->GetIsSpeechFlag();
 
 	if (isSpeech)
 	{
-		std::cout << "Say \"save\" to save an existing file (overwrite)," << std::endl;
-		std::cout << "say \"new\" to save to a new file," << std::endl;
-		std::cout << "or say \"back\" to go back to the main menu.\n" << std::endl;
+		stream << "Say \"save\" to save an existing file (overwrite)," << std::endl;
+		stream << "say \"new\" to save to a new file," << std::endl;
+		stream << "or say \"back\" to go back to the main menu.\n" << std::endl;
 	}
 	else
 	{
-		std::cout << "Press 's' to save to an existing file (overwrite)," << std::endl;
-		std::cout << "press 'n' to save to a new file," << std::endl;
-		std::cout << "or press 'b' to go back to the main menu.\n" << std::endl;
+		stream << "Press 's' to save to an existing file (overwrite)," << std::endl;
+		stream << "press 'n' to save to a new file," << std::endl;
+		stream << "or press 'b' to go back to the main menu.\n" << std::endl;
 	}
+
+	return output = stream.str();
 }
 
-void Utility::PrintLoadOptions()
+std::string Utility::PrintLoadOptions()
 {
+	std::string output = "";
+	std::ostringstream stream;
 	Menu* menu = Menu::GetInstance();
 	bool isSpeech = menu->GetIsSpeechFlag();
 
 	if (isSpeech)
 	{
-		std::cout << "Say \"yes\" to save your date before loading, \"no\" to overwrite the current data with a file," << std::endl;
-		std::cout << "or \"back\" to go back to the main menu." << std::endl;
+		stream << "Say \"yes\" to save your date before loading, \"no\" to overwrite the current data with a file," << std::endl;
+		stream << "or \"back\" to go back to the main menu." << std::endl;
 	}
 	else
 	{
-		std::cout << "Press 'y' to save your data before loading, 'n' to overwrite the current data with a file," << std::endl;
-		std::cout << "or 'b' to go back to the main menu." << std::endl;
+		stream << "Press 'y' to save your data before loading, 'n' to overwrite the current data with a file," << std::endl;
+		stream << "or 'b' to go back to the main menu." << std::endl;
 	}
+
+	return output = stream.str();
 }
 
 void Utility::DeleteAllData()
@@ -705,4 +826,9 @@ void Utility::DeleteAllData()
 	ConnectionChannel::m_nNameIDCounter = 0;
 	RectPlane::m_nNameIDCounter = 0;
 	CurvedSurface::m_nNameIDCounter = 0;
+}
+
+void Utility::Display(std::string input)
+{
+	std::cout << input;
 }

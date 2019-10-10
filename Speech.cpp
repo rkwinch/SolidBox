@@ -78,7 +78,7 @@ int Speech::RetrievePosInteger()
 	do
 	{
 		input = StartListeningPhrase();
-		std::cout << "input:  " << input << std::endl;
+		
 		if (input == "back") return -1;
 
 		if (input == "quit") return -1;
@@ -110,12 +110,12 @@ std::string Speech::GetText(ISpRecoContext* reco_context)
 	return test;
 }
 
-std::string Speech::ToNarrow(const wchar_t *s, char dfault,
-	const std::locale& loc)
+std::string Speech::ToNarrow(const wchar_t *s, char dfault, const std::locale& loc)
 {
 	std::ostringstream stm;
 
-	while (*s != L'\0') {
+	while (*s != L'\0') 
+	{
 		stm << std::use_facet< std::ctype<wchar_t> >(loc).narrow(*s++, dfault);
 	}
 	return stm.str();
@@ -125,8 +125,8 @@ ISpRecoGrammar* Speech::InitGrammarPhrase(ISpRecoContext* recoContext)
 {
 	HRESULT hr;
 	SPSTATEHANDLE state;
-
 	ISpRecoGrammar* recoGrammar;
+	
 	hr = recoContext->CreateGrammar(grammarId, &recoGrammar);
 	WORD langId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
 	recoGrammar->ResetGrammar(langId);
@@ -142,14 +142,26 @@ int Speech::CalculateEditDistance(std::string word1, std::string word2)
 	std::vector<std::vector<int>> dp(word1.length() + 1);
 	for (auto &v : dp) v.resize(word2.length() + 1);
 
-	for (size_t i = 0; i <= word1.length(); i++) 
+	for (int i = 0; i <= word1.length(); i++) 
 	{
-		for (size_t j = 0; j <= word2.length(); j++) 
+		for (int j = 0; j <= word2.length(); j++) 
 		{
-			if (!i) dp[i][j] = j;
-			else if (!j) dp[i][j] = i;
-			else if (word1[i - 1] == word2[j - 1]) dp[i][j] = dp[i - 1][j - 1];
-			else dp[i][j] = 1 + (std::min)({ dp[i][j - 1], dp[i - 1][j], dp[i - 1][j - 1] });
+			if (!i)
+			{
+				dp[i][j] = j;
+			}
+			else if (!j)
+			{
+				dp[i][j] = i;
+			}
+			else if (word1[i - 1] == word2[j - 1])
+			{
+				dp[i][j] = dp[i - 1][j - 1];
+			}
+			else
+			{
+				dp[i][j] = 1 + (std::min)({ dp[i][j - 1], dp[i - 1][j], dp[i - 1][j - 1] });
+			}
 		}
 	}
 
@@ -165,9 +177,12 @@ std::string Speech::ClampWord(std::string const &word)
 		"eighteen", "nineteen", "twenty", "thirty", "fourty", "fifty", "sixty", "seventy", "eighty", "ninety",
 		"hundred", "thousand", "million", "point", "back", "quit", "and" };
 
-	for (auto &candidate : dictionary) {
+	for (auto &candidate : dictionary) 
+	{
 		auto editDist = CalculateEditDistance(word, candidate);
-		if (editDist < minEditDistance) {
+		
+		if (editDist < minEditDistance) 
+		{
 			bestMatch = candidate;
 			minEditDistance = editDist;
 		}
@@ -176,13 +191,17 @@ std::string Speech::ClampWord(std::string const &word)
 	return bestMatch;
 }
 
-std::string Speech::ClampPhrase(std::string const &text) {
+std::string Speech::ClampPhrase(std::string const &text) 
+{
 	std::string rv;
 	std::istringstream is(text);
 	std::string word;
-	while (std::getline(is, word, ' ')) {
+	
+	while (std::getline(is, word, ' ')) 
+	{
 		rv += ClampWord(word) + " ";
 	}
+
 	return std::string(rv.begin(), rv.end() - 1);
 }
 
@@ -215,19 +234,19 @@ int Speech::ConvertPhraseToInteger(std::string input)
 	input = ClampPhrase(input);
 	wordsToNumMap["and"] = std::make_pair(1, 0);
 	
-	for (size_t i = 0; i < units.size(); ++i)
+	for (int i = 0; i < units.size(); ++i)
 	{
 		wordsToNumMap[units[i]] = std::make_pair(1, i);
 	}
 
-	for (size_t i = 0; i < tens.size(); ++i)
+	for (int i = 0; i < tens.size(); ++i)
 	{
 		wordsToNumMap[tens[i]] = std::make_pair(1, 10 * i);
 	}
 
-	for (size_t i = 0; i < scales.size(); ++i)
+	for (int i = 0; i < scales.size(); ++i)
 	{
-		wordsToNumMap[scales[i]] = std::make_pair(pow(10, i ? i * 3 : 2), 0);
+		wordsToNumMap[scales[i]] = std::make_pair(static_cast<int>(pow(10, i ? i * 3 : 2)), 0);
 	}
 
 	strStream.str(input);
@@ -246,7 +265,7 @@ int Speech::ConvertPhraseToInteger(std::string input)
 			current = 0;
 		}
 	}
-	std::cout << result + current << std::endl;
+	
 	return result + current;
 }
 
@@ -275,19 +294,19 @@ double Speech::ConvertPhraseToDouble(std::string input)
 	input = Speech::ClampPhrase(input);
 	wordsToNumMap["and"] = std::make_pair(1, 0);
 
-	for (size_t i = 0; i < units.size(); ++i)
+	for (int i = 0; i < units.size(); ++i)
 	{
 		wordsToNumMap[units[i]] = std::make_pair(1, i);
 	}
 
-	for (size_t i = 0; i < tens.size(); ++i)
+	for (int i = 0; i < tens.size(); ++i)
 	{
 		wordsToNumMap[tens[i]] = std::make_pair(1, 10 * i);
 	}
 
-	for (size_t i = 0; i < scales.size(); ++i)
+	for (int i = 0; i < scales.size(); ++i)
 	{
-		wordsToNumMap[scales[i]] = std::make_pair(pow(10, i ? i * 3 : 2), 0);
+		wordsToNumMap[scales[i]] = std::make_pair(static_cast<int>(pow(10, i ? i * 3 : 2)), 0);
 	}
 
 	strStream.str(input);

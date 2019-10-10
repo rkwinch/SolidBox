@@ -5,11 +5,11 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 #include "Utility.h"
 #include "ConnectionChannel.h"
 #include "Surface.h"
-
-//abstract.  Don't make instances of Shape.
 
 class Shape {
 
@@ -30,11 +30,12 @@ public:
 	virtual void Delete() = 0;
 	virtual void CalcVol() = 0;
 	virtual void CalcSA() = 0;
+	virtual std::string PrintShapeInfo() = 0;
+	virtual std::string PrintPlanesInfo() = 0;
 
-	Shape() : m_channel(this) 
-	{
-		// empty 
-	}
+	Shape() : m_channel(this) {}
+
+	Shape(const Shape& shape) : m_channel(shape.m_channel) {}
 
 	bool operator==(const Shape &shape) const
 	{
@@ -85,4 +86,48 @@ public:
 	{
 		return &m_channel;
 	}	
+
+	std::string PrintChannelInfo()
+	{
+		bool bIsFirstSurface = true;
+		std::string strHeader = "Channel:";
+		std::string output = "";
+		std::ostringstream stream;
+
+		stream << Utility::PrintHeader(strHeader);
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Channel name:" << m_channel.GetName() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Associated Shape name:" << m_channel.GetShape()->GetName() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Associated Surface name(s):";
+
+		for (auto surfacePtr : m_channel.GetSurfaceSet())
+		{
+			if (bIsFirstSurface == true)
+			{
+				stream << std::left << surfacePtr->GetName() << std::endl;
+				bIsFirstSurface = false;
+			}
+			else
+			{
+				stream << Utility::PrintChar(' ', Utility::PRINTING_WIDTH + 5);
+				stream << std::left << surfacePtr->GetName() << std::endl;
+			}
+		}
+
+		stream << std::endl;
+		return output = stream.str();
+	}
+
+	std::string PrintShapeDebugInfo()
+	{
+		std::string output = "";
+		std::ostringstream stream;
+
+		stream << PrintShapeInfo();
+		stream << PrintChannelInfo();
+		stream << PrintPlanesInfo();
+		return output = stream.str();
+	}
 };

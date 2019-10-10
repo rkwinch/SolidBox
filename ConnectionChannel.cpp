@@ -8,6 +8,8 @@
 #include "Surface.h"
 #include "Menu.h"
 #include "Utility.h"
+#include "RectPlane.h"
+#include "CurvedSurface.h"
 
 int ConnectionChannel::m_nNameIDCounter = 0;
 
@@ -27,33 +29,52 @@ ConnectionChannel::~ConnectionChannel()
 }
 
 //copy constructor    (new = old)
-ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel)
+ConnectionChannel::ConnectionChannel(const ConnectionChannel& channel) 
 {
 	// new name for copy constructor was requested (will not copy current name)
 	// (will probably not want to call copy constructor.  pass by reference instead)
-	m_stName = Utility::CreateUniqueName("channel", m_nNameIDCounter);
+	m_stName = Utility::CreateUniqueName("connectionChannel", m_nNameIDCounter);
 
 	// allocating new memory for the copy 
 	for (auto surface : channel.m_surfaceSet)
 	{
-		std::shared_ptr<Surface> copy = surface;
+		auto copy = surface->GetCopy();
+		copy->SetConnChannel(this);
 		m_surfaceSet.insert(copy);
 	}
-
-	//setting shape ptr
-	m_shape = channel.m_shape;
 }
 
 //operator =
 ConnectionChannel& ConnectionChannel::operator=(ConnectionChannel &channel)
 {
 	//don't change name
-	std::set<std::shared_ptr<Surface>>::iterator surfaceSetItr = m_surfaceSet.begin();
+	std::set<std::shared_ptr<Surface>>::iterator surfaceSetItr = channel.m_surfaceSet.begin();
+	try {
+		for (auto surface : m_surfaceSet)
+		{
+			if (surface->GetName().find("plane") != std::string::npos)
+			{
+				auto rectPlane = dynamic_cast<RectPlane*>(surface.get());
+				auto channelRectPlane = dynamic_cast<RectPlane*>((*surfaceSetItr).get());
+				*rectPlane = *channelRectPlane;
+			}
+			else if (surface->GetName().find("curvedSurf") != std::string::npos)
+			{
+				auto curvedSurface = dynamic_cast<CurvedSurface*>(surface.get());
+				auto channelCurvedSurface = dynamic_cast<CurvedSurface*>((*surfaceSetItr).get());
+				*curvedSurface = *channelCurvedSurface;
+			}
+			else
+			{
+				throw std::exception("Unknown surface detected");
+			}
 
-	for (auto surface : m_surfaceSet)
+			++surfaceSetItr;
+		}
+	}
+	catch (std::exception e)
 	{
-		*surface = **(surfaceSetItr);
-		++surfaceSetItr;
+		Utility::Display(e.what());
 	}
 
 	return *this;
@@ -113,6 +134,11 @@ std::string ConnectionChannel::GetName()
 std::set<std::shared_ptr<Surface>> ConnectionChannel::GetSurfaceSet()
 {
 	return this->m_surfaceSet;
+}
+
+void ConnectionChannel::SetShape(Shape* shape)
+{
+	m_shape = shape;
 }
 
 Shape* ConnectionChannel::GetShape()

@@ -4,6 +4,7 @@
 #include <set>
 #include <vector>
 #include <fstream>
+#include <memory>
 #include "Shape.h"
 
 class Surface;
@@ -22,7 +23,7 @@ public:
 
 	Sphere(double radius);
 	~Sphere();
-	Sphere(Sphere& other);
+	Sphere(const Sphere& other);
 	Sphere& operator=(Sphere &sphere);
 	void Delete() override;
 	void CalcVol() override;
@@ -32,7 +33,11 @@ public:
 	std::vector<std::shared_ptr<Sphere>> GetShapeVec();
 	void Save(std::ofstream &outFile) override;
 	static void Create();
-	static void PrintSolids();
+	static std::string PrintSolids();
+	static std::string PrintSolids(int &counter);
 	static void Load(std::vector<std::string>::iterator &itr);
 	static bool Move();
+	static bool Move(std::shared_ptr<Sphere> sphere);
+	std::string PrintShapeInfo() override;
+	std::string PrintPlanesInfo() override;
 };

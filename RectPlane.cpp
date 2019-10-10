@@ -3,8 +3,7 @@
 #include <fstream>
 #include "RectPlane.h"
 #include "Utility.h"
-
-class ConnectionChannel;
+#include "ConnectionChannel.h"
 
 int RectPlane::m_nNameIDCounter = 0;
 
@@ -20,7 +19,7 @@ RectPlane::RectPlane(double length, double height, ConnectionChannel* channel)
 }
 
 // copy constructor
-RectPlane::RectPlane(RectPlane & rectPlane)
+RectPlane::RectPlane(const RectPlane &rectPlane)
 {
 	// don't change name
 	if (m_stName.length() == 0)
@@ -28,6 +27,7 @@ RectPlane::RectPlane(RectPlane & rectPlane)
 		m_stName = Utility::CreateUniqueName("plane", m_nNameIDCounter);
 	}
 
+	m_nNumOfEdges = rectPlane.m_nNumOfEdges;
 	m_dLength = rectPlane.m_dLength;
 	m_dHeight = rectPlane.m_dHeight;
 	m_channel = rectPlane.m_channel;
@@ -41,8 +41,7 @@ RectPlane& RectPlane::operator=(RectPlane& plane)
 	m_dHeight = plane.m_dHeight;
 	m_dLength = plane.m_dLength;
 	m_nNumOfEdges = plane.m_nNumOfEdges;
-	m_dArea = plane.m_dArea;
-	*m_channel = *(plane.m_channel);
+	m_dArea = plane.m_dArea;	
 	return *this;
 }
 
@@ -78,14 +77,9 @@ double RectPlane::GetHeight() const
 	return m_dHeight;
 }
 
-ConnectionChannel* RectPlane::GetConnChannel() const
-{
-	return m_channel;
-}
-
 std::shared_ptr<Surface> RectPlane::GetCopy() const
 {
-	return std::make_shared<RectPlane>(m_dLength, m_dHeight, m_channel);
+	return std::make_shared<RectPlane>(*this);
 }
 
 void RectPlane::Save(std::ofstream &outFile) const

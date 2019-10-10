@@ -16,6 +16,7 @@ public:
 	static int m_nNameIDCounter;
 
 	CurvedSurface(double radius, ConnectionChannel* channel);
+	CurvedSurface(const CurvedSurface &curvedSurf);
 	CurvedSurface& operator=(CurvedSurface& plane);
 	bool operator==(const CurvedSurface& plane) const;
 	bool operator<(const CurvedSurface &plane) const;
@@ -27,6 +28,6 @@ public:
 	void Save(std::ofstream &outFile) const override;
 	
 private:
-	double m_dArea = 0;
+	
 	double m_dRadius = 0;
 };

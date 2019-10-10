@@ -6,6 +6,7 @@
 #include <vector>
 #include <math.h>
 #include <iomanip>
+#include <sstream>
 #include "SolidBox.h"
 #include "RectPlane.h"
 #include "ConnectionChannel.h"
@@ -49,7 +50,7 @@ SolidBox::~SolidBox()
 }
 
 // copy constructor
-SolidBox::SolidBox(SolidBox& other)
+SolidBox::SolidBox(const SolidBox& other) : Shape(other)
 {
 	// don't change name
 	if (m_stName.length() == 0)
@@ -57,9 +58,10 @@ SolidBox::SolidBox(SolidBox& other)
 		m_stName = Utility::CreateUniqueName("cube", m_nNameIDCounter);
 	}
 
+	m_nNumOfSurfaces = other.m_nNumOfSurfaces;
 	m_dSideLength = other.m_dSideLength;
-	m_channel = other.m_channel;
-	m_bHasConnection = other.m_bHasConnection; // flag for checking if the SolidBox has a connection
+	m_bHasConnection = other.m_bHasConnection;
+	m_channel.SetShape(this);
 	CalcSA();
 	CalcVol();
 }
@@ -71,6 +73,8 @@ SolidBox& SolidBox::operator=(SolidBox &cube)
 	m_dSideLength = cube.m_dSideLength;
 	m_channel = cube.m_channel;
 	m_bHasConnection = cube.m_bHasConnection;
+	CalcSA();
+	CalcVol();
 	cube.Delete(); //**deleting items on right side of = operator**
 	return *this;
 }
@@ -84,7 +88,7 @@ void SolidBox::Delete()
 
 	if (shapeVecItr == m_shapeVec.end())
 	{
-		std::cout << "Cannot delete Shape.  Shape not found" << std::endl;
+		Utility::Display("Cannot delete Shape.  Shape not found\n");
 		return;
 	}
 
@@ -92,12 +96,12 @@ void SolidBox::Delete()
 	m_shapeVec.erase(shapeVecItr); // removing item from vector
 }
 
-void SolidBox::CalcVol() 
+void SolidBox::CalcVol()
 {
 	m_dVolume = pow(m_dSideLength, 3.0);
 }
 
-void SolidBox::CalcSA() 
+void SolidBox::CalcSA()
 {
 	m_dSurfaceArea = 6.0 * pow(m_dSideLength, 2.0);
 }
@@ -142,8 +146,8 @@ void SolidBox::Create()
 	Menu* menu = Menu::GetInstance();
 	bool isSpeech = menu->GetIsSpeechFlag();
 
-	std::cout << "What would you like the length, width, and height to be? (in mm)" << std::endl;
-	std::cout << "ex: 4.5" << std::endl;
+	Utility::Display("What would you like the length, width, and height to be? (in mm)\n");
+	Utility::Display("ex: 4.5\n");
 
 	if (isSpeech)
 	{
@@ -153,11 +157,10 @@ void SolidBox::Create()
 
 			if (dSideLength <= 0)
 			{
-				std::cout << "Please say a positive, nonzero, number." << std::endl;
+				Utility::Display("Please say a positive, nonzero, number.\n");
 			}
 
 		} while (dSideLength <= 0.0);
-		
 	}
 	else
 	{
@@ -168,27 +171,40 @@ void SolidBox::Create()
 
 			if (dSideLength <= 0.0)
 			{
-				std::cout << "Please enter a positive, nonzero, number." << std::endl;
+				Utility::Display("Please enter a positive, nonzero, number.\n");
 			}
 		} while (dSideLength <= 0.0);
 	}
-	
+
 	std::shared_ptr<SolidBox> box = std::make_shared<SolidBox>(dSideLength);
 	m_shapeVec.push_back(box);
-	Utility::PrintNwLnsAndLnDelimiter("-", 55);
+	Utility::Display(Utility::PrintNwLnsAndLnDelimiter("-", 55));
 }
 
-void SolidBox::PrintSolids()
+std::string SolidBox::PrintSolids()
 {
-	std::cout << "in print solids" << std::endl;
+	std::ostringstream stream;
 	int count = 1;
 
 	for (auto cube : m_shapeVec)
 	{
-		std::cout << "in for loop in print solids" << std::endl;
-		std::cout << count << ") " << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+		stream << count << ") " << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
 		++count;
 	}
+
+	return stream.str();
+}
+
+std::string SolidBox::PrintSolids(int &counter)
+{
+	std::ostringstream stream;
+
+	for (auto &cube : SolidBox::m_shapeVec)
+	{
+		stream << counter++ << ") " << cube->GetName() << " (" << std::fixed << std::setprecision(3) << cube->GetSideLength() << ")" << std::endl;
+	}
+
+	return stream.str();
 }
 
 void SolidBox::Load(std::vector<std::string>::iterator &itr)
@@ -200,7 +216,7 @@ void SolidBox::Load(std::vector<std::string>::iterator &itr)
 	int nNumOfEdges = 0;
 
 	//getting members for solidbox
-	stName = (*itr); 
+	stName = (*itr);
 	itr++;
 	dLength = stod(*itr);
 	itr++;
@@ -226,7 +242,7 @@ void SolidBox::Load(std::vector<std::string>::iterator &itr)
 		dLength = stod(*itr);
 		itr++;
 		nNumOfEdges = stoi(*itr);
-		itr++; 
+		itr++;
 		// for notes on why using dynamic cast here, refer to load fxn in Sphere
 		auto rectPlanePtr = dynamic_cast<RectPlane*>(planePtr.get());
 		rectPlanePtr->SetName(stName);
@@ -237,67 +253,194 @@ void SolidBox::Load(std::vector<std::string>::iterator &itr)
 
 	if (dHeight != dLength)
 	{
-		std::cout << "Invalid length and height parameters.  Cannot load cube." << std::endl;
+		Utility::Display("Invalid length and height parameters.  Cannot load cube.\n");
 		box->Delete();
 	}
 }
 
 bool SolidBox::Move()
 {
-	std::cout << "in move" << std::endl;
-	int strMoveFrom = 0;
-	int strMoveTo = 0;
+	int nMoveFrom = 0;
+	int nMoveTo = 0;
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
 	int solidBoxVecSize = static_cast<int>(SolidBox::m_shapeVec.size());
 	auto shapeVecItr_To = SolidBox::m_shapeVec.begin();
 	auto shapeVecItr_From = SolidBox::m_shapeVec.begin();
 	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' while allowing for whitespace
 
-	SolidBox::PrintSolids();
-	std::cout << std::endl;
+	Utility::Display(SolidBox::PrintSolids());
+	Utility::Display("\n");
 
 	//------Get cube selections from user----------------
 	do
-	{  
+	{
 		//moveFrom cube:
 		do
 		{
-			strMoveFrom = Utility::RetrieveVecInput(acceptableInputExpr, SolidBox::m_shapeVec.size());
-
-			if (strMoveFrom == -1) return false; // user elected to go back to main menu
-			
-			if ((strMoveFrom < 1) || (strMoveFrom > solidBoxVecSize))
+			if (isSpeech)
 			{
-				std::cout << "Invalid entry.  Please try again." << std::endl;
+				Utility::Display("Please select the cube you are moving FROM or say \"back\" to go to the main menu.\n");
+				nMoveFrom = Speech::RetrievePosInteger();
+			}
+			else
+			{
+				Utility::Display("Please select the cube you are moving FROM or press 'b' to go back to the main menu.\n");
+				nMoveFrom = Utility::RetrieveVecInput(acceptableInputExpr, solidBoxVecSize);
 			}
 
-		} while ((strMoveFrom < 1) || (strMoveFrom > solidBoxVecSize));
-		
-		shapeVecItr_From = std::next(shapeVecItr_From, (strMoveFrom - 1));
+			if (nMoveFrom == -1) return false; // user elected to go back to main menu
+
+			if ((nMoveFrom < 1) || (nMoveFrom > solidBoxVecSize))
+			{
+				Utility::Display("Invalid entry.  Please try again.\n");
+			}
+
+		} while ((nMoveFrom < 1) || (nMoveFrom > solidBoxVecSize));
+
+		shapeVecItr_From = std::next(shapeVecItr_From, (nMoveFrom - 1));
 
 		//moveTo cube:
 		do
 		{
-			strMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, solidBoxVecSize);
-
-			if (strMoveTo == -1) return false; // user elected to go back to main menu
-
-			if ((strMoveTo < 1) || (strMoveTo > solidBoxVecSize))
+			if (isSpeech)
 			{
-				std::cout << "Invalid entry.  Please try again." << std::endl;
+				Utility::Display("Please select the cube you are moving TO or say \"back\" to go to the main menu.\n");
+				nMoveTo = Speech::RetrievePosInteger();
+			}
+			else
+			{
+				Utility::Display("Please select the cube you are moving TO or press 'b' to go back to the main menu.\n");
+				nMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, solidBoxVecSize);
 			}
 
-		} while ((strMoveTo < 1) || (strMoveTo > solidBoxVecSize));
-		
-		shapeVecItr_To = std::next(shapeVecItr_To, (strMoveTo - 1));
+			if (nMoveTo == -1) return false; // user elected to go back to main menu
 
-		if (strMoveFrom == strMoveTo) //check if trying to move to the same shape
+			if ((nMoveTo < 1) || (nMoveTo > solidBoxVecSize))
+			{
+				Utility::Display("Invalid entry.  Please try again.\n");
+			}
+
+		} while ((nMoveTo < 1) || (nMoveTo > solidBoxVecSize));
+
+		shapeVecItr_To = std::next(shapeVecItr_To, (nMoveTo - 1));
+
+		if (nMoveFrom == nMoveTo) //check if trying to move to the same shape
 		{
-			std::cout << "You cannot move from and to the same cube.  Please try again." << std::endl;
+			Utility::Display("You cannot move from and to the same cube.  Please try again.\n");
 		}
 
-	} while (strMoveFrom == strMoveTo);
+	} while (nMoveFrom == nMoveTo);
 
 	// It's OK to now move From into To
 	**shapeVecItr_To = **shapeVecItr_From;
 	return true;
+}
+
+bool SolidBox::Move(std::shared_ptr<SolidBox> cube)
+{
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
+	int nMoveTo = 0;
+	int counter = 1;
+	std::ostringstream stream;
+	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' while allowing for whitespace
+	int solidBoxVecSize = static_cast<int>(SolidBox::m_shapeVec.size());
+	auto shapeVecItr_From = std::find(SolidBox::m_shapeVec.begin(), SolidBox::m_shapeVec.end(), cube);
+	auto shapeVecItr_To = SolidBox::m_shapeVec.begin();
+	
+	do
+	{
+		//moveTo cube:
+		do
+		{
+			if (isSpeech)
+			{
+				Utility::Display("\nPlease select the cube you are moving TO or say \"back\" to go to the main menu.\n\n");
+				Utility::Display(SolidBox::PrintSolids());
+				nMoveTo = Speech::RetrievePosInteger();
+			}
+			else
+			{
+				Utility::Display("\nPlease select the cube you are moving TO or press 'b' to go back to the main menu.\n\n");
+				Utility::Display(SolidBox::PrintSolids());
+				nMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, solidBoxVecSize);
+			}
+
+			if (nMoveTo == -1) return false; // user elected to go back to main menu
+
+			if ((nMoveTo < 1) || (nMoveTo > solidBoxVecSize))
+			{
+				Utility::Display("Invalid entry.  Please try again.\n");
+			}
+
+		} while ((nMoveTo < 1) || (nMoveTo > solidBoxVecSize));
+
+		shapeVecItr_To = std::next(shapeVecItr_To, (nMoveTo - 1));
+
+		if (*shapeVecItr_To == *shapeVecItr_From) //check if trying to move to the same shape
+		{
+			Utility::Display("You cannot move from and to the same cube.  Please try again.\n");
+		}
+
+	} while (*shapeVecItr_To == *shapeVecItr_From);
+
+	// It's OK to now move From into To
+	**shapeVecItr_To = **shapeVecItr_From;
+	return true;
+}
+
+std::string SolidBox::PrintShapeInfo()
+{
+	std::string output = "";
+	std::string strHeader = "Solid Box:";
+	std::ostringstream stream;
+
+	stream << Utility::PrintHeader(strHeader);
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Shape name:" << m_stName << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "hasConnection:" << m_bHasConnection << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Channel name:" << m_channel.GetName() << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "SideLength (mm):" << std::fixed << std::setprecision(3) << m_dSideLength << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Surface Area (mm^2):" << m_dSurfaceArea << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Volume (mm^3):" << m_dVolume << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Number of surfaces:" << m_nNumOfSurfaces << std::endl;
+	stream << std::endl;
+	return output = stream.str();
+}
+
+std::string SolidBox::PrintPlanesInfo()
+{
+	std::string output = "";
+	std::ostringstream stream;
+
+	stream << Utility::PrintHeader("Surfaces:");
+
+	for (auto plane : m_channel.GetSurfaceSet())
+	{
+		auto planePtr = dynamic_cast<RectPlane*>(plane.get());
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Plane name:" << plane->GetName() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Associated shape name:" << plane->GetConnChannel()->GetShape()->GetName() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Associated channel name:" << plane->GetConnChannel()->GetName() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Number of edges:" << plane->GetNumOfEdges() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Length:" << std::fixed << std::setprecision(3) << planePtr->GetLength() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Height:" << std::fixed << std::setprecision(3) << planePtr->GetHeight() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Area:" << std::fixed << std::setprecision(3) << planePtr->GetArea() << std::endl;
+		stream << std::endl;
+	}
+
+	return output = stream.str();
 }

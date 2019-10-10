@@ -33,5 +33,6 @@ public:
 	std::string GetName();
 	std::set<std::shared_ptr<Surface>> GetSurfaceSet();
 	Shape* GetShape();
+	void SetShape(Shape* shape);
 	void Save(std::ofstream &outFile);
 };

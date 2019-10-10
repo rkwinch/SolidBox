@@ -22,7 +22,7 @@ public:
 	static int m_nNameIDCounter; 
 
 	RectPlane(double length, double height, ConnectionChannel* channel);
-	RectPlane(RectPlane & rectPlane);
+	RectPlane(const RectPlane &rectPlane);
 	RectPlane& operator=(RectPlane& plane);
 	bool operator==(const RectPlane& plane) const;
 	bool operator<(const RectPlane &plane) const;
@@ -30,7 +30,6 @@ public:
 	void SetName(std::string name); 
 	double GetLength() const;
 	double GetHeight() const;
-	ConnectionChannel* GetConnChannel() const;
 	std::shared_ptr<Surface> GetCopy() const override;
 	void Save(std::ofstream &outFile) const override;
 };

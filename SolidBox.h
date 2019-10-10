@@ -3,6 +3,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <memory>
 #include <fstream>
 #include "Shape.h"
 
@@ -24,7 +25,7 @@ public:
 
 	SolidBox(double sideLength);
 	~SolidBox();
-	SolidBox(SolidBox& other);
+	SolidBox(const SolidBox& other);
 	SolidBox& operator=(SolidBox &cube);
 	void Delete() override;
 	void CalcVol() override;
@@ -34,7 +35,11 @@ public:
 	std::vector<std::shared_ptr<SolidBox>> GetShapeVec();
 	void Save(std::ofstream &outFile) override;
 	static void Create();
-	static void PrintSolids();
+	static std::string PrintSolids();
+	static std::string PrintSolids(int &counter);
 	static void Load(std::vector<std::string>::iterator &itr);
 	static bool Move();
+	static bool Move(std::shared_ptr<SolidBox> cube);
+	std::string PrintShapeInfo() override;
+	std::string PrintPlanesInfo() override;
 };

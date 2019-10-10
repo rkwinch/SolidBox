@@ -3,10 +3,9 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include "Shape.h"
 
 class ConnectionChannel;
-class Surface;
+class Shape;
 
 class Surface {
 
@@ -24,6 +23,10 @@ public:
 	virtual std::shared_ptr<Surface> GetCopy() const = 0;
 	virtual void Save(std::ofstream &outFile) const = 0;
 
+	Surface() {}
+
+	Surface(Surface& surface) {}
+
 	double GetArea() const
 	{
 		return m_dArea;
@@ -32,6 +35,11 @@ public:
 	std::string GetName() const
 	{
 		return m_stName;
+	}
+
+	void SetConnChannel(ConnectionChannel* channel)
+	{
+		m_channel = channel;
 	}
 
 	ConnectionChannel* GetConnChannel() const

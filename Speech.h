@@ -10,7 +10,7 @@
 namespace Speech {
 
 	static const ULONGLONG grammarId = 0;
-	static wchar_t* ruleName1 = L"ruleName1";
+	static const wchar_t* ruleName1 = L"ruleName1";
 	static std::vector<std::string> units = { "zero", "one", "two", "three", "four", "five", "six",
 											"seven", "eight", "nine", "ten", "eleven", "twelve",
 											 "thirteen", "fourteen", "fifteen", "sixteen",

@@ -3,6 +3,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <memory>
 #include <fstream>
 #include "Shape.h"
 
@@ -22,7 +23,7 @@ public:
 
 	RectPrism(double length, double width, double height);
 	~RectPrism();
-	RectPrism(RectPrism& other);
+	RectPrism(const RectPrism& other);
 	RectPrism& operator=(RectPrism &cube);
 	void Delete() override;
 	void CalcVol() override;
@@ -34,7 +35,11 @@ public:
 	std::vector<std::shared_ptr<RectPrism>> GetShapeVec();
 	void Save(std::ofstream &outFile) override;
 	static void Create();
-	static void PrintSolids();
+	static std::string PrintSolids();
+	static std::string PrintSolids(int &counter);
 	static void Load(std::vector<std::string>::iterator &itr);
 	static bool Move();
+	static bool Move(std::shared_ptr<RectPrism> rectPrism);
+	std::string PrintShapeInfo() override;
+	std::string PrintPlanesInfo() override;
 };

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <math.h>
 #include <iomanip>
+#include <sstream>
 #include "Sphere.h"
 #include "CurvedSurface.h"
 #include "ConnectionChannel.h"
@@ -47,14 +48,20 @@ Sphere::~Sphere()
 }
 
 // copy constructor
-Sphere::Sphere(Sphere& other)
+Sphere::Sphere(const Sphere& other) : Shape(other)
 {
 	// don't change name
+	if (m_stName.length() == 0)
+	{
+		m_stName = Utility::CreateUniqueName("sphere", m_nNameIDCounter);
+	}
+
+	m_nNumOfSurfaces = other.m_nNumOfSurfaces;
 	m_dRadius = other.m_dRadius;
-	this->CalcSA();
-	this->CalcVol();
-	m_channel = other.m_channel;
-	m_bHasConnection = other.m_bHasConnection; // flag for checking if the SolidBox has a connection
+	m_bHasConnection = other.m_bHasConnection;
+	m_channel.SetShape(this);
+	CalcSA();
+	CalcVol();
 }
 
 // since it was requested that old object be discarded afterwards, this is
@@ -62,10 +69,10 @@ Sphere::Sphere(Sphere& other)
 Sphere& Sphere::operator=(Sphere &sphere)
 {
 	m_dRadius = sphere.m_dRadius;
-	this->CalcSA();
-	this->CalcVol();
 	m_channel = sphere.m_channel;
 	m_bHasConnection = sphere.m_bHasConnection;
+	CalcSA();
+	CalcVol();
 	sphere.Delete(); //**deleting items on right side of = operator**
 	return *this;
 }
@@ -79,7 +86,7 @@ void Sphere::Delete()
 
 	if (shapeVecItr == m_shapeVec.end())
 	{
-		std::cout << "Cannot delete Shape.  Shape not found" << std::endl;
+		Utility::Display("Cannot delete Shape.  Shape not found\n");
 		return;
 	}
 
@@ -119,7 +126,7 @@ std::vector<std::shared_ptr<Sphere>> Sphere::GetShapeVec()
 	return m_shapeVec;
 }
 
-void Sphere::Save(std::ofstream &outFile) 
+void Sphere::Save(std::ofstream &outFile)
 {
 	outFile << m_stName << ";";
 	outFile << m_dRadius << ";" << m_bHasConnection << ";";
@@ -135,8 +142,8 @@ void Sphere::Create()
 	double dRadius = 0.0;
 	std::regex acceptableInputExpr("^\\s*([0-9]*\\.?[0-9]*)\\s*$"); // looking for a number (if present)
 																   // with 0-1 decimals followed by a number (if present) while allowing spaces
-	std::cout << "What would you like the radius to be? (in mm)" << std::endl;
-	std::cout << "ex: 0.125" << std::endl;
+	Utility::Display("What would you like the radius to be? (in mm)\n");
+	Utility::Display("ex: 0.125\n");
 
 	if (isSpeech)
 	{
@@ -146,7 +153,7 @@ void Sphere::Create()
 
 			if (dRadius <= 0.0)
 			{
-				std::cout << "Invalid parameter.  Must be greater than zero.  Please try again." << std::endl;
+				Utility::Display("Invalid parameter.  Must be greater than zero.  Please try again.\n");
 			}
 
 		} while (dRadius <= 0.0);
@@ -156,29 +163,44 @@ void Sphere::Create()
 		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
 		dRadius = std::stod(strInput); // converting string input into a double
 	}
-	
+
 
 	while (dRadius == 0.0)
 	{
-		std::cout << "Please input a value that is not 0" << std::endl;
+		Utility::Display("Please input a value that is not 0\n");
 		strInput = Utility::GetAndValidateInput(acceptableInputExpr);
 		dRadius = std::stod(strInput);
 	}
 
 	std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(dRadius);
 	m_shapeVec.push_back(sphere);
-	Utility::PrintNwLnsAndLnDelimiter("-", 55);
+	Utility::Display(Utility::PrintNwLnsAndLnDelimiter("-", 55));
 }
 
-void Sphere::PrintSolids()
+std::string Sphere::PrintSolids()
 {
+	std::ostringstream stream;
 	int count = 1;
 
 	for (auto sphere : m_shapeVec)
 	{
-		std::cout << count << ") " << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
+		stream << count << ") " << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
 		++count;
 	}
+
+	return stream.str();
+}
+
+std::string Sphere::PrintSolids(int &counter)
+{
+	std::ostringstream stream;
+
+	for (auto &sphere : Sphere::m_shapeVec)
+	{
+		stream << counter++ << ") " << sphere->GetName() << " (" << std::fixed << std::setprecision(3) << sphere->GetRadius() << ")" << std::endl;
+	}
+
+	return stream.str();
 }
 
 void Sphere::Load(std::vector<std::string>::iterator &itr)
@@ -189,7 +211,7 @@ void Sphere::Load(std::vector<std::string>::iterator &itr)
 	int nNumOfEdges = 0;
 
 	//getting members for sphere
-	stName = (*itr); 
+	stName = (*itr);
 	itr++;
 	dRadius = stod(*itr);
 	itr++;
@@ -231,21 +253,23 @@ void Sphere::Load(std::vector<std::string>::iterator &itr)
 		auto curvedSurfacePtr = dynamic_cast<CurvedSurface*>(surface.get());
 		curvedSurfacePtr->SetName(stName);
 	}
-		
+
 	m_shapeVec.push_back(sphere); // solid box object is completed now.
 }
 
 bool Sphere::Move()
 {
-	int strMoveFrom = 0;
-	int strMoveTo = 0;
+	int nMoveFrom = 0;
+	int nMoveTo = 0;
+	Menu* menu = Menu::GetInstance();
+	bool bIsSpeech = menu->GetIsSpeechFlag();
 	int sphereVecSize = static_cast<int>(Sphere::m_shapeVec.size());
 	auto shapeVecItr_To = Sphere::m_shapeVec.begin();
 	auto shapeVecItr_From = Sphere::m_shapeVec.begin();
 	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' while allowing for whitespace
 
-	Sphere::PrintSolids();
-	std::cout << std::endl;
+	Utility::Display(Sphere::PrintSolids());
+	Utility::Display("\n");
 
 	//------Get Sphere selections from user----------------
 	do
@@ -253,43 +277,167 @@ bool Sphere::Move()
 		//moveFrom Sphere:
 		do
 		{
-			strMoveFrom = Utility::RetrieveVecInput(acceptableInputExpr, sphereVecSize);
-
-			if (strMoveFrom == -1) return false; // user elected to go back to main menu
-
-			if ((strMoveFrom < 1) || (strMoveFrom > sphereVecSize))
+			if (bIsSpeech)
 			{
-				std::cout << "Invalid entry.  Please try again." << std::endl;
+				Utility::Display("Please select the sphere you are moving FROM or say \"back\" to go to the main menu.\n");
+				nMoveFrom = Speech::RetrievePosInteger();
+			}
+			else
+			{
+				Utility::Display("Please select the sphere you are moving FROM or press 'b' to go back to the main menu.\n");
+				nMoveFrom = Utility::RetrieveVecInput(acceptableInputExpr, sphereVecSize);
 			}
 
-		} while ((strMoveFrom < 1) || (strMoveFrom > sphereVecSize));
+			if (nMoveFrom == -1) return false; // user elected to go back to main menu
 
-		shapeVecItr_From = std::next(shapeVecItr_From, (strMoveFrom - 1));
+			if ((nMoveFrom < 1) || (nMoveFrom > sphereVecSize))
+			{
+				Utility::Display("Invalid entry.  Please try again.\n");
+			}
+
+		} while ((nMoveFrom < 1) || (nMoveFrom > sphereVecSize));
+
+		shapeVecItr_From = std::next(shapeVecItr_From, (nMoveFrom - 1));
 
 		//moveTo Sphere:
 		do
 		{
-			strMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, sphereVecSize);
-
-			if (strMoveTo == -1) return false; // user elected to go back to main menu
-
-			if ((strMoveTo < 1) || (strMoveTo > sphereVecSize))
+			if (bIsSpeech)
 			{
-				std::cout << "Invalid entry.  Please try again." << std::endl;
+				Utility::Display("Please select the sphere you are moving TO or say \"back\" to go to the main menu.\n");
+				nMoveTo = Speech::RetrievePosInteger();
+			}
+			else
+			{
+				Utility::Display("Please select the sphere you are moving TO or press 'b' to go back to the main menu.\n");
+				nMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, sphereVecSize);
 			}
 
-		} while ((strMoveTo < 1) || (strMoveTo > sphereVecSize));
+			if (nMoveTo == -1) return false; // user elected to go back to main menu
 
-		shapeVecItr_To = std::next(shapeVecItr_To, (strMoveTo - 1));
+			if ((nMoveTo < 1) || (nMoveTo > sphereVecSize))
+			{
+				Utility::Display("Invalid entry.  Please try again.\n");
+			}
 
-		if (strMoveFrom == strMoveTo) //check if trying to move to the same shape
+		} while ((nMoveTo < 1) || (nMoveTo > sphereVecSize));
+
+		shapeVecItr_To = std::next(shapeVecItr_To, (nMoveTo - 1));
+
+		if (nMoveFrom == nMoveTo) //check if trying to move to the same shape
 		{
-			std::cout << "You cannot move from and to the same Sphere.  Please try again." << std::endl;
+			Utility::Display("You cannot move from and to the same Sphere.  Please try again.\n");
 		}
 
-	} while (strMoveFrom == strMoveTo);
+	} while (nMoveFrom == nMoveTo);
 
 	// It's OK to now move From into To
 	**shapeVecItr_To = **shapeVecItr_From; // calls move constructor
 	return true;
+}
+
+bool Sphere::Move(std::shared_ptr<Sphere> sphere)
+{
+	Menu* menu = Menu::GetInstance();
+	bool isSpeech = menu->GetIsSpeechFlag();
+	int nMoveTo = 0;
+	int counter = 1;
+	std::ostringstream stream;
+	std::regex acceptableInputExpr("^\\s*([0-9]*|b|B)\\s*$"); // want any # or 'b' or 'B' while allowing for whitespace
+	int solidBoxVecSize = static_cast<int>(Sphere::m_shapeVec.size());
+	auto shapeVecItr_From = std::find(Sphere::m_shapeVec.begin(), Sphere::m_shapeVec.end(), sphere);
+	auto shapeVecItr_To = Sphere::m_shapeVec.begin();
+
+	do
+	{
+		//moveTo cube:
+		do
+		{
+			if (isSpeech)
+			{
+				Utility::Display("\nPlease select the sphere you are moving TO or say \"back\" to go to the main menu.\n\n");
+				Utility::Display(Sphere::PrintSolids());
+				nMoveTo = Speech::RetrievePosInteger();
+			}
+			else
+			{
+				Utility::Display("\nPlease select the sphere you are moving TO or press 'b' to go back to the main menu.\n\n");
+				Utility::Display(Sphere::PrintSolids());
+				nMoveTo = Utility::RetrieveVecInput(acceptableInputExpr, solidBoxVecSize);
+			}
+
+			if (nMoveTo == -1) return false; // user elected to go back to main menu
+
+			if ((nMoveTo < 1) || (nMoveTo > solidBoxVecSize))
+			{
+				Utility::Display("Invalid entry.  Please try again.\n");
+			}
+
+		} while ((nMoveTo < 1) || (nMoveTo > solidBoxVecSize));
+
+		shapeVecItr_To = std::next(shapeVecItr_To, (nMoveTo - 1));
+
+		if (*shapeVecItr_To == *shapeVecItr_From) //check if trying to move to the same shape
+		{
+			Utility::Display("You cannot move from and to the same sphere.  Please try again.\n");
+		}
+
+	} while (*shapeVecItr_To == *shapeVecItr_From);
+
+	// It's OK to now move From into To
+	**shapeVecItr_To = **shapeVecItr_From;
+	return true;
+}
+
+std::string Sphere::PrintShapeInfo()
+{
+	std::string output = "";
+	std::string strHeader = "Sphere:";
+	std::ostringstream stream;
+
+	stream << Utility::PrintHeader(strHeader);
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Shape name:" << m_stName << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "hasConnection:" << m_bHasConnection << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Channel name:" << m_channel.GetName() << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Radius (mm):" << std::fixed << std::setprecision(3) << m_dRadius << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Surface Area (mm^2):" << m_dSurfaceArea << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Volume (mm^3):" << m_dVolume << std::endl;
+	stream << Utility::PrintChar(' ', 5);
+	stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Number of surfaces:" << m_nNumOfSurfaces << std::endl;
+	stream << std::endl;
+	return output = stream.str();
+}
+
+std::string Sphere::PrintPlanesInfo()
+{
+	std::string output = "";
+	std::ostringstream stream;
+
+	stream << Utility::PrintHeader("Surfaces:");
+
+	for (auto plane : m_channel.GetSurfaceSet())
+	{
+		auto spherePtr = dynamic_cast<CurvedSurface*>(plane.get());
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Plane name:" << spherePtr->GetName() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Associated shape name:" << spherePtr->GetConnChannel()->GetShape()->GetName() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Associated channel name:" << spherePtr->GetConnChannel()->GetName() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Number of edges:" << spherePtr->GetNumOfEdges() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Radius (mm):" << std::fixed << std::setprecision(3) << spherePtr->GetRadius() << std::endl;
+		stream << Utility::PrintChar(' ', 5);
+		stream << std::left << std::setw(Utility::PRINTING_WIDTH) << "Area:" << std::fixed << std::setprecision(3) << spherePtr->GetArea() << std::endl;
+		stream << std::endl;
+	}
+
+	return output = stream.str();
 }
